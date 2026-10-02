@@ -15,6 +15,41 @@
     <link href="{{ asset('assets/vendor/flagiconcss/css/flag-icon.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/master.css') }}" rel="stylesheet">
 
+    <style>
+        .sa-panel #sidebar {
+            background: #0b3c66;
+            background-image: linear-gradient(180deg, #0b3c66 0%, #082c4d 100%);
+            border-right: 1px solid #072742;
+        }
+        .sa-panel #sidebar .sidebar-brand {
+            padding: .65rem .8rem !important;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+        }
+        .sa-panel #sidebar .sidebar-brand a {
+            color: #fff;
+        }
+        .sa-panel #sidebar ul.components li a {
+            color: #cfe2f3;
+        }
+        .sa-panel #sidebar ul.components li a i {
+            color: #8fc4ea;
+        }
+        .sa-panel #sidebar ul.components li a:hover {
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .sa-panel #sidebar ul.components li a.active {
+            background: rgba(15,127,212,.3);
+            color: #fff;
+            border-left-color: #4dabf7;
+            font-weight: 600;
+        }
+        .sa-panel #sidebar .sidebar-role {
+            color: #cfe2f3;
+        }
+    </style>
+
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @livewireStyles
 </head>
