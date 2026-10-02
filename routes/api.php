@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -8,12 +7,16 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
+| Loaded by bootstrap/app.php with the "api" middleware group and the "api"
+| prefix. Each module keeps its own file under routes/api so the surface stays
+| mirror-image with the web modules (site, auth, admin, superadmin).
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::prefix('v1')->name('api.v1.')->group(function () {
+    require __DIR__.'/api/auth.php';
+    require __DIR__.'/api/site.php';
+    require __DIR__.'/api/appointments.php';
+    require __DIR__.'/api/admin.php';
+    require __DIR__.'/api/superadmin.php';
 });

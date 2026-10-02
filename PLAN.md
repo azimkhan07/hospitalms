@@ -1,0 +1,439 @@
+# HMS — Master Plan & Task Tracker
+
+> Living document. Update the checkboxes and the progress bars **after every completed task**.
+> If the machine shuts down unexpectedly, this file is the source of truth for what is done and what is next.
+
+Project: Hospital Management System (HMS) — Laravel 12 + Livewire 3 + MySQL
+Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
+
+---
+
+## 0. Progress Overview
+
+```
+Overall              [####......]  ~43%   (foundation + mode + landing + booking + super admin core + API v1 auth done)
+
+Phase 1 Super Admin  [######....]   65%   (auth, panel, tenant CRUD, error monitor built + smoke-tested)
+Phase 2 Admin        [##........]   20%   (settings + mode + staff list exist)
+Phase 3 Reception    [#.........]   10%   (appointment module exists)
+Phase 4 Doctor       [##........]   20%   (prescriptions/history exist)
+Phase 5 Lab          [..........]    0%
+Phase 6 Nurse (IPD)  [..........]    0%
+Phase 7 Pharmacy/Store [..........]   0%
+Phase 8 Accountant   [..........]    0%
+Phase 9 Dean/Calendar [#.........]   15%   (meeting calendar exists)
+Phase 10 Reports/Notify ##.......   20%   (bell + notifications exist)
+Phase 11 Platform/Multi-tenant [.........]  5%   (tenants + tenant_id + scoping backfill)
+API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live)
+```
+
+Legend: `[#]` done · `[.]` pending. Recalculate `done / total` per phase when updating.
+
+---
+
+## 1. Types of Tenant
+
+The system has **two institution modes** (already in `config/hms.php`):
+
+| | Clinic | Hospital |
+|---|---|---|
+| Size | 1–5 doctors | 10+ beds, many departments |
+| Login roles | admin, receptionist, doctor, pharmacist | admin, dean, doctor, nurse, receptionist, pharmacist, storekeeper, laboratorist, accountant |
+| OPD | yes | yes |
+| IPD / Bed / Nurse | no | yes |
+| Lab | basic / outsourced | full |
+| Accountant | no (pharmacist does money) | yes |
+
+**Rule:** a mode switch hides/disables the modules and roles that are not allowed. Data is never deleted on switch, only hidden.
+
+---
+
+## 2. Global Rules (apply to every phase)
+
+- [ ] **RBAC** — every route/action checked against a role permission (helpers already in `app/helpers.php`: `hms_can`, `hms_role_enabled`, `hms_enabled_roles`).
+- [ ] **Audit trail** — log who did what and when for clinical/financial actions (`audit_logs` table).
+- [ ] **Soft deletes** on all clinical + financial records (recoverable; user is worried about data loss).
+- [ ] **Backups** — scheduled DB + uploads backup with retention; document restore steps. (Prevents history loss after a crash.)
+- [ ] **Error monitor** — every uncaught exception saved to `system_errors` and shown in Super Admin → Errors (see Phase 1).
+- [ ] **Design** — follow `AGENTS.md` compact theme. Same look for public + admin.
+- [ ] **Search** must never `dd()`; it filters or redirects.
+- [ ] **Money** — store amounts as decimal, never float; one invoice = one patient stay.
+- [ ] **Every list** has: search, pagination, empty state, sort.
+- [ ] **Every create/edit** has server-side validation + inline error messages.
+- [ ] **No external CA needed** — accountant role does ledger, vouchers, salary, GST-ready invoices.
+- [ ] **Mobile/tablet** responsive, no horizontal scroll (verified by `audit.js`).
+
+---
+
+## 2.5 Technical Architecture (agreed)
+
+- **Pure Laravel 12** (no October CMS) — Services in `app/Services/*`, resolved via the **Service Container** (`app()->make`, constructor injection). No business logic in Livewire components.
+- **Modular monolith** with clear **service boundaries** per domain (Tenant, Billing, Pharmacy, Lab, Clinical). Each module talks through a service interface so it can be extracted to a **microservice** later without rewriting callers.
+- **Redis** for queue + cache in production (`QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`). Code must use the queue/cache **abstractions only** (never call Redis directly) so this XAMPP box can run `sync`/`database` today. *This machine has no `redis` PHP extension yet — install before production.*
+- **Queues** for slow work: SMS/WhatsApp, report generation, notifications, nightly backups.
+- **Eager loading** (`with()`, `withCount()`) everywhere — no N+1; add a guard in review.
+- **Pure Laravel forms** — `FormRequest` validation + Blade components; server-side validation always.
+- Multi-tenant: **shared database, shared schema**, `tenant_id` on business tables. Global scope added phase by phase (Phase 11); existing rows are back-filled to tenant #1.
+
+## 3. Phase 1 — Super Admin (platform owner: us)
+
+Goal: one **centralized panel** that manages every hospital/clinic running on our server, and keeps **only two core jobs**: create an admin and choose clinic/hospital.
+
+### 1.1 Tenant (Hospital/Clinic) onboarding — the only real Super Admin form
+- [ ] Super Admin login is separate from tenant admin (already separate guard).
+- [ ] **Step 1 — Type:** choose `Clinic` or `Hospital` (radio).
+- [ ] **Step 2 — Profile form:**
+  - [ ] Name of facility
+  - [ ] Contact number(s)
+  - [ ] Address
+  - [ ] Opening / closing time + working hours text
+  - [ ] Logo upload
+  - [ ] Cover/hero images upload (gallery)
+  - [ ] If **Hospital**: number of beds, number of floors/wards, number of staff (approx), departments list, whether lab/OT/ambulance exist.
+  - [ ] If **Clinic**: number of doctors, services offered.
+  - [ ] Sub-domain / domain field (e.g. `metro.hms.app` or client's own domain).
+  - [ ] Timezone + currency.
+- [ ] **Step 3 — Create Admin:** name, email, phone, password → admin is created and **mapped to this tenant** (`tenant_id`/`organization_id`).
+- [ ] Tenant status: `active` / `suspended` / `trial` + expiry date.
+- [ ] Super Admin can edit / suspend / delete a tenant.
+- [ ] Super Admin can reset a tenant admin's password.
+
+### 1.2 Tenant list dashboard
+- [ ] Table: tenant name, mode, domain, admin, staff count, beds, status, created.
+- [ ] Filters: mode, status, search.
+- [ ] Click → drill-down (read-only overview of that tenant's key stats).
+- [ ] Impersonate tenant admin (Super Admin support login) — **logged in audit**.
+
+### 1.3 Multi-domain / centralization (Phase 11 details, decide now)
+- [ ] Default deployment: one database, `tenants` table + `tenant_id` on business tables → one Super Admin sees all.
+- [ ] Domain resolution: map incoming host → tenant (middleware).
+- [ ] When a client takes **their own domain + own DB on our server**: add tenant connection + give Super Admin cross-tenant read (and DB access) so we can support them.
+- [ ] When a client hosts **fully on their own server**: ship the same app; they get their **own separate Super Admin** (isolated). No cross-access — that is acceptable.
+- [ ] Write a short decision note in this file once chosen.
+
+### 1.4 Error monitor (Super Admin → Errors)
+- [ ] `system_errors` table: tenant, url, method, user, role, message, file, line, stack, occurred_at, resolved_at.
+- [ ] Hook Laravel's exception handler to also write here.
+- [ ] List page: filter by tenant/date/resolved, open detail, mark resolved.
+- [ ] Badge count of unresolved errors on Super Admin dashboard.
+
+### 1.5 Super Admin dashboard
+- [ ] Counts: tenants, staff, patients, appointments today, revenue today.
+- [ ] System: PHP/Laravel version, DB size, storage, last backup, queue status.
+
+**Acceptance:** from one Super Admin login we can create a clinic tenant + admin, create a hospital tenant + admin, upload logo/images, set domain, and see any error that occurred on any tenant.
+
+### 1.6 Concrete build (files)
+
+- Migrations: `create_tenants_table`, `add_tenant_id_to_users_table`, `create_system_errors_table`.
+- Models: `App\Models\Tenant`, `App\Models\SystemError`; `User::tenant()`.
+- Role `super_admin` (level 0), kept **out** of tenant mode lists.
+- Auth: `SuperAdminController` (login/logout), middleware `EnsureSuperAdmin`, routes under `/superadmin`.
+- Panel layout `resources/views/superadmin/layouts/app.blade.php` (AdminLTE assets, compact).
+- Livewire `App\Http\Livewire\SuperAdmin\`: `Dashboard`, `Tenants` (list), `TenantForm` (create/edit wizard), `Errors` (monitor).
+- Service: `App\Services\TenantService` (create tenant + admin in one DB transaction), `App\Services\ErrorLogger`.
+- Exception hook in `bootstrap/app.php` → `SystemError::record()`.
+- Seeder: `super@hms.com` (role super_admin) + back-fill existing data to tenant #1.
+
+- [x] PLAN architecture documented
+- [x] tenants/users/system_errors migrations
+- [x] Tenant + SystemError models
+- [x] super_admin role + seeder
+- [x] exception → system_errors hook
+- [x] super admin auth (routes/middleware/controller)
+- [x] super admin layout
+- [x] Livewire Dashboard / Tenants / TenantForm / Errors
+- [x] smoke test + lint + audit still green
+- [x] impersonate admin, tenant drill-down, password reset, timezone/currency, system stats, unresolved-error badge
+- [x] routes split per module (`site/auth/admin/superadmin`) — `routes/web.php` is a loader
+- [x] API v1 foundation: Sanctum + module route files + auth/site/appointments/admin/superadmin endpoints
+
+---
+
+## 3b. API v1 (mobile mirror)
+
+Goal: every web feature gets a matching JSON endpoint so the mobile app stays in lock-step.
+
+- Auth (Sanctum bearer tokens): `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`.
+- Public: `GET /api/v1/site`, `GET /api/v1/doctors`, `GET /api/v1/departments`, `GET /api/v1/appointments/doctors`, `POST /api/v1/appointments/request`.
+- Staff (tenant-scoped): `GET /api/v1/admin/{dashboard,patients,appointments,medicines,staff}` (`auth:sanctum` + `api.staff`).
+- Platform: `GET|POST /api/v1/superadmin/tenants`, `GET|PUT|DELETE /api/v1/superadmin/tenants/{tenant}`, `GET /api/v1/superadmin/errors` (`auth:sanctum` + `api.superadmin`).
+- Response envelope: `{ success, message?, data? }`; `data` may be a paginator (`per_page` honoured).
+
+- [x] Sanctum installed + `personal_access_tokens` migrated + `HasApiTokens` on `User`
+- [x] `routes/api.php` loader + `routes/api/*` module files
+- [x] auth / site / appointments / admin / superadmin controllers
+- [ ] tenant scoping on API queries (global scope) - blocked on Phase 11
+- [ ] mirror remaining web modules (reports, lab, pharmacy, nurse, accountant, dean)
+- [ ] API docs / Postman collection
+
+---
+
+## 4. Phase 2 — Admin (tenant owner)
+
+Goal: run one facility. Admin = Super Admin **of that tenant only**.
+
+- [x] Settings page (site name, contacts, socials, logo, mode).
+- [x] Clinic/Hospital mode stored per tenant.
+- [x] Staff directory (filtered by enabled roles).
+- [ ] Admin creates users per allowed role (clinic: doctor, receptionist, pharmacist; hospital: + nurse, laboratorist, storekeeper, accountant, dean).
+- [ ] Departments management.
+- [ ] All **appointments** visible to admin.
+- [ ] **Prescriptions / reports are view-only** for admin (no editing clinical data).
+- [ ] Admin dashboard cards: patients today, appointments, beds occupied/free, revenue, low stock, unresolved items.
+- [ ] Facility profile edit (name, number, timing, logo, images, beds).
+- [ ] Ward/Bed **setup** (create wards + beds) — see recommendation in §9.
+- [ ] Reports: daily/monthly, doctor-wise, department-wise, revenue, pharmacy, lab.
+- [ ] Bulk import staff/patients (optional).
+
+**Acceptance:** an admin can create every staff role allowed by the mode, see all appointments, and never edit a prescription/report body.
+
+---
+
+## 5. Phase 3 — Receptionist (Front Desk) + Appointments
+
+Goal: patient walks in → registered → queued → sent to doctor; hospital adds admission (IPD).
+
+- [x] Public + admin appointment table, status, edit/cancel, search.
+- [x] Public website booking (`appointmentform`) → `requested_appointments`.
+- [ ] Admin approves a website request → creates a real patient + appointment (with doctor).
+- [ ] **Patient registration**: name, age/DOB, gender, phone, address, emergency contact, photo, UHID (unique patient id).
+- [ ] Search existing patient before creating a new one (avoid duplicates).
+- [ ] **Queue / token**: assign token number; list of waiting patients.
+- [ ] **Bell to call patient:** doctor presses "Call next" → receptionist screen highlights "send [patient] in". (Livewire event/poll.)
+- [ ] Vitals capture at reception: BP, pulse, temperature, SpO2, weight, height (feeds doctor screen).
+- [ ] **Clinic OPD:** register → vitals → queue → doctor.
+- [ ] **Hospital OPD:** + write **disease/chief complaint**, mark **OPD or IPD**.
+- [ ] **IPD admission:** choose ward/bed from **available** beds → set bed `reserved` → assign doctor.
+- [ ] **Assign doctor:** show doctors on duty/available; see recommendation in §9.
+- [ ] Appointment states (see §8): `requested → scheduled → waiting → in_consult → treated/done → (pending) → terminated`.
+- [ ] "Today" list: only today's + upcoming; completed move to Treated list and disappear from Today.
+- [ ] **3-day rule:** an appointment not completed within 3 days auto-moves to `pending`, then `terminated` (configurable).
+- [ ] Follow-up appointment auto-created when doctor sets a follow-up date.
+- [ ] Send reminder (SMS/WhatsApp/email) — later.
+
+**Acceptance:** receptionist can register a patient, capture vitals, queue them, send them in when the doctor calls, and (hospital) admit to a bed and assign a doctor.
+
+---
+
+## 6. Phase 4 — Doctor (OPD + IPD)
+
+Goal: see patients (clinic common tasks) and manage clinical records.
+
+- [x] Prescription model + list + history foundations.
+- [ ] Doctor sees only **their own** appointments (assigned to them).
+- [ ] Patient check screen: complaint, history, allergies, previous visits, current vitals.
+- [ ] Update vitals (can edit what reception/nurse captured).
+- [ ] Diagnosis (with ICD-10 code list), notes.
+- [ ] **E-prescription:**
+  - [ ] Medicine picker shows **only available stock** (batch + qty).
+  - [ ] Expired / out-of-stock shown in **red and not selectable**.
+  - [ ] Per medicine: dosage, **timing/frequency**, **number of days**.
+  - [ ] **Quantity auto-calculated** = dose × frequency × days.
+  - [ ] Save → appears on pharmacist screen (and IPD drug chart).
+- [ ] **Order investigations:** tick lab/radiology tests → lab receives order.
+- [ ] **View lab report** when patient returns; adjust or continue medicine.
+- [ ] **Follow-up date** → auto-create next appointment.
+- [ ] Referral to another doctor/department (optional).
+- [ ] IPD: daily rounds notes, change orders, discharge order + discharge summary.
+- [ ] Doctor cannot edit billing.
+
+**Acceptance:** doctor completes a consultation, writes a full prescription using only available medicines (expired ones visible but greyed/red + unselectable), orders a test, later sees the report, and sets a follow-up that auto-books.
+
+---
+
+## 7. Phase 5 — Laboratory
+
+Goal: perform ordered tests and publish reports online to the doctor + patient portal.
+
+- [ ] Lab dashboard: pending orders, in-progress, completed.
+- [ ] Doctor order creates a lab request (patient, tests, priority: routine/STAT).
+- [ ] **Call the patient** (status + contact shown) → schedule collection.
+- [ ] Sample collection + barcode/label, sample status.
+- [ ] Result entry (manual now; analyzer interface later).
+- [ ] Attach / upload report file + structured values.
+- [ ] Report auto-**published to doctor** and to patient record (view-only).
+- [ ] Critical value alert to doctor (optional).
+- [ ] Test master (name, price, reference range) + packages.
+- [ ] Lab billing line added to invoice.
+- [ ] (Optional) Radiology tie-in: X-ray/USG/CT order → report upload.
+
+**Acceptance:** a doctor's order reaches the lab, lab calls patient, enters/uploads result, and the doctor sees it before the follow-up visit.
+
+---
+
+## 8. Phase 6 — Nurse (IPD)
+
+Goal: execute doctor's orders round the clock and log everything via the system.
+
+- [ ] Nurse **assigned to bed** by doctor → sees only assigned patients.
+- [ ] Per patient: give medicine (from chart), change saline/IV, ECG, check vitals at the **interval the doctor set**.
+- [ ] **Step-by-step condition notes** (timeline) until discharge.
+- [ ] Drug administration record (what/when/given by).
+- [ ] Alert doctor (in-app) if critical.
+- [ ] **Discharge handling** — reason captured:
+  - [ ] Recovered / improved
+  - [ ] Expired
+  - [ ] Taken away by family (LAMA / DAMA)
+  - [ ] Transferred
+- [ ] On discharge → bed goes `cleaning` → `available`; final bill prepared.
+- [ ] Handover notes between shifts (optional).
+
+**Acceptance:** nurse sees assigned beds only, records meds/vitals on schedule, adds timeline notes, and triggers discharge with a reason.
+
+---
+
+## 9. Recommendations (open questions the user asked)
+
+1. **Who assigns the doctor?** → **Receptionist** assigns for normal OPD walk-ins, choosing from the on-duty list. **Dean** controls the duty roster and handles IPD/emergency reassignment and exceptions. Reason: receptionist is at the counter when the patient arrives; the dean owns staffing.
+2. **Who creates beds/wards?** → **Admin (or Dean) creates wards + bed numbers** during setup (this is configuration, done once). **Receptionist allocates** a free bed at admission; **Nurse** updates occupied/cleaning status. In clinic mode there is no bed module at all.
+3. **Vitals** → captured by **receptionist for OPD**, by **nurse for IPD**, both editable by the **doctor**. This matches the user's two statements.
+4. **Mode** → the Super Admin picks clinic/hospital at creation; Admin can request a change; only Super Admin flips it.
+
+---
+
+## 10. Phase 7 — Pharmacist + Store (Inventory)
+
+Goal: dispense medicines and keep stock correct. In **clinic mode the pharmacist also does store/inventory** (no accountant).
+
+- [ ] Medicine master: generic + brand, composition, batch, Mfg date, Expiry, MRP, supplier.
+- [ ] Stock ledger: purchase (stock in), issue/dispense (stock out), return, adjustment.
+- [ ] **Expiry alerts** 30/60/90 days; **low-stock / reorder** alerts.
+- [ ] FEFO/FIFO dispensing (first-expiry first-out).
+- [ ] Pharmacist sees doctor's e-prescriptions → dispense → **deducts stock**.
+- [ ] Mark medicine **"payment done"** when handed over (posts to billing).
+- [ ] Out-of-stock medicines cannot be dispensed (doctor side already marks red).
+- [ ] **Storekeeper** (hospital): purchase orders, suppliers, multi-store stock, consumables, expiry, dead stock.
+- [ ] Clinic: pharmacist does the above store duties too.
+- [ ] Reports: stock, expiry, sales, purchase, dispense.
+
+**Acceptance:** dispensing a prescription reduces stock, expiry is visible, and payment-done posts to the patient bill.
+
+---
+
+## 11. Phase 8 — Accountant (Billing, Ledger, Payroll)
+
+Goal: all money in one place; **no external CA needed**. Easy UI for non-accountants.
+
+- [ ] **Invoice = per patient stay** (OPD visit or IPD admission).
+- [ ] **IPD bed charge** auto-calculated from **allocation date → discharge date** (per bed/day rate).
+- [ ] Doctor consultation charge, procedure/operation charges, lab/radiology charges.
+- [ ] **Operation charges entered in patient history** and flow to billing.
+- [ ] **Reception collects first payment** (registration/consult/advance).
+- [ ] Pharmacy: pharmacist marks "payment done" per medicine; **accountant handles the rest**.
+- [ ] **At discharge:** final bill generated, pending amount shown, payment cleared, receipt printed.
+- [ ] Advance payment tracking + adjustment.
+- [ ] Discounts / packages, partial payments, refunds.
+- [ ] **Ledger** (patient + accounts), **day book**, **trial balance**, **P&L**.
+- [ ] **Vouchers** (receipt/payment/journal/contra).
+- [ ] **Salary** run for all staff + payslip (basic, allowances, deductions).
+- [ ] GST-ready invoice fields (kept simple; no CA required).
+- [ ] Reports: daily collection, pending dues, doctor-wise revenue, department-wise.
+
+**Acceptance:** a patient is admitted, charges accumulate (bed, doctor, lab, medicine, operation), and on discharge the accountant produces a final invoice and clears dues; salary run works.
+
+---
+
+## 12. Phase 9 — Dean + Calendar / Events
+
+Goal: dean manages staffing, approvals, and the facility calendar.
+
+- [x] Meeting calendar (create/respond/open).
+- [ ] **Calendar also supports events** beyond meetings:
+  - [ ] Blood donation camp (date + time)
+  - [ ] Visiting/special doctor (date + time)
+  - [ ] Any hospital event
+- [ ] Popup / open calendar view (month/week/day), click a day to add.
+- [ ] Event types with color + who can see.
+- [ ] Dean approves: leave (exists), duty roster, doctor reassignment.
+- [ ] Dean sees staff, beds, admissions oversight.
+
+**Acceptance:** dean creates a blood-donation camp and a visiting-doctor event from the calendar; both show on the right date with time.
+
+---
+
+## 13. Phase 10 — Reports, Analytics & Notifications
+
+- [x] Notification bell + notifications table.
+- [ ] Reports hub: patient stats, OPD/IPD census, bed occupancy, revenue, pharmacy, lab, doctor performance, due list.
+- [ ] Date-range filters + export (CSV/PDF/print).
+- [ ] Notifications: appointment reminders, report-ready, low-stock, due-payment — via in-app + SMS/WhatsApp/email (configurable).
+- [ ] Dashboard KPIs per role.
+
+---
+
+## 14. Phase 11 — Platform / Multi-tenant (Super Admin infra)
+
+- [ ] `tenants` table + `tenant_id` on all business tables.
+- [ ] Host → tenant resolution middleware.
+- [ ] Super Admin cross-tenant access + per-tenant DB connection option.
+- [ ] Error monitor (Phase 1.4) reads across tenants.
+- [ ] Backups + restore runbook.
+- [ ] Audit log viewer.
+
+---
+
+## 15. Standard HMS modules from market research (add if the tenant is a hospital)
+
+Already planned above: OPD, IPD, EMR, e-prescription, Pharmacy, Lab, Billing, HR/Payroll, Inventory, Calendar, Reports.
+Additional / later-ready (mark in-scope when a client pays for them):
+
+- [ ] Radiology (RIS) — imaging orders + reports
+- [ ] OT (Operation Theatre) scheduling, anesthesia notes, implant tracking
+- [ ] Emergency / casualty + MLC
+- [ ] Blood bank
+- [ ] Ambulance
+- [ ] Insurance / TPA / cashless claims
+- [ ] Government schemes (e.g. PMJAY/Ayushman) — region specific
+- [ ] Patient portal / ABHA link (India digital health)
+- [ ] SMS / WhatsApp gateway
+- [ ] Multi-branch / inter-branch transfer
+- [ ] NABH/MRD document management
+- [ ] MIS/BI dashboards (advanced)
+- [ ] AI/automation helpers (later)
+
+---
+
+## 16. Feature flags by mode (single source of truth)
+
+```
+CLINIC   : admin, receptionist, doctor, pharmacist
+           modules: appointments, patients, OPD, prescriptions, pharmacy, billing(basic), reports
+           hidden : IPD, beds, nurse, lab, store, accountant, dean
+HOSPITAL : all roles
+           modules: everything above + IPD, beds, nurse, lab, OT(opt), accountant,
+                    store, dean, calendar/events, advanced reports
+```
+
+Keep this table and `config/hms.php` in sync.
+
+---
+
+## 17. Build Order (do not jump the line)
+
+```
+1  Super Admin (tenant onboarding + admin + errors)      <-- start here
+2  Admin (roles, profile, dashboard, view-only clinical)
+3  Receptionist + Appointments (+ IPD admission)
+4  Doctor (prescription engine + lab orders + follow-up)
+5  Laboratory
+6  Nurse (IPD)
+7  Pharmacist + Store
+8  Accountant
+9  Dean + Calendar events
+10 Reports + Notifications
+11 Platform / multi-tenant hardening
+```
+
+---
+
+## 18. How to update this file
+
+1. Tick `- [ ]` → `- [x]` when a task is verified.
+2. Recompute the phase % = done / total, update the bar and the Overall line.
+3. Note the date next to major milestones.
+4. Keep this file committed so a crash never loses the roadmap.
+
+---
+
+_Document created for the HMS build. Next action: start Phase 1 (Super Admin)._

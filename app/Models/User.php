@@ -6,10 +6,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'designation',
         'department',
         'is_active',
+        'tenant_id',
     ];
 
     protected $hidden = [
@@ -39,6 +41,11 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(\App\Models\Tenant::class);
+    }
+
     public function isActive(): bool
     {
         return (bool) $this->is_active;
@@ -51,7 +58,17 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->roleSlug() === 'admin';
+        return in_array($this->roleSlug(), ['admin', 'super_admin'], true);
+    }
+
+    public function isPlatformAdmin(): bool
+    {
+        return $this->roleSlug() === 'super_admin';
+    }
+
+    public function getIsSuperAdminAttribute(): bool
+    {
+        return $this->isSuperAdmin();
     }
 
     public function roleSlug(): ?string

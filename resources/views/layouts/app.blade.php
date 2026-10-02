@@ -179,6 +179,15 @@
             document.getElementById(d).classList.add('active');
         }
     </script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            setTimeout(() => {
+                if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                    window.Alpine.initTree(document.body);
+                }
+            }, 150);
+        });
+    </script>
 </body>
 
 </html>

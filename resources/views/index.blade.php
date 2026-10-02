@@ -193,13 +193,27 @@
             </div>
         </div>
 
-        <div id="getintouch" class="hms-section wb wow fadeIn" style="padding-bottom:0;">
+        <div id="reach-us" class="hms-section wow fadeIn">
             <div class="container">
                 <div class="heading">
                     <h2>Get in Touch</h2>
                 </div>
+                <div class="hms-contact">
+                    <div class="hms-contact-card">
+                        <h4><i class="fa fa-map-marker"></i>Visit Us</h4>
+                        <p>{{ $site['address'] }}</p>
+                    </div>
+                    <div class="hms-contact-card">
+                        <h4><i class="fa fa-phone"></i>Call / Email</h4>
+                        <p><a href="tel:{{ $site['phone'] }}">{{ $site['phone'] }}</a><br>
+                            <a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a></p>
+                    </div>
+                    <div class="hms-contact-card">
+                        <h4><i class="fa fa-clock-o"></i>Working Hours</h4>
+                        <p>{{ $site['working_hours'] }}</p>
+                    </div>
+                </div>
             </div>
-            @livewire('contactus')
         </div>
     </div>
 @endsection

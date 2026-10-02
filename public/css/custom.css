@@ -1768,8 +1768,8 @@ main#main {
 
 @media (max-width: 767px) {
     .hms-hero {
-        margin-top: -145px;
-        padding-top: 160px;
+        margin-top: 0;
+        padding-top: 96px;
     }
     .hms-hero h1 {
         font-size: 25px;
@@ -1777,4 +1777,316 @@ main#main {
     .hms-book-grid .form-group {
         flex: 1 1 100%;
     }
+}
+
+/* ============================================================
+   HMS compact header (slim top bar + slim navbar)
+   ============================================================ */
+.header-top {
+    padding: 8px 0;
+}
+.header-top .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.header-top .container::before,
+.header-top .container::after {
+    display: none;
+}
+.header-top .navbar-brand {
+    float: none;
+    margin: 0;
+    padding: 0;
+    height: auto;
+    line-height: 1;
+}
+.navbar-brand img {
+    width: 148px;
+}
+.right-header {
+    float: none;
+    margin: 0;
+}
+.header-info {
+    float: none;
+    width: auto;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: nowrap;
+}
+.info-inner {
+    float: none;
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+.info-inner span.icontop {
+    float: none;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    padding: 0;
+    margin-right: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: none;
+}
+.info-inner span.icontop img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+.info-inner span.icontop i.fa-clock-o {
+    font-size: 14px;
+}
+.iconcont {
+    float: none;
+    font-size: 13px;
+    letter-spacing: 0;
+    margin: 0;
+}
+.iconcont a {
+    font-size: 13px;
+    color: #46586b;
+}
+.info-inner:hover span.icontop,
+.info-inner:focus span.icontop {
+    border-radius: 6px;
+}
+.header-bottom nav.main-menu ul.nav.navbar-nav > li a {
+    font-size: 13px;
+    padding: 13px 16px;
+    line-height: 1.5;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+.header-bottom nav.main-menu ul.nav.navbar-nav > li a:hover,
+.header-bottom nav.main-menu ul.nav.navbar-nav > li a:focus,
+.header-bottom nav.main-menu ul.nav.navbar-nav > li a.active {
+    box-shadow: none;
+}
+#custom-search-input {
+    margin: 7px 0;
+}
+#custom-search-input .form-control.input-lg {
+    height: 32px;
+    font-size: 13px;
+    width: 185px;
+    padding: 0 18px;
+}
+#custom-search-input button {
+    padding: 0 12px;
+}
+#custom-search-input button i {
+    font-size: 15px;
+}
+main#main {
+    padding-top: 105px;
+}
+
+/* ============================================================
+   HMS compact landing flow (theme uses floats everywhere)
+   ============================================================ */
+.hms-landing {
+    margin-top: -105px;
+}
+.hms-landing #about,
+.hms-landing .hms-section {
+    float: none;
+    width: 100%;
+    display: flow-root;
+    padding: 34px 0;
+}
+.hms-landing .heading {
+    float: none;
+    width: 100%;
+    margin: 0 0 22px;
+}
+.hms-landing .heading h2 {
+    float: none;
+    font-size: 22px;
+    margin: 0;
+    padding-bottom: 10px;
+    letter-spacing: 0;
+}
+.hms-landing .heading h2::after {
+    width: 46px;
+    height: 3px;
+}
+.hms-landing .hms-hero {
+    float: none;
+    margin-top: 0;
+    min-height: 300px;
+    padding: 110px 0 52px;
+}
+.hms-landing .hms-hero h1 {
+    font-size: 30px;
+}
+.hms-landing .hms-hero p {
+    font-size: 14px;
+}
+
+/* about */
+.hms-landing .hms-about-row .message-box .lead {
+    font-size: 14px;
+}
+.hms-landing .hms-about-row .post-media,
+.hms-landing .hms-about-row .post-media img {
+    width: 100%;
+    max-height: 270px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+.hms-landing .hms-dept-row {
+    margin-top: 18px;
+}
+.hms-landing .hms-dept-row .post-media img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+}
+.hms-landing .hms-dept-row .service-widget {
+    margin-bottom: 14px;
+}
+.hms-landing .hms-dept-row .service-widget h3 {
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+/* services */
+.hms-landing .serv,
+.hms-landing .hms-serv {
+    float: none;
+    width: auto;
+    margin: 0 0 14px;
+    text-align: left;
+    color: #24313f;
+}
+.hms-landing .hms-serv h4,
+.hms-landing .hms-serv p,
+.hms-landing .hms-serv .icon-service {
+    float: none;
+    width: auto;
+}
+.hms-landing .hms-serv h4 {
+    margin: 6px 0 4px;
+}
+.hms-landing .hms-serv p {
+    margin: 0;
+    line-height: 1.5;
+}
+.hms-landing .hms-serv .icon-service {
+    display: inline-block;
+    text-align: left;
+    margin: 0;
+}
+.hms-landing .hms-services .row {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+.hms-landing .hms-services .col-lg-8,
+.hms-landing .hms-services .col-lg-4 {
+    margin-bottom: 0;
+}
+
+/* doctors */
+.hms-landing .dev-list .widget {
+    margin-bottom: 14px;
+}
+.hms-landing .dev-list .widget img {
+    width: 100%;
+    height: 230px;
+    object-fit: cover;
+}
+.hms-landing .widget-title h3 {
+    font-size: 16px;
+}
+
+/* testimonials */
+.hms-landing #testimonials {
+    background-attachment: scroll;
+}
+.hms-landing .testimonial .desc h3 {
+    font-size: 16px;
+}
+.hms-landing .testimonial .desc .lead {
+    font-size: 14px;
+    line-height: 1.55;
+}
+.hms-landing .testi-meta img {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* compact contact strip (replaces the map block) */
+.hms-contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+.hms-contact .hms-contact-card {
+    flex: 1 1 220px;
+    background: #fff;
+    border: 1px solid var(--hms-line);
+    border-radius: 8px;
+    padding: 16px 18px;
+}
+.hms-contact .hms-contact-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--hms-dark);
+    margin: 0 0 6px;
+}
+.hms-contact .hms-contact-card h4 i {
+    color: var(--hms-primary);
+    margin-right: 6px;
+}
+.hms-contact .hms-contact-card p {
+    font-size: 13px;
+    color: var(--hms-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+.hms-contact .hms-contact-card a {
+    color: var(--hms-muted);
+}
+
+/* compact footer */
+.footer-area {
+    padding: 34px 0;
+}
+.footer-area .logo img {
+    width: 148px;
+    margin-bottom: 10px;
+}
+.footer-info h3,
+.subcriber-info h3 {
+    font-size: 15px;
+    margin: 0 0 12px;
+}
+.footer-info p,
+.footer-area p {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+.copyright-area {
+    padding: 12px 0;
+}
+.copyright-area .footer-text p {
+    font-size: 12.5px;
+    margin: 0;
+}
+.social-links li a {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    font-size: 14px;
 }

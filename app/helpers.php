@@ -79,6 +79,11 @@ if (! function_exists('hms_role_enabled')) {
             return false;
         }
 
+        // The platform super admin is never restricted by an institution mode.
+        if ($slug === 'super_admin') {
+            return true;
+        }
+
         $roles = hms_enabled_roles($mode);
 
         return $roles === null || in_array($slug, $roles, true);
@@ -99,6 +104,11 @@ if (! function_exists('hms_can')) {
 
         if (! $user) {
             return false;
+        }
+
+        // Platform super admin can access everything.
+        if (method_exists($user, 'isPlatformAdmin') && $user->isPlatformAdmin()) {
+            return true;
         }
 
         $slug = $user->roleSlug();

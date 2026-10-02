@@ -137,6 +137,16 @@
     <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/js/script.js') }}"></script>
     @livewireScripts
+
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            setTimeout(() => {
+                if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                    window.Alpine.initTree(document.body);
+                }
+            }, 150);
+        });
+    </script>
 </body>
 
 </html>

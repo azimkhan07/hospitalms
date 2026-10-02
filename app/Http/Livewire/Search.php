@@ -10,7 +10,7 @@ class Search extends Component
 
     public function search()
     {
-       dd( $this->item);
+        $this->redirect(route('site.doctors'));
     }
     public function render()
     {

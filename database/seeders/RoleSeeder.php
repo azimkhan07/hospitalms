@@ -16,11 +16,18 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             [
+                'name' => 'Super Admin',
+                'slug' => 'super_admin',
+                'level' => 0,
+                'module' => 'platform',
+                'description' => 'Platform owner. Creates hospitals/clinics and their admins. Not part of any tenant.',
+            ],
+            [
                 'name' => 'Admin',
                 'slug' => 'admin',
                 'level' => 0,
                 'module' => 'all',
-                'description' => 'Super admin. Full system control, roles, settings and all hospital data.',
+                'description' => 'Tenant admin. Full control of one hospital/clinic: roles, settings and all data.',
             ],
             [
                 'name' => 'Moderator',

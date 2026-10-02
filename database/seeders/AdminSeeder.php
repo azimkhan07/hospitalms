@@ -29,7 +29,6 @@ class AdminSeeder extends Seeder
             'hero_subtitle' => 'Book an appointment online or walk in — our specialists are here for you.',
             'emergency_title' => 'Emergency 24x7',
             'emergency_text' => 'Round-the-clock trauma and emergency care with on-call consultants.',
-            'working_horse' => 'Emergency 24x7 | OPD 8:00 AM - 8:00 PM',
             'working_hours' => 'OPD 8:00 AM - 8:00 PM',
             'address' => '14 Civil Line, Near Metro Hospital Road, Kathmandu',
             'phone' => '+977-1-5550199',
@@ -52,8 +51,38 @@ class AdminSeeder extends Seeder
 
         $roles = Role::pluck('id', 'slug');
 
+        $tenant = \App\Models\Tenant::firstOrCreate(
+            ['slug' => 'metro-hospital'],
+            [
+                'name' => 'Metro Multi-Speciality Hospital',
+                'mode' => Settings::where('key', 'institution_mode')->value('value') ?: 'hospital',
+                'phone' => $settings['phone'] ?? null,
+                'email' => $settings['email'] ?? null,
+                'address' => $settings['address'] ?? null,
+                'working_hours' => $settings['working_hours'] ?? null,
+                'logo' => $settings['logo'] ?? null,
+                'status' => 'active',
+                'facilities' => ['beds' => 350, 'staff' => 820, 'has_lab' => true, 'has_ot' => true, 'has_ambulance' => true],
+            ]
+        );
+
+        if (! empty($roles['super_admin'])) {
+            User::updateOrCreate(
+                ['email' => 'super@hms.com'],
+                [
+                    'name' => 'Platform Super Admin',
+                    'password' => bcrypt('123456'),
+                    'role_id' => $roles['super_admin'],
+                    'designation' => 'Super Admin',
+                    'department' => 'Platform',
+                    'is_active' => true,
+                    'tenant_id' => null,
+                ]
+            );
+        }
+
         $users = [
-            ['name' => 'Azim Khan', 'email' => 'azim@hms.com', 'role' => 'admin', 'designation' => 'Super Admin', 'department' => 'Administration'],
+            ['name' => 'Azim Khan', 'email' => 'azim@hms.com', 'role' => 'admin', 'designation' => 'Hospital Admin', 'department' => 'Administration'],
             ['name' => 'Dean Moderator', 'email' => 'mod@hms.com', 'role' => 'moderator', 'designation' => 'Dean', 'department' => 'Administration'],
             ['name' => 'Doctor Demo', 'email' => 'doc@hms.com', 'role' => 'doctor', 'designation' => 'Consultant', 'department' => 'General Medicine'],
             ['name' => 'Nurse Demo', 'email' => 'nurse@hms.com', 'role' => 'nurse', 'designation' => 'Staff Nurse', 'department' => 'Nursing'],
@@ -79,6 +108,7 @@ class AdminSeeder extends Seeder
                     'designation' => $row['designation'],
                     'department' => $row['department'],
                     'is_active' => true,
+                    'tenant_id' => $tenant->id,
                 ]
             );
         }
