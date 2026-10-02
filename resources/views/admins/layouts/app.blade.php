@@ -19,7 +19,7 @@
     @livewireStyles
 </head>
 
-<body class="clinic_version">
+<body class="clinic_version sa-panel">
 
     <div class="wrapper">
         <nav id="sidebar">

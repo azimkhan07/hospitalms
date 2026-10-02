@@ -64,8 +64,8 @@ class MeetingCalendar extends Component
             ? Carbon::parse($this->monthCursor)->startOfMonth()
             : Carbon::now()->startOfMonth();
 
-        $gridStart = $month->copy()->startOfMonth()->startOfWeek();
-        $gridEnd = $month->copy()->endOfMonth()->endOfWeek();
+        $gridStart = $month->copy()->startOfMonth()->startOfWeek(Carbon::SUNDAY);
+        $gridEnd = $month->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
 
         $canManage = hms_can('meetings.manage');
 
