@@ -243,6 +243,7 @@
             }, 150);
         });
     </script>
+    @stack('scripts')
 </body>
 
 </html>

@@ -12,7 +12,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'name', 'slug', 'mode', 'domain', 'subdomain', 'status',
-        'phone', 'email', 'address', 'city', 'country', 'working_hours',
+        'phone', 'email', 'address', 'city', 'state', 'country', 'working_hours',
         'logo', 'hero_image', 'facilities', 'trial_ends_at', 'created_by',
     ];
 

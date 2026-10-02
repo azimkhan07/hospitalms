@@ -63,13 +63,24 @@
                         <label style="font-size:13px">Address</label>
                         <input type="text" class="form-control" wire:model="address">
                     </div>
-                    <div class="col-md-3 form-group">
-                        <label style="font-size:13px">City</label>
-                        <input type="text" class="form-control" wire:model="city">
-                    </div>
-                    <div class="col-md-3 form-group">
+                    <div class="col-md-6 form-group">
                         <label style="font-size:13px">Country</label>
-                        <input type="text" class="form-control" wire:model="country">
+                        <select id="country-select" class="form-control" wire:model="country" data-init="{{ $country }}">
+                            <option value="">-- Select Country --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label style="font-size:13px">State / Province</label>
+                        <select id="state-select" class="form-control" data-init="{{ $state ?? '' }}" disabled>
+                            <option value="">-- Select State/Province --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label style="font-size:13px">City</label>
+                        <select id="city-select" class="form-control" data-init="{{ $city }}">
+                            <option value="">-- Select City --</option>
+                        </select>
+                        <input type="hidden" id="city-input" wire:model="city" data-init="{{ $city }}">
                     </div>
 
                     <div class="col-md-6 form-group">
@@ -184,9 +195,14 @@
                                         wire:model="admin_password" placeholder="min 6 characters">
                                     @error('admin_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
-                            </div>
-                        @endif
-                    </div>
+        </div>
+    @endif
+
+    @push('scripts')
+        <script src="{{ asset('js/country-state-city.js') }}"></script>
+        <script src="{{ asset('js/country-state-city-dropdown.js') }}"></script>
+    @endpush
+</div>
                 </div>
             @endif
 

@@ -37,6 +37,8 @@ class TenantForm extends Component
 
     public string $city = '';
 
+    public string $state = '';
+
     public string $country = '';
 
     public string $working_hours = '';
@@ -109,6 +111,7 @@ class TenantForm extends Component
         $this->email = (string) $tenant->email;
         $this->address = (string) $tenant->address;
         $this->city = (string) $tenant->city;
+        $this->state = (string) ($tenant->state ?? '');
         $this->country = (string) $tenant->country;
         $this->working_hours = (string) $tenant->working_hours;
         $this->domain = (string) $tenant->domain;
@@ -131,8 +134,8 @@ class TenantForm extends Component
     public function resetForm(): void
     {
         $this->reset([
-            'step', 'tenantId', 'name', 'slug', 'phone', 'email', 'address',
-            'city', 'country', 'working_hours', 'domain', 'subdomain',
+        'step', 'tenantId', 'name', 'slug', 'phone', 'email', 'address',
+        'city', 'state', 'country', 'working_hours', 'domain', 'subdomain',
             'admin_name', 'admin_email', 'admin_password', 'logo', 'hero_image',
             'existingLogo', 'existingHero', 'beds', 'staff', 'floors',
             'departments', 'services', 'has_lab', 'has_ot', 'has_ambulance',
