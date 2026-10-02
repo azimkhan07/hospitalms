@@ -41,7 +41,7 @@
                             @forelse ($departments as $department)
                                 <td>{{ $loop->index + 1 }}</td>
                                 <td>{{ $department->name }}</td>
-                                <td><img width="50px" height="50px" src="{{ $department->photo_path }}"
+                                <td><img width="50px" height="50px" src="{{ storage_url($department->photo_path, 'department-placeholder.jpg') }}"
                                           alt=""></td>
                                 <td>{{ $department->hod->doctor->employ->name }}</td>
                                 <td>{{ $department->block->blockname }}</td>

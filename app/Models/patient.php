@@ -20,4 +20,19 @@ class patient extends Model
         'bloodgroup',
         'photo_path',
     ];
+
+    public function appointments()
+    {
+        return $this->hasMany(appointment::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
+
+    public function stays()
+    {
+        return $this->hasMany(stay::class);
+    }
 }

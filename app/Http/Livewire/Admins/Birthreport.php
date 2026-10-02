@@ -6,12 +6,14 @@ use App\Models\birthreport as ModelsBirthreport;
 use App\Models\doctor;
 use App\Models\patient;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Birthreport extends Component
 {
 
@@ -103,10 +105,12 @@ class Birthreport extends Component
 
     public function render()
     {
+        if (! hms_can('births')) { abort(403); }
+
         return view('livewire.admins.birthreport',[
             'BirthReports' => ModelsBirthreport::latest()->paginate(10),
             'doctors' => doctor::all(),
             'patients' => patient::all(),
-        ])->layout('admins.layouts.app');
+        ]);
     }
 }

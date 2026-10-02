@@ -1,140 +1,172 @@
-<div>
-    <div class="content">
-        <div class="container">
-            <div class="page-title">
-                <h3 class="text-info">{{ env('APP_NAME') }} Appointments</h3>
+<div class="content">
+    <div class="container">
+        <div class="page-title">
+            <h3 class="text-info">Appointments</h3>
+        </div>
+
+        @if (session()->has('message'))
+            <div class="alert alert-success py-1 px-2">
+                {{ session('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div>
-                @if (session()->has('message'))
-                    <div class="alert alert-success">
-                        {{ session('message') }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+        @endif
+
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="box box-primary">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fas fa-calendar-plus text-info mr-1"></i>
+                            {{ $edit_appointment_id ? 'Edit Appointment' : 'Add New Appointment' }}
+                        </h3>
                     </div>
-                @endif
+                    <div class="box-body">
+                        <form wire:submit.prevent="add_appointment">
+                            <div class="form-group">
+                                <label>Patient</label>
+                                <select class="form-control form-control-sm" wire:model="patient">
+                                    <option value="">Choose patient</option>
+                                    @foreach ($patients as $p)
+                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('patient')
+                                    <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
+                                @enderror
+                                @if ($patients->isEmpty())
+                                    <span class="text-muted" style="font-size:10.5px">No patients registered yet.</span>
+                                @endif
+                            </div>
+
+                            <div class="form-group">
+                                <label>Doctor</label>
+                                <select class="form-control form-control-sm" wire:model="doctor">
+                                    <option value="">Choose doctor</option>
+                                    @foreach ($doctors as $d)
+                                        <option value="{{ $d->id }}">{{ $d->employ?->name ?? 'Doctor #'.$d->id }}</option>
+                                    @endforeach
+                                </select>
+                                @error('doctor')
+                                    <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
+                                @enderror
+                                @if ($doctors->isEmpty())
+                                    <span class="text-muted" style="font-size:10.5px">No doctors registered yet.</span>
+                                @endif
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label>Start</label>
+                                    <input type="datetime-local" class="form-control form-control-sm"
+                                        wire:model="start_timeee">
+                                    @error('start_timeee')
+                                        <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-6">
+                                    <label>End</label>
+                                    <input type="datetime-local" class="form-control form-control-sm"
+                                        wire:model="endtime">
+                                    @error('endtime')
+                                        <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select class="form-control form-control-sm" wire:model="status">
+                                    @foreach (['pending', 'confirmed', 'completed', 'cancelled'] as $s)
+                                        <option value="{{ $s }}">{{ ucfirst($s) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Notes <span class="text-muted">(optional)</span></label>
+                                <textarea rows="2" class="form-control form-control-sm" wire:model="notes"
+                                    placeholder="Reason, referral, preparation..."></textarea>
+                            </div>
+
+                            <div class="d-flex">
+                                @if ($edit_appointment_id)
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mr-1"
+                                        wire:click="cancelEdit">Cancel</button>
+                                @endif
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-check"></i> {{ $button_text }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="box box-primary">
-                <div class="box-body">
-                    <div class="text-info" wire:loading>Loading..</div>
-                    <form accept-charset="utf-8" class="shadow rounded p-3" wire:submit.prevent="add_appointment()">
-                        <div class="text-capitalize bg-dark p-2 shadow mb-3 text-center text-lg text-light rounded">
-                            {{ __('Add New appointment') }}</div>
 
-                        <div class="form-group">
-                            <label for="patient">Select Patient</label>
-                            <select name="patient" wire:model.lazy="patient" class="form-control" required>
-                                @forelse ($patients as $patient)
-                                    <option value="{{ $patient->id }}">{{ $patient->name }}</option>
-                                @empty
-                                    <option value="">No Fatient Found!</option>
-                                @endforelse
-                            </select>
-                            @error('patient')
-                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
-                            @enderror
-                        </div>
+            <div class="col-lg-8">
+                <div class="box box-primary">
+                    <div class="box-header d-flex align-items-center justify-content-between flex-wrap">
+                        <h3 class="box-title"><i class="fas fa-list text-info mr-1"></i> All Appointments</h3>
+                        <input type="search" class="form-control form-control-sm" style="max-width:220px"
+                            placeholder="Search patient..." wire:model.live.debounce.300ms="search">
+                    </div>
+                    <div class="box-body">
+                        <div class="text-info" wire:loading>Loading..</div>
 
-                        <div class="form-group">
-                            <label for="Nurse">Select Nurse</label>
-                            <select name="Nurse" wire:model.lazy="nurse" class="form-control" required>
-                                @forelse ($nurses as $nurse)
-                                    <option value="{{ $nurse->id }}">{{ $nurse->name }}</option>
-                                @empty
-                                    <option value="">No Nurse Found!</option>
-                                @endforelse
-                            </select>
-                            @error('nurse')
-                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-
-                        <div class="form-group">
-                            <label for="Doctor">Select Doctor</label>
-                            <select name="Doctor" wire:model.lazy="doctor" class="form-control" required>
-                                @forelse ($doctors as $doctor)
-                                    <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
-                                @empty
-                                    <option value="">No Doctor Found!</option>
-                                @endforelse
-                            </select>
-                            @error('doctor')
-                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="end_time">Start Time Of Appointment</label>
-                            <input type="datetime-local" name="end_time" class="form-control"
-                                placeholder="Set End Time Of Appointment" wire:model.lazy="start_timeee" />
-                            <p class="text-info">Current Value: {{ $start_timeee }}</p>
-                            @error('start_timeee')
-                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="end_time">End Time Of Appointment</label>
-                            <input type="datetime-local" name="end_time" class="form-control"
-                                placeholder="Set End Time Of Appointment" wire:model.lazy="endtime" />
-                            <p class="text-info">Current Value: {{ $endtime }}</p>
-                            @error('endtime')
-                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <input type="submit" class="btn btn-primary" value="{{ $button_text }}">
-                        </div>
-                    </form><br>
-                    <hr>
-
-                    <div class="text-capitalize bg-dark p-2 shadow mb-3 text-center text-lg text-light rounded">
-                        {{ __('All  appointments') }}</div>
-                    <table class="table table-hover" style="" id="">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Patient</th>
-                                <th>Prep Nurse</th>
-                                <th>Doctor</th>
-                                <th>Start Schduled Time</th>
-                                <th>End Time</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($appointments as $appointment)
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead>
                                 <tr>
-                                    <td>{{ $appointment->id }}</td>
-                                    <td>{{ $appointment->patient_id }}</td>
-                                    <td>{{ $appointment->nurse_id }}</td>
-                                    <td>{{ $appointment->doctor_id }}</td>
-                                    <td>{{ $appointment->intime }}</td>
-                                    <td>{{ $appointment->outtime }}</td>
-                                    <td>{{ $appointment->created_at }}</td>
-                                    <td class="text-right">
-                                        <button wire:click="edit({{ $appointment->id }})"
-                                            class="btn btn-outline-info btn-rounded"><i class="fas fa-pen"></i></button>
-                                        <button wire:click="delete({{ $appointment->id }})"
-                                            onclick="return confirm('{{ __('Are You Sure ?') }}')"
-                                            class="btn btn-outline-danger btn-rounded"><i
-                                                class="fas fa-trash"></i></button>
-                                    </td>
+                                    <th>#</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Status</th>
+                                    <th style="width:90px">Actions</th>
                                 </tr>
-                            @empty
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @forelse ($appointments as $item)
+                                    <tr>
+                                        <td>{{ $item->id }}</td>
+                                        <td>{{ $item->patient?->name ?? 'Removed patient' }}</td>
+                                        <td>{{ $item->doctor?->employ?->name ?? '-' }}</td>
+                                        <td>{{ optional($item->intime)->format('d M Y, h:i A') ?? '-' }}</td>
+                                        <td>{{ optional($item->outtime)->format('d M Y, h:i A') ?? 'Ongoing' }}</td>
+                                        <td>
+                                            <span class="badge badge-sm
+                                                @if ($item->status === 'completed') badge-success
+                                                @elseif ($item->status === 'cancelled') badge-danger
+                                                @elseif ($item->status === 'confirmed') badge-info
+                                                @else badge-warning @endif">
+                                                {{ ucfirst($item->status ?? 'pending') }}
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button wire:click="edit({{ $item->id }})" class="btn btn-xs btn-outline-info"
+                                                title="Edit"><i class="fas fa-pen"></i></button>
+                                            <button wire:click="delete({{ $item->id }})"
+                                                onclick="return confirm('Delete this appointment?')"
+                                                class="btn btn-xs btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-3">No appointments recorded.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+
+                        @if ($appointments->hasPages())
+                            <div class="mt-2">{{ $appointments->links() }}</div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>

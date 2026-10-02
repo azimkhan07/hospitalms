@@ -4,9 +4,11 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\doctor;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\block;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Blocks extends Component
 {
 
@@ -88,10 +90,12 @@ class Blocks extends Component
     }
     public function render()
     {
+        if (! hms_can('blocks')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.block.index', [
                 'blocks' => block::latest()->paginate(10),
-            ])->layout('admins.layouts.app');
+            ]);
         } else if ($this->_page == "create") {
             return view('livewire.admins.block.create');
         } else if ($this->_page == "edit") {

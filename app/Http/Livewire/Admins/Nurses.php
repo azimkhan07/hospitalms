@@ -4,12 +4,14 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\nurse;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Nurses extends Component
 {
     use WithFileUploads;
@@ -163,8 +165,10 @@ class Nurses extends Component
 
     public function render()
     {
+        if (! hms_can('nurses')) { abort(403); }
+
         return view('livewire.admins.nurses',[
             'nurses' =>nurse::latest()->paginate(10),
-        ])->layout('admins.layouts.app');
+        ]);
     }
 }

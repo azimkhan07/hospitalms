@@ -5,8 +5,10 @@ namespace App\Http\Livewire\Admins;
 use App\Models\department;
 use App\Models\rooms as ModelsRooms;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Rooms extends Component
 {
     use WithPagination;
@@ -127,10 +129,12 @@ class Rooms extends Component
     }
     public function render()
     {
+        if (! hms_can('rooms')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.rooms.index', [
                 'rooms' => ModelsRooms::latest()->paginate(10),
-            ])->layout('admins.layouts.app');
+            ]);
         } else if ($this->_page == "create") {
             return view('livewire.admins.rooms.create', [
                 'departments' => department::all()

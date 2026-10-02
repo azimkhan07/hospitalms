@@ -4,8 +4,10 @@ namespace App\Http\Livewire\Admins;
 use App\Models\bill;
 use App\Models\patient;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Bills extends Component
 {
 
@@ -97,9 +99,11 @@ class Bills extends Component
 }
     public function render()
     {
+        if (! hms_can('bills')) { abort(403); }
+
         return view('livewire.admins.bills',[
             'bills' =>bill::latest()->paginate(10),
             'patients' =>patient::all()
-        ])->layout('admins.layouts.app');
+        ]);
     }
 }

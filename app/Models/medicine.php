@@ -8,10 +8,32 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class medicine extends Model
 {
-    use HasFactory,softDeletes;
-    protected $fillable=[
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
         'price',
         'quantity',
         'code',
+        'name',
+        'expiry_date',
+        'batch_no',
+        'manufacturer',
+        'stock',
     ];
+
+    protected $casts = [
+        'expiry_date' => 'date',
+    ];
+
+    public function scopeUsable($query)
+    {
+        return $query->whereNull('deleted_at')
+            ->whereNotNull('name')
+            ->where(function ($q) {
+                $q->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', today());
+            })
+            ->where(function ($q) {
+                $q->whereNull('stock')->orWhere('stock', '>', 0);
+            });
+    }
 }

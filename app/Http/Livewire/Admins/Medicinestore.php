@@ -3,9 +3,11 @@
 namespace App\Http\Livewire\Admins;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use \App\Models\medicine;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Medicinestore extends Component
 {
     use WithPagination;
@@ -100,8 +102,10 @@ class Medicinestore extends Component
 }
     public function render()
     {
+        if (! hms_can('medicines')) { abort(403); }
+
         return view('livewire.admins.medicinestore',[
             'medicines' => medicine::latest()->paginate(10)
-        ])->layout('admins.layouts.app');
+        ]);
     }
 }

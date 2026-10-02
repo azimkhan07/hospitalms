@@ -3,162 +3,48 @@
 @section('content')
 <div id="doctors" class="parallax section db" data-stellar-background-ratio="0.4" style="background:#fff;" data-scroll-id="doctors" tabindex="-1">
     <div class="container">
-  
-     <div class="heading">
-           <span class="icon-logo"><img src="images/icon-logo.png" alt="#"></span>
-           <h2>The Specialist Clinic</h2>
+
+        <div class="heading">
+            <span class="icon-logo"><img src="{{ asset('images/icon-logo.png') }}" alt="#"></span>
+            <h2>Our Specialists</h2>
         </div>
-  
+
         <div class="row dev-list text-center">
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.2s" style="visibility: visible; animation-duration: 1s; animation-delay: 0.2s; animation-name: fadeIn;">
-                <div class="widget clearfix">
-                    <img src="images/doctor_01.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Soren Bo Bostian</h3>
-                        <small>Clinic Owner</small>
+            @forelse ($doctors as $doctor)
+                <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.2s">
+                    <div class="widget clearfix">
+                        <img src="{{ storage_url($doctor->image ?? null, 'employee-placeholder.jpg') }}" alt="{{ $doctor->name }}" class="img-responsive img-rounded">
+                        <div class="widget-title">
+                            <h3>{{ $doctor->name }}</h3>
+                            <small>{{ $doctor->qualification ?: 'Consultant' }}</small>
+                        </div>
+                        <!-- end title -->
+                        <p>{{ $doctor->about ?: 'Consultant at ' . $site['name'] . '.' }}</p>
+
+                        <div class="footer-social">
+                            <a href="{{ $doctor->facebook ?: $site['facebook'] }}" class="btn grd1"><i class="fa fa-facebook"></i></a>
+                            <a href="{{ $doctor->twitter ?: $site['twitter'] }}" class="btn grd1"><i class="fa fa-twitter"></i></a>
+                            <a href="{{ $doctor->linkedin ?: $site['linkedin'] }}" class="btn grd1"><i class="fa fa-linkedin"></i></a>
+                            <a href="{{ $doctor->instagram ?: $site['instagram'] }}" class="btn grd1"><i class="fa fa-instagram"></i></a>
+                        </div>
+                    </div><!--widget -->
+                </div><!-- end col -->
+            @empty
+                @for ($i = 1; $i <= 6; $i++)
+                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn">
+                        <div class="widget clearfix">
+                            <img src="{{ asset('images/doctor_0' . (($i - 1) % 3 + 1) . '.jpg') }}" alt="" class="img-responsive img-rounded">
+                            <div class="widget-title">
+                                <h3>Consultant</h3>
+                                <small>{{ ['Cardiology', 'Neurology', 'Orthopaedics', 'Paediatrics', 'Gynaecology', 'General Medicine'][$i - 1] }}</small>
+                            </div>
+                            <p>Doctor profiles will appear here once consultants are added from the admin panel.</p>
+                        </div>
                     </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-  
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.4s" style="visibility: visible; animation-duration: 1s; animation-delay: 0.4s; animation-name: fadeIn;">
-                <div class="widget clearfix">
-                    <img src="images/doctor_02.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Bryan Saftler</h3>
-                        <small>Internal Diseases</small>
-                    </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.4s" style="visibility: visible; animation-duration: 1s; animation-delay: 0.4s; animation-name: fadeIn;">
-                <div class="widget clearfix">
-                    <img src="images/doctor_02.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Bryan Saftler</h3>
-                        <small>Internal Diseases</small>
-                    </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.4s" style="visibility: visible; animation-duration: 1s; animation-delay: 0.4s; animation-name: fadeIn;">
-                <div class="widget clearfix">
-                    <img src="images/doctor_02.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Bryan Saftler</h3>
-                        <small>Internal Diseases</small>
-                    </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.4s" style="visibility: visible; animation-duration: 1s; animation-delay: 0.4s; animation-name: fadeIn;">
-                <div class="widget clearfix">
-                    <img src="images/doctor_02.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Bryan Saftler</h3>
-                        <small>Internal Diseases</small>
-                    </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.4s" style="visibility: visible; animation-duration: 1s; animation-delay: 0.4s; animation-name: fadeIn;">
-                <div class="widget clearfix">
-                    <img src="images/doctor_02.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Bryan Saftler</h3>
-                        <small>Internal Diseases</small>
-                    </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn" data-wow-duration="1s" data-wow-delay="0.4s" style="visibility: visible; animation-duration: 1s; animation-delay: 0.4s; animation-name: fadeIn;">
-                <div class="widget clearfix">
-                    <img src="images/doctor_02.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Bryan Saftler</h3>
-                        <small>Internal Diseases</small>
-                    </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-  
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 wow fadeIn">
-                <div class="widget clearfix">
-                    <img src="images/doctor_03.jpg" alt="" class="img-responsive img-rounded">
-                    <div class="widget-title">
-                        <h3>Matthew Bayliss</h3>
-                        <small>Orthopedics Expert</small>
-                    </div>
-                    <!-- end title -->
-                    <p>Hello guys, I am Soren from Sirbistana. I am senior art director and founder of Violetta.</p>
-  
-                    <div class="footer-social">
-                        <a href="#" class="btn grd1"><i class="fa fa-facebook"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-github"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-twitter"></i></a>
-                        <a href="#" class="btn grd1"><i class="fa fa-linkedin"></i></a>
-                    </div>
-                </div><!--widget -->
-            </div><!-- end col -->
-  
+                @endfor
+            @endforelse
         </div><!-- end row -->
     </div><!-- end container -->
-  </div>
+</div>
 
 @endsection

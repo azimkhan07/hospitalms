@@ -6,8 +6,10 @@ use App\Models\beds as ModelsBeds;
 use App\Models\rooms;
 use App\Models\patient;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Beds extends Component
 {
 
@@ -129,10 +131,12 @@ class Beds extends Component
     }
     public function render()
     {
+        if (! hms_can('beds')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.beds.index', [
                 'beds' => ModelsBeds::latest()->paginate(10)
-            ])->layout('admins.layouts.app');
+            ]);
         } else if ($this->_page == "create") {
             return view('livewire.admins.beds.create', [
                 'patients' => patient::all(),

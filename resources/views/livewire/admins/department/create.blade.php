@@ -57,7 +57,7 @@
                             @if ($edit_photo)
                                 <br>Old Photo Preview:<br>
                                 <img width="20%" height="20%"
-                                    src="{{ env('APP_URL') . 'storage/' . $edit_photo }}">
+                                    src="{{ storage_url($edit_photo) }}">
                             @endif
 
                             <div wire:loading wire:target="photo">Uploading...</div><br>

@@ -16,3 +16,9 @@ $('#sidebarCollapse').on('click', function() {
 //         $('#sidebar, #body').addClass('active');
 //     }
 // });
+
+// Nested sidebar submenu toggle
+$(document).on('click', '#sidebar ul.components a.nav-group-toggle', function(e) {
+    e.preventDefault();
+    $(this).closest('li.nav-group').toggleClass('open');
+});

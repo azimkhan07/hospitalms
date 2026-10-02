@@ -3,9 +3,11 @@
 namespace App\Http\Livewire\Admins;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\subscriber;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Subscibers extends Component
 {
     use WithPagination;
@@ -20,8 +22,10 @@ class Subscibers extends Component
 }
     public function render()
     {
+        if (! hms_can('subscribers')) { abort(403); }
+
         return view('livewire.admins.subscibers',[
             'subscribers' => subscriber::latest()->paginate(10)
-        ])->layout('admins.layouts.app');
+        ]);
     }
 }

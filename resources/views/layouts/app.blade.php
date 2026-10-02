@@ -2,7 +2,7 @@
 
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @php
-    $settings = \App\Models\Settings::pluck('value', 'key')->toArray();
+    $site = \App\Models\SiteContent::get();
 @endphp
 
 <head>
@@ -12,7 +12,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ $site['name'] }} | {{ $site['tagline'] }}</title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -21,23 +21,22 @@
     <!-- Mobile Metas -->
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
     <!-- Site Icons -->
-    <link rel="shortcut icon" href="{{ asset('storage/' . ($settings['icon'] ?? 'default.png')) }}"
-        type="image/x-icon" />
+    <link rel="shortcut icon" href="{{ storage_url($site['icon'], 'default.png') }}" type="image/x-icon" />
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ config('app.url') }}css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <!-- Site CSS -->
-    <link rel="stylesheet" href="{{ config('app.url') }}css/style.css">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <!-- Colors CSS -->
-    <link rel="stylesheet" href="{{ config('app.url') }}css/colors.css">
+    <link rel="stylesheet" href="{{ asset('css/colors.css') }}">
     <!-- ALL VERSION CSS -->
-    <link rel="stylesheet" href="{{ config('app.url') }}css/versions.css">
+    <link rel="stylesheet" href="{{ asset('css/versions.css') }}">
     <!-- Responsive CSS -->
-    <link rel="stylesheet" href="{{ config('app.url') }}css/responsive.css">
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ config('app.url') }}css/custom.css">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <!-- Modernizer for Portfolio -->
-    <script src="js/modernizer.js"></script>
+    <script src="{{ asset('js/modernizer.js') }}"></script>
     <!-- [if lt IE 9] -->
     @livewireStyles
 </head>
@@ -55,24 +54,23 @@
         <div class="header-top wow fadeIn">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}"><img
-                        src="{{ asset('storage/' . ($settings['logo'] ?? 'default.png')) }}" alt="logo image "></a>
+                        src="{{ storage_url($site['logo'], 'default.png') }}" alt="{{ $site['name'] }}"></a>
                 <div class="right-header">
                     <div class="header-info">
                         <div class="info-inner">
                             <span class="icontop"><img src="{{ asset('images/phone-icon.png') }}"
                                     alt="#"></span>
-                            <span class="iconcont"><a
-                                    href="tel:{{ $settings['phone'] ?? '123 123 123' }}">{{ $settings['phone'] ?? '123 123 123' }}</a></span>
+                            <span class="iconcont"><a href="tel:{{ $site['phone'] ?? '123 123 123' }}">{{ $site['phone'] ?? '123 123 123' }}</a></span>
                         </div>
                         <div class="info-inner">
                             <span class="icontop"><i class="fa fa-envelope" aria-hidden="true"></i></span>
                             <span class="iconcont"><a data-scroll
-                                    href="mailto:{{ $settings['email'] ?? 'tauseed@test.com' }}">{{ $settings['email'] ?? 'tauseed@test.com' }}</a></span>
+                                    href="mailto:{{ $site['email'] ?? 'info@hospital.test' }}">{{ $site['email'] ?? 'info@hospital.test' }}</a></span>
                         </div>
                         <div class="info-inner">
                             <span class="icontop"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
                             <span class="iconcont"><a data-scroll href="#">Daily:
-                                    {{ $settings['working_horse'] ?? '7:00 AM - 8:00 PM' }}</a></span>
+                                    {{ $site['working_hours'] }}</a></span>
                         </div>
                     </div>
                 </div>
@@ -96,7 +94,7 @@
                             <li onclick="check_active('Doctors')"><a id="Doctors" data-scroll
                                     href="{{ url('docters') }}">Doctors</a></li>
                             <li onclick="check_active('Departments')"><a id="Departments" data-scroll
-                                    href="#departments">Departments</a></li>
+                                    href="{{ url('/#departments') }}">Departments</a></li>
                             <li onclick="check_active('About')"><a id="About" data-scroll
                                     href="{{ url('/about') }}">About us</a></li>
                             <li onclick="check_active('Contact')"><a id="Contact" data-scroll
@@ -104,7 +102,7 @@
                             @auth
                                 @if (auth()->user()->is_super_admin)
                                     <li onclick="check_active('admin-area')"><a id="admin-area" data-scroll
-                                            href="{{ route('admin_settings') }}">Admin Area</a></li>
+                                            href="{{ route('admin_dashboard') }}">Admin Area</a></li>
                                 @endif
                             @endauth
                         </ul>
@@ -124,9 +122,9 @@
                 <div class="col-md-4">
                     <div class="logo padding">
                         <a href="{{ url('/') }}">
-                            <img src="{{ asset('storage/' . ($settings['logo'] ?? 'default.png')) }}" alt="logo">
+                            <img src="{{ storage_url($site['logo'], 'default.png') }}" alt="{{ $site['name'] }}">
                         </a>
-                        <p>{{ $settings['description'] ?? 'hi this isLocavore pork belly scen ester pine est chill wave microdosing pop uple itarian cliche artisan.' }}
+                        <p>{{ $site['about'] ?? $site['name'] . ' provides multi-speciality care with 24x7 emergency support.' }}
                         </p>
                     </div>
                 </div>
@@ -134,12 +132,12 @@
                     <div class="footer-info padding">
                         <h3>CONTACT US</h3>
                         <p><i class="fa fa-map-marker"
-                                aria-hidden="true"></i>{{ $settings['address'] ?? 'distric abc P/O xyz sorana' }}
+                                aria-hidden="true"></i>{{ $site['address'] ?? 'Hospital address' }}
                         </p>
                         <p><i class="fa fa-paper-plane"
-                                aria-hidden="true"></i>{{ $settings['email'] ?? 'tauseed@test.com' }}
+                                aria-hidden="true"></i>{{ $site['email'] ?? 'info@hospital.test' }}
                         </p>
-                        <p><i class="fa fa-phone" aria-hidden="true"></i>{{ $settings['phone'] ?? '123 123 123' }}
+                        <p><i class="fa fa-phone" aria-hidden="true"></i>{{ $site['phone'] ?? '123 123 123' }}
                         </p>
                     </div>
                 </div>
@@ -152,19 +150,18 @@
             <div class="row">
                 <div class="col-md-8">
                     <div class="footer-text">
-                        <p>© {{ date('Y') }} <a id="tw" href="{{ url('') }}"
-                                target="_blank">{{ env('APP_NAME') }}</a> , Inc</p>
+                        <p>&copy; {{ date('Y') }} <a id="tw" href="{{ url('/') }}"
+                                target="_blank">{{ $site['name'] }}</a>. All rights reserved.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="social">
                         <ul class="social-links">
-                            <li><a href=""><i class="fa fa-rss"></i></a></li>
-                            <li><a href=""><i class="fa fa-facebook"></i></a></li>
-                            <li><a href=""><i class="fa fa-twitter"></i></a></li>
-                            <li><a href=""><i class="fa fa-google-plus"></i></a></li>
-                            <li><a href=""><i class="fa fa-youtube"></i></a></li>
-                            <li><a href=""><i class="fa fa-pinterest"></i></a></li>
+                            <li><a href="{{ $site['facebook'] }}"><i class="fa fa-facebook"></i></a></li>
+                            <li><a href="{{ $site['twitter'] }}"><i class="fa fa-twitter"></i></a></li>
+                            <li><a href="{{ $site['linkedin'] }}"><i class="fa fa-linkedin"></i></a></li>
+                            <li><a href="{{ $site['instagram'] }}"><i class="fa fa-instagram"></i></a></li>
+                            <li><a href="{{ $site['youtube'] }}"><i class="fa fa-youtube"></i></a></li>
                         </ul>
                     </div>
                 </div>
@@ -174,13 +171,12 @@
     <!-- end copyrights -->
     @livewireScripts
     <!-- all js files -->
-    {{-- <script src="js/all.js"></script> --}}
     <script src="{{ asset('js/all-in-one.js') }}"></script>
     <!-- all plugins -->
     <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         function check_active(d) {
-            document.getElementById(d).addAttribute('class', 'active');
+            document.getElementById(d).classList.add('active');
         }
     </script>
 </body>

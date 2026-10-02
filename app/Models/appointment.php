@@ -4,29 +4,48 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class appointment extends Model
 {
     use HasFactory;
-    protected $fillable=[
+
+    protected $fillable = [
         'patient_id',
         'doctor_id',
         'intime',
         'outtime',
+        'status',
+        'notes',
+        'description',
+        'prescription',
     ];
 
-    public function patient(){
+    protected $casts = [
+        'intime' => 'datetime',
+        'outtime' => 'datetime',
+    ];
+
+    /**
+     * The legacy `description` column is NOT NULL without a database default,
+     * so seed a blank value for every insert.
+     */
+    protected $attributes = [
+        'description' => '',
+        'status' => 'pending',
+    ];
+
+    public function patient()
+    {
         return $this->belongsTo(patient::class);
     }
 
-    public function doctor(){
+    public function doctor()
+    {
         return $this->belongsTo(doctor::class);
     }
 
-    public function checkups(){
+    public function checkups()
+    {
         return $this->hasMany(patientCheckup::class);
     }
-
-
 }

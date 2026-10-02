@@ -12,42 +12,42 @@
              <div class="inner-services">
                 <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                    <div class="serv">
-                      <span class="icon-service"><img src="images/service-icon1.png" alt="#" /></span>
+                      <span class="icon-service"><img src="{{ asset('images/service-icon1.png') }}" alt="#" /></span>
                       <h4>PREMIUM FACILITIES</h4>
                       <p>Lorem Ipsum is simply dummy text of the printing.</p>
                    </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                    <div class="serv">
-                      <span class="icon-service"><img src="images/service-icon2.png" alt="#" /></span>
+                      <span class="icon-service"><img src="{{ asset('images/service-icon2.png') }}" alt="#" /></span>
                       <h4>LARGE LABORATORY</h4>
                       <p>Lorem Ipsum is simply dummy text of the printing.</p>
                    </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                    <div class="serv">
-                      <span class="icon-service"><img src="images/service-icon3.png" alt="#" /></span>
+                      <span class="icon-service"><img src="{{ asset('images/service-icon3.png') }}" alt="#" /></span>
                       <h4>DETAILED SPECIALIST</h4>
                       <p>Lorem Ipsum is simply dummy text of the printing.</p>
                    </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                    <div class="serv">
-                      <span class="icon-service"><img src="images/service-icon4.png" alt="#" /></span>
+                      <span class="icon-service"><img src="{{ asset('images/service-icon4.png') }}" alt="#" /></span>
                       <h4>CHILDREN CARE CENTER</h4>
                       <p>Lorem Ipsum is simply dummy text of the printing.</p>
                    </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                    <div class="serv">
-                      <span class="icon-service"><img src="images/service-icon5.png" alt="#" /></span>
+                      <span class="icon-service"><img src="{{ asset('images/service-icon5.png') }}" alt="#" /></span>
                       <h4>FINE INFRASTRUCTURE</h4>
                       <p>Lorem Ipsum is simply dummy text of the printing.</p>
                    </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                    <div class="serv">
-                      <span class="icon-service"><img src="images/service-icon6.png" alt="#" /></span>
+                      <span class="icon-service"><img src="{{ asset('images/service-icon6.png') }}" alt="#" /></span>
                       <h4>ANYTIME BLOOD BANK</h4>
                       <p>Lorem Ipsum is simply dummy text of the printing.</p>
                    </div>
@@ -126,46 +126,29 @@
        <!-- end row -->
       <hr class="hr1">
       <div class="row">
-         <div class="col-md-3 col-sm-6 col-xs-12">
-            <div class="service-widget">
-               <div class="post-media wow fadeIn">
-                  <a href="images/clinic_01.jpg" data-rel="prettyPhoto[gal]" class="hoverbutton global-radius"><i class="flaticon-unlink"></i></a>
-                  <img src="images/clinic_01.jpg" alt="" class="img-responsive">
+         @forelse ($departments->take(4) as $dept)
+            <div class="col-md-3 col-sm-6 col-xs-12">
+               <div class="service-widget">
+                  <div class="post-media wow fadeIn">
+                     <img src="{{ storage_url($dept->photo_path, 'department-placeholder.jpg') }}" alt="{{ $dept->name }}" class="img-responsive">
+                  </div>
+                  <h3>{{ $dept->name }}</h3>
                </div>
-               <h3>Digital Control Center</h3>
+               <!-- end service -->
             </div>
-            <!-- end service -->
-         </div>
-         <div class="col-md-3 col-sm-6 col-xs-12">
-            <div class="service-widget">
-               <div class="post-media wow fadeIn">
-                  <a href="images/clinic_02.jpg" data-rel="prettyPhoto[gal]" class="hoverbutton global-radius"><i class="flaticon-unlink"></i></a>
-                  <img src="images/clinic_02.jpg" alt="" class="img-responsive">
+         @empty
+            @for ($i = 1; $i <= 4; $i++)
+               <div class="col-md-3 col-sm-6 col-xs-12">
+                  <div class="service-widget">
+                     <div class="post-media wow fadeIn">
+                        <img src="{{ asset('images/clinic_0' . $i . '.jpg') }}" alt="" class="img-responsive">
+                     </div>
+                     <h3>{{ ['Cardiology', 'Neurology', 'Orthopaedics', 'Paediatrics'][$i - 1] }}</h3>
+                  </div>
+                  <!-- end service -->
                </div>
-               <h3>Hygienic Operating Room</h3>
-            </div>
-            <!-- end service -->
-         </div>
-         <div class="col-md-3 col-sm-6 col-xs-12">
-            <div class="service-widget">
-               <div class="post-media wow fadeIn">
-                  <a href="images/clinic_03.jpg" data-rel="prettyPhoto[gal]" class="hoverbutton global-radius"><i class="flaticon-unlink"></i></a>
-                  <img src="images/clinic_03.jpg" alt="" class="img-responsive">
-               </div>
-               <h3>Specialist Physicians</h3>
-            </div>
-            <!-- end service -->
-         </div>
-         <div class="col-md-3 col-sm-6 col-xs-12">
-            <div class="service-widget">
-               <div class="post-media wow fadeIn">
-                  <a href="images/clinic_01.jpg" data-rel="prettyPhoto[gal]" class="hoverbutton global-radius"><i class="flaticon-unlink"></i></a>
-                  <img src="images/clinic_01.jpg" alt="" class="img-responsive">
-               </div>
-               <h3>Digital Control Center</h3>
-            </div>
-            <!-- end service -->
-         </div>
+            @endfor
+         @endforelse
       </div>
       <!-- end row -->
     </div>

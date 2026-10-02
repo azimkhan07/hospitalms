@@ -5,8 +5,10 @@ namespace App\Http\Livewire\Admins;
 use App\Models\hod;
 use App\Models\doctor;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Hods extends Component
 {
     use WithPagination;
@@ -78,10 +80,12 @@ class Hods extends Component
 
     public function render()
     {
+        if (! hms_can('hods')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.hod.hods', [
                 'hods' => hod::latest()->paginate(10),
-            ])->layout('admins.layouts.app');
+            ]);
         } else if ($this->_page == "create") {
             $ids = hod::pluck('doctor_id')->toArray();
             return view('livewire.admins.hod.create', [

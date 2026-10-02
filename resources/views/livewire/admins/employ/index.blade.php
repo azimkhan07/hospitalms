@@ -56,8 +56,8 @@
                                     <td>{{ $loop->index + 1 }}</td>
                                     <td>
                                         @if ($employee->image)
-                                            <a href="{{ asset('storage/' . $employee->image) }}" target="_blank">
-                                                <img src="{{ asset('storage/' . $employee->image) }}"
+                                            <a href="{{ storage_url($employee->image) }}" target="_blank">
+                                                <img src="{{ storage_url($employee->image) }}"
                                                     alt="Employee Photo"
                                                     style="width: 90px; height: 90px;border-radius: 50%">
                                             </a>

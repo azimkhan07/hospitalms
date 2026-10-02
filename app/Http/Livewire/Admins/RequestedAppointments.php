@@ -5,10 +5,12 @@ namespace App\Http\Livewire\Admins;
 use App\Models\appointment;
 use App\Models\doctor;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\requestedAppointment;
 use App\Models\patient;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class RequestedAppointments extends Component
 {
     use WithPagination;
@@ -130,21 +132,23 @@ class RequestedAppointments extends Component
     }
     public function render()
     {
+        if (! hms_can('appointments')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.requested-appointments.index', [
                 'appointments' => requestedAppointment::latest()->paginate(10),
-            ])->layout('admins.layouts.app');
+            ]);
         } elseif ($this->_page == "create") {
             return view('livewire.admins.requested-appointments.create', [
                 'patients' => patient::all(),
                 'doctors' => doctor::all(),
-            ])->layout('admins.layouts.app');
+            ]);
         } elseif ($this->_page == "edit") {
             return view('livewire.admins.requested-appointments.edit', [
                 'appointment' => requestedAppointment::findOrFail($this->edit_operation_report_id),
                 'doctors' => doctor::all(),
                 'patients' => patient::all(),
-            ])->layout('admins.layouts.app');
+            ]);
         }
     }
 }

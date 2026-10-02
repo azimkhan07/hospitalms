@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -10,27 +11,15 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('index');
-});
+Route::get('/', [SiteController::class, 'index'])->name('site.index');
 
-Route::get('/about', function () {
-    return view('about');
-});
+Route::get('/about', [SiteController::class, 'about'])->name('site.about');
 
-Route::get('/contact', function () {
-    return view('contact');
-});
+Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
 
-Route::get('/docters', function () {
-    return view('docter');
-});
+Route::get('/docters', [SiteController::class, 'doctors'])->name('site.doctors');
 
-Route::view('/services', 'services');
-
-Route::get('/app', function () {
-    return view('layouts.app');
-});
+Route::get('/services', [SiteController::class, 'services'])->name('site.services');
 
 
 /*
@@ -55,6 +44,20 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
     Route::get('/dashboard', App\Http\Livewire\Admins\Dashboard::class)->name('admin_dashboard');
 
     Route::get('/settings', App\Http\Livewire\Admins\Settings::class)->name('admin_settings');
+
+    Route::get('/meetings', App\Http\Livewire\Admins\MeetingCalendar::class)->name('admin_meetings');
+
+    Route::get('/leave', App\Http\Livewire\Admins\LeaveRequests::class)->name('admin_leave');
+
+    Route::get('/staff', App\Http\Livewire\Admins\StaffDirectory::class)->name('admin_staff');
+
+    Route::get('/prescriptions', App\Http\Livewire\Admins\Prescriptions::class)->name('admin_prescriptions');
+
+    Route::get('/patient-history', App\Http\Livewire\Admins\PatientHistory::class)->name('admin_history');
+
+    Route::get('/discharges', App\Http\Livewire\Admins\DischargeHistory::class)->name('admin_discharges');
+
+    Route::get('/expired-medicines', App\Http\Livewire\Admins\ExpiredMedicines::class)->name('admin_expired_medicines');
 
     Route::get('/nurses', App\Http\Livewire\Admins\Nurses::class)->name('nurses');
 

@@ -1,0 +1,77 @@
+/*
+ * Flaticon v1 (local font) - generated from repo font metadata.
+ */
+
+@font-face {
+  font-family: 'Flaticon';
+  src: url('/fonts/Flaticon.eot');
+  src: url('/fonts/Flaticon.eot?#iefix') format('embedded-opentype'),
+       url('/fonts/Flaticon.woff') format('woff'),
+       url('/fonts/Flaticon.ttf') format('truetype'),
+       url('/fonts/Flaticon.svg#Flaticon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.flaticon,
+[class*="flaticon-"] {
+  font-family: 'Flaticon';
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  speak: none;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.flaticon-amazon-logo:before { content: "\f120"; }
+.flaticon-ambulance:before { content: "\f121"; }
+.flaticon-android:before { content: "\f122"; }
+.flaticon-apple:before { content: "\f123"; }
+.flaticon-bathtub:before { content: "\f124"; }
+.flaticon-binoculars:before { content: "\f125"; }
+.flaticon-briefcase:before { content: "\f126"; }
+.flaticon-calendar:before { content: "\f127"; }
+.flaticon-cer-file-format:before { content: "\f128"; }
+.flaticon-cloud-computing:before { content: "\f129"; }
+.flaticon-cloud-computing-1:before { content: "\f12a"; }
+.flaticon-coding:before { content: "\f12b"; }
+.flaticon-coupon:before { content: "\f12c"; }
+.flaticon-cup:before { content: "\f12d"; }
+.flaticon-customer-service:before { content: "\f12e"; }
+.flaticon-devices:before { content: "\f12f"; }
+.flaticon-domain-registration:before { content: "\f130"; }
+.flaticon-download:before { content: "\f131"; }
+.flaticon-family-room:before { content: "\f132"; }
+.flaticon-first-aid-kit:before { content: "\f133"; }
+.flaticon-folder:before { content: "\f134"; }
+.flaticon-full-bed:before { content: "\f135"; }
+.flaticon-github:before { content: "\f136"; }
+.flaticon-happy:before { content: "\f137"; }
+.flaticon-hosting:before { content: "\f138"; }
+.flaticon-house:before { content: "\f139"; }
+.flaticon-idea:before { content: "\f13a"; }
+.flaticon-lifesaver-security-sportive-tool:before { content: "\f13b"; }
+.flaticon-line-graph:before { content: "\f13c"; }
+.flaticon-list:before { content: "\f13d"; }
+.flaticon-locked:before { content: "\f13e"; }
+.flaticon-mail:before { content: "\f13f"; }
+.flaticon-money:before { content: "\f140"; }
+.flaticon-new-file:before { content: "\f141"; }
+.flaticon-padlock:before { content: "\f142"; }
+.flaticon-pantone:before { content: "\f143"; }
+.flaticon-play-button:before { content: "\f144"; }
+.flaticon-price-tag:before { content: "\f145"; }
+.flaticon-school-bus:before { content: "\f146"; }
+.flaticon-search:before { content: "\f147"; }
+.flaticon-server:before { content: "\f148"; }
+.flaticon-stopwatch:before { content: "\f149"; }
+.flaticon-support:before { content: "\f14a"; }
+.flaticon-swimming-pool:before { content: "\f14b"; }
+.flaticon-unlink:before { content: "\f14c"; }
+.flaticon-windows:before { content: "\f14d"; }
+.flaticon-wordpress-logo:before { content: "\f14e"; }
+.flaticon-world-wide-web:before { content: "\f14f"; }

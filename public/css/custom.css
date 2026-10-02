@@ -336,6 +336,12 @@ body.clinic_version .first-section h2 {
     color: #fff;
     position: relative;
 }
+.service-time::after,
+.time-table-section::after {
+    content: "";
+    display: table;
+    clear: both;
+}
 .info-icon {
     float: left;
     width: 100%;
@@ -931,7 +937,7 @@ body.clinic_version .footer .widget-title h3 {
     background: linear-gradient(to right, #39b49a 0%, #1d86df 100%);
 }
 #testimonials {
-    background-image: url("../images/bg-testimonial.png");
+    background-image: url("../images/testi-bg.png");
     background-position: bottom;
     background-attachment: fixed;
 }
@@ -1504,4 +1510,271 @@ nav.main-menu .navbar-toggle {
 }
 main#main {
     padding-top: 145px;
+    display: flow-root;
+}
+
+/* ============================================================
+   HMS compact landing + booking form
+   ============================================================ */
+.hms-landing {
+    --hms-primary: #0f7fd4;
+    --hms-dark: #0b3c66;
+    --hms-muted: #61748a;
+    --hms-line: #e3ebf3;
+    font-size: 14px;
+    color: #24313f;
+}
+
+.hms-landing .heading h2 {
+    font-size: 24px;
+    margin: 6px 0 14px;
+    font-weight: 700;
+}
+
+.hms-landing .hms-section {
+    padding: 38px 0;
+}
+
+.hms-hero {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    min-height: 340px;
+    display: flex;
+    align-items: center;
+    margin-top: -145px;
+    padding: 170px 0 60px;
+}
+.hms-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(11, 60, 102, .82), rgba(15, 127, 212, .45));
+}
+.hms-hero .container {
+    position: relative;
+    z-index: 2;
+}
+.hms-hero-inner {
+    max-width: 620px;
+    color: #fff;
+}
+.hms-hero-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+.hms-hero h1 {
+    font-size: 34px;
+    line-height: 1.18;
+    font-weight: 800;
+    margin: 0 0 10px;
+    color: #fff;
+}
+.hms-hero p {
+    font-size: 15px;
+    color: rgba(255, 255, 255, .92);
+    margin-bottom: 18px;
+}
+.hms-hero-actions .hms-btn {
+    margin-right: 8px;
+}
+
+.hms-btn {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 9px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .18s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+.hms-btn-primary {
+    background: var(--hms-primary);
+    color: #fff;
+}
+.hms-btn-primary:hover {
+    background: #0b6bb5;
+    color: #fff;
+}
+.hms-btn-ghost {
+    background: transparent;
+    border-color: rgba(255, 255, 255, .7);
+    color: #fff;
+}
+.hms-btn-ghost:hover {
+    background: rgba(255, 255, 255, .15);
+    color: #fff;
+}
+
+.hms-facts {
+    background: #f5f9fd;
+    border-bottom: 1px solid var(--hms-line);
+    padding: 18px 0;
+}
+.hms-fact {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+}
+.hms-fact-icon {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--hms-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+.hms-fact h4 {
+    margin: 0 0 3px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--hms-dark);
+}
+.hms-fact p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--hms-muted);
+}
+
+.hms-about-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.hms-about-row .message-box h4 {
+    color: var(--hms-primary);
+    font-size: 13px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
+.hms-about-row .message-box .lead {
+    font-size: 14px;
+}
+.hms-dept-row {
+    margin-top: 22px;
+}
+.hms-dept-row .service-widget {
+    margin-bottom: 14px;
+}
+.hms-dept-row .service-widget h3 {
+    font-size: 14px;
+}
+
+.hms-services {
+    background: #f8fbfe;
+}
+.hms-serv {
+    background: #fff;
+    border: 1px solid var(--hms-line);
+    border-radius: 6px;
+    padding: 14px 14px 12px;
+    margin-bottom: 14px;
+    transition: box-shadow .18s ease, transform .18s ease;
+}
+.hms-serv:hover {
+    box-shadow: 0 8px 20px rgba(15, 127, 212, .12);
+    transform: translateY(-2px);
+}
+.hms-serv h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hms-dark);
+    margin: 8px 0 6px;
+}
+.hms-serv p {
+    font-size: 12.5px;
+    color: var(--hms-muted);
+    margin: 0;
+}
+.hms-serv .icon-service {
+    color: var(--hms-primary);
+    font-size: 22px;
+}
+
+.hms-book {
+    background: #fff;
+    border: 1px solid var(--hms-line);
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(11, 60, 102, .08);
+    padding: 18px;
+}
+.hms-book h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--hms-dark);
+    margin: 0 0 12px;
+}
+.hms-book h3 span {
+    color: var(--hms-primary);
+}
+.hms-book-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.hms-book-grid .form-group {
+    flex: 1 1 calc(50% - 8px);
+    margin: 0;
+}
+.hms-book-grid .hms-book-full {
+    flex: 1 1 100%;
+}
+.hms-book .form-control-sm {
+    height: 34px;
+    font-size: 13px;
+    border-radius: 4px;
+}
+.hms-book textarea.form-control-sm {
+    height: auto;
+}
+.hms-err {
+    display: block;
+    color: #d9534f;
+    font-size: 11px;
+    margin-top: 2px;
+}
+.hms-book-btn {
+    width: 100%;
+    border: none;
+    background: var(--hms-primary);
+    color: #fff;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: background .18s ease;
+}
+.hms-book-btn:hover {
+    background: #0b6bb5;
+}
+.hms-book-alert {
+    font-size: 13px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 767px) {
+    .hms-hero {
+        margin-top: -145px;
+        padding-top: 160px;
+    }
+    .hms-hero h1 {
+        font-size: 25px;
+    }
+    .hms-book-grid .form-group {
+        flex: 1 1 100%;
+    }
 }

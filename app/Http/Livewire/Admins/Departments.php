@@ -6,12 +6,14 @@ use App\Models\department;
 use App\Models\hod;
 use App\Models\block;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Departments extends Component
 {
     use WithFileUploads;
@@ -150,23 +152,25 @@ class Departments extends Component
 
     public function render()
     {
+        if (! hms_can('departments')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.department.index', [
                 'departments' => department::latest()->paginate(10),
-            ])->layout('admins.layouts.app');
+            ]);
         } elseif ($this->_page == "create") {
             $ids = department::pluck('hod_id')->toArray();
             return view('livewire.admins.department.create', [
                 'hods' => hod::whereNotIn('id', $ids)->get(),
                 'blocks' => block::all(),
-            ])->layout('admins.layouts.app');
+            ]);
         } elseif ($this->_page == "edit") {
             $ids = department::pluck('hod_id')->toArray();
             return view('livewire.admins.department.edit', [
                 'department' => department::findOrFail($this->edit_department_id),
                 'hods' => hod::whereNotIn('id', $ids)->get(),
                 'blocks' => block::all(),
-            ])->layout('admins.layouts.app');
+            ]);
         }
     }
 }

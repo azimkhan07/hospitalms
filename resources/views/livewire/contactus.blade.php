@@ -1,7 +1,7 @@
 <div id="getintouch" class="section wb wow fadeIn" style="padding-bottom:0;">
     <div class="container">
         <div class="heading">
-            <span class="icon-logo"><img src="images/icon-logo.png" alt="#"></span>
+            <span class="icon-logo"><img src="{{ asset('images/icon-logo.png') }}" alt="#"></span>
             <h2>Get in Touch</h2>
         </div>
     </div>

@@ -3,10 +3,10 @@
         <div class="container">
             <div class="row page-title row">
                 <div class="col">
-                    <h3 class="text-info">{{ env('APP_NAME') }} Requested Appointments</h3>
+                    <h3 class="text-info">Website Appointment Requests</h3>
                 </div>
                 <div class="col-auto">
-                    <button class="btn btn-primary" wire:click="show_create_form">Add New</button>
+                    <button class="btn btn-sm btn-primary" wire:click="show_create_form">Add New</button>
                 </div>
             </div>
             <div>
@@ -45,10 +45,10 @@
                                     <td>{{ $request->name }}</td>
                                     <td>{{ $request->email }}</td>
                                     <td>{{ $request->phone }}</td>
-                                    <td>{{ $request->doctor->employ->name }}</td>
+                                    <td>{{ $request->doctor?->employ?->name ?? '-' }}</td>
                                     <td>{{ $request->address }}</td>
-                                    <td>{{ $request->message }}</td>
-                                    <td>{{ $request->stime }}</td>
+                                    <td>{{ \Illuminate\Support\Str::limit($request->message, 40) }}</td>
+                                    <td>{{ $request->stime ? \Illuminate\Support\Carbon::parse($request->stime)->format('d M Y, h:i A') : '-' }}</td>
                                     <td class="text-right">
 
                                         @if (
@@ -59,25 +59,19 @@
                                                 'address' => $request->address,
                                             ])->exists())
                                             <button wire:click="add_patient({{ $request->id }})"
-                                                title="add as a patient" class="btn btn-outline-info btn-rounded"><i
+                                                title="add as a patient" class="btn btn-sm btn-outline-info"><i
                                                     class="fas fa-plus"></i></button>
                                         @endif
 
                                         <button title="delete request" onclick="return confirm('Are You Sure ?')"
                                             wire:click="delete({{ $request->id }})"
-                                            class="btn btn-outline-danger btn-rounded"><i
+                                            class="btn btn-sm btn-outline-danger"><i
                                                 class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                             @empty
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
-                                <td class="text-warning">{{ __('Null') }}</td>
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-2">No website appointment requests yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -24,6 +24,14 @@ class AdminController extends Controller
 
         if (Auth::attempt($credentials)) {
 
+            if (! hms_role_enabled(Auth::user()->roleSlug())) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->with('error', 'This role is not available in the current institution mode.');
+            }
+
             $request->session()->regenerate();
 
             return redirect()->route('admin_dashboard');

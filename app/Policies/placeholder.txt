@@ -1,0 +1,9 @@
+<?php
+
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
+
+return new class extends BasePolicy
+{
+    //
+}; // placeholder not needed; use Gates

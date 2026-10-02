@@ -19,7 +19,6 @@
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    @livewireStyles
 </head>
 
 <body class="clinic_version">
@@ -141,7 +140,6 @@
     <br><br><br>
 
     @yield('admin_gest_content')
-    @livewireScripts
     <script src="{{ config('app.url') }}js/alpine.js"></script>
     <script src="{{ config('app.url') }}assets/vendor/jquery/jquery.min.js"></script>
     <script src="{{ config('app.url') }}assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

@@ -3,12 +3,14 @@
 namespace App\Http\Livewire\Admins;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\doctor;
 use App\Models\operationreport as ModelsOperationreport;
 use App\Models\patient;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Operationreport extends Component
 {
 
@@ -121,21 +123,23 @@ class Operationreport extends Component
 
     public function render()
     {
+        if (! hms_can('operations')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.operationreport.index', [
                 'reports' => ModelsOperationreport::latest()->paginate(10),
-            ])->layout('admins.layouts.app');
+            ]);
         } elseif ($this->_page == "create") {
             return view('livewire.admins.operationreport.create', [
                 'doctors' => doctor::all(),
                 'patients' => patient::all(),
-            ])->layout('admins.layouts.app');
+            ]);
         } elseif ($this->_page == "edit") {
             return view('livewire.admins.operationreport.edit', [
                 'report' => ModelsOperationreport::findOrFail($this->edit_operation_report_id),
                 'doctors' => doctor::all(),
                 'patients' => patient::all(),
-            ])->layout('admins.layouts.app');
+            ]);
         }
 
     }

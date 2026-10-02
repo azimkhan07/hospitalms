@@ -5,9 +5,11 @@ namespace App\Http\Livewire\Admins;
 use App\Models\doctor;
 use App\Models\employee;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Employees extends Component
 {
     use WithPagination;
@@ -169,6 +171,8 @@ class Employees extends Component
 
     public function render()
     {
+        if (! hms_can('employees')) { abort(403); }
+
         $this->selectedFilter = $this->_filter;
 
         $positions = ["nurse", "doctor", "accountant", "pharmacist", "receptionist", "cleaner", "security", "other"];
@@ -181,16 +185,16 @@ class Employees extends Component
             return view('livewire.admins.employ.index', [
                 'employees' => $data,
                 'positions' => $positions
-            ])->layout('admins.layouts.app');
+            ]);
 
         } else if ($this->_page == "create") {
             return view('livewire.admins.employ.create', [
                 'positions' => $positions
-            ])->layout('admins.layouts.app');
+            ]);
         } else if ($this->_page == "edit") {
             return view('livewire.admins.employ.edit', [
                 'positions' => $positions
-            ])->layout('admins.layouts.app');
+            ]);
         }
     }
 }

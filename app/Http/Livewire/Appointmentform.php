@@ -1,54 +1,81 @@
 <?php
 
 namespace App\Http\Livewire;
-use App\Models\requestedappointment;
+
+use App\Models\doctor;
+use App\Models\requestedAppointment;
 use Livewire\Component;
 
 class Appointmentform extends Component
 {
-    public $name;
-    public $email;
-    public $phone;
-    public $doctor;
-    public $stime;
-    public $address;
-    public $message;
+    public string $name = '';
 
-    public function store_requested_appointment()
+    public string $email = '';
+
+    public string $phone = '';
+
+    public $doctor_id = '';
+
+    public $stime = '';
+
+    public string $address = '';
+
+    public string $message = '';
+
+    public bool $booked = false;
+
+    protected function rules(): array
     {
-        $this->validate([
-            'name' => 'required|',
-            'email' => 'required|email',
-            'stime' => 'required',
-            'phone' => 'required|numeric|max:10000000000000',
-            'doctor' => 'required',
-            'address' => 'required',
-            'message' => 'required|max:550',
-            ]);
+        return [
+            'name' => 'required|string|max:150',
+            'email' => 'nullable|email|max:150',
+            'phone' => 'required|string|max:13',
+            'doctor_id' => 'required|exists:doctors,id',
+            'stime' => 'required|date|after:now',
+            'address' => 'required|string|max:150',
+            'message' => 'nullable|string|max:550',
+        ];
+    }
 
-        requestedappointment::create([
-            'name'          => $this->name,
-            'email'         => $this->email,
-            'phone'         => $this->phone,
-            'stime'       => $this->stime,
-            'address'       => $this->address,
-            'doctor'       => $this->doctor,
-            'message' => $this->message,
+    protected function messages(): array
+    {
+        return [
+            'name.required' => 'Please enter your name.',
+            'phone.required' => 'A phone number is required so we can confirm.',
+            'doctor_id.required' => 'Please choose a doctor.',
+            'doctor_id.exists' => 'The selected doctor is not available.',
+            'stime.required' => 'Please pick a preferred date and time.',
+            'stime.after' => 'Please choose a time in the future.',
+            'address.required' => 'Please enter your address.',
+        ];
+    }
+
+    public function store_requested_appointment(): void
+    {
+        $this->validate();
+
+        requestedAppointment::create([
+            'name' => $this->name,
+            'email' => $this->email ?: null,
+            'phone' => $this->phone,
+            'doctor_id' => $this->doctor_id,
+            'stime' => $this->stime,
+            'address' => $this->address,
+            'message' => $this->message ?: 'Appointment request from website.',
         ]);
 
-           //unset variables
-           $this->name="";
-           $this->email="";
-           $this->stime="";
-           $this->phone="";
-           $this->doctor="";
-           $this->address="";
-           $this->message="";
+        $this->reset(['name', 'email', 'phone', 'doctor_id', 'stime', 'address', 'message']);
+        $this->booked = true;
 
-           session()->flash('message', 'Your Appointment Added successfully.');
+        session()->flash('booked', 'Your appointment request has been received. Our team will call you to confirm.');
     }
+
     public function render()
     {
-        return view('livewire.appointmentform');
+        return view('livewire.appointmentform', [
+            'doctors' => doctor::with('employ:id,name')
+                ->get()
+                ->sortBy(fn ($d) => $d->employ?->name),
+        ]);
     }
 }

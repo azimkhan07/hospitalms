@@ -4,12 +4,14 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\patient;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
+#[Layout('admins.layouts.app')]
 class Patients extends Component
 {
     use WithFileUploads;
@@ -173,10 +175,12 @@ class Patients extends Component
 
     public function render()
     {
+        if (! hms_can('patients')) { abort(403); }
+
         if ($this->_page == "index") {
             return view('livewire.admins.patients.index', [
                 'patients' => patient::latest()->paginate(10),
-            ])->layout('admins.layouts.app');
+            ]);
         } else if ($this->_page == "create") {
             return view('livewire.admins.patients.create');
         } else if ($this->_page == "edit") {
