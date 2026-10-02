@@ -187,6 +187,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('superadmin.admins') }}"
+                        class="{{ request()->routeIs('superadmin.admins') ? 'active' : '' }}">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Tenant Admins</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('superadmin.errors') }}"
                         class="{{ request()->routeIs('superadmin.errors') ? 'active' : '' }}">
                         <i class="fas fa-triangle-exclamation"></i>

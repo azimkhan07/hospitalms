@@ -47,7 +47,7 @@ class TenantForm extends Component
 
     public string $subdomain = '';
 
-    public bool $create_admin = true;
+    public bool $create_admin = false;
 
     public string $admin_name = '';
 

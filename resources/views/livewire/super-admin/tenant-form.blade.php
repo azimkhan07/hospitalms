@@ -15,7 +15,7 @@
                     <span class="nav-link {{ $step === 1 ? 'active' : '' }}">1. Institution</span>
                 </li>
                 <li class="nav-item">
-                    <span class="nav-link {{ $step === 2 ? 'active' : '' }}">2. Facilities &amp; Admin</span>
+                    <span class="nav-link {{ $step === 2 ? 'active' : '' }}">2. Facilities</span>
                 </li>
             </ul>
 
@@ -165,44 +165,10 @@
                         </div>
                     @endif
 
-                    <div class="col-md-12">
-                        <hr>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="create_admin"
-                                wire:model.live="create_admin">
-                            <label class="form-check-label" for="create_admin" style="font-size:13px">
-                                <strong>{{ $tenantId ? 'Reset / create admin' : 'Create the first admin' }}</strong>
-                            </label>
-                        </div>
-
-                        @if ($create_admin)
-                            <div class="row">
-                                <div class="col-md-4 form-group">
-                                    <label style="font-size:13px">Admin name *</label>
-                                    <input type="text" class="form-control @error('admin_name') is-invalid @enderror"
-                                        wire:model="admin_name">
-                                    @error('admin_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-4 form-group">
-                                    <label style="font-size:13px">Admin email *</label>
-                                    <input type="email" class="form-control @error('admin_email') is-invalid @enderror"
-                                        wire:model="admin_email">
-                                    @error('admin_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-4 form-group">
-                                    <label style="font-size:13px">Password *</label>
-                                    <input type="text" class="form-control @error('admin_password') is-invalid @enderror"
-                                        wire:model="admin_password" placeholder="min 6 characters">
-                                    @error('admin_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-        </div>
-    @endif
-
-    @push('scripts')
-        <script src="{{ asset('js/country-state-city.js') }}"></script>
-        <script src="{{ asset('js/country-state-city-dropdown.js') }}"></script>
-    @endpush
-</div>
+                    @push('scripts')
+                        <script src="{{ asset('js/country-state-city.js') }}"></script>
+                        <script src="{{ asset('js/country-state-city-dropdown.js') }}"></script>
+                    @endpush
                 </div>
             @endif
 

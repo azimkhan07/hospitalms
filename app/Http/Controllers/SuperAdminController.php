@@ -62,6 +62,11 @@ class SuperAdminController extends Controller
         return view('superadmin.errors');
     }
 
+    public function admins()
+    {
+        return view('superadmin.admins');
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();
