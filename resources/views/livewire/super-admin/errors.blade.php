@@ -1,7 +1,7 @@
 <div>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2 style="font-size:22px;margin:0;color:#0b3c66">Error Monitor</h2>
+            <h2 style="font-size:17px;margin:0;color:#0b3c66">Error Monitor</h2>
             <p style="font-size:13px;color:#61748a;margin:2px 0 0">
                 Every captured exception across all tenants, in one place.
             </p>

@@ -88,6 +88,10 @@
             border-bottom: 1px solid #e3ebf3;
         }
 
+        .sa-panel #body > .content {
+            padding: 3.3rem .8rem 1rem;
+        }
+
         .sa-page-title {
             font-size: 13px;
             font-weight: 700;
