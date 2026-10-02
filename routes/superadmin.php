@@ -26,7 +26,9 @@ Route::name('superadmin.')->group(function () {
 
 Route::prefix('superadmin')->name('superadmin.')->middleware('superadmin')->group(function () {
 
-    Route::get('/', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/', fn () => redirect()->route('superadmin.dashboard'));
+
+    Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/tenants', [SuperAdminController::class, 'tenants'])->name('tenants');
 

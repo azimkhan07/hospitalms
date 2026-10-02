@@ -13,49 +13,49 @@
 
     <div class="row">
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Total tenants</div>
                 <div class="value">{{ $stats['tenants'] }}</div>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Active</div>
                 <div class="value" style="color:#0f7fd4">{{ $stats['active'] }}</div>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Hospitals</div>
                 <div class="value">{{ $stats['hospitals'] }}</div>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Clinics</div>
                 <div class="value">{{ $stats['clinics'] }}</div>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Tenant admins</div>
                 <div class="value">{{ $stats['admins'] }}</div>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Open errors</div>
                 <div class="value" style="color:#d9534f">{{ $stats['unresolved'] }}</div>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Errors (24h)</div>
                 <div class="value">{{ $stats['errors_24h'] }}</div>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6 mb-3">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Mode engine</div>
                 <div class="value" style="font-size:18px">{{ ucfirst(hms_institution_mode()) }}</div>
             </div>

@@ -17,38 +17,136 @@
     <link href="{{ asset('assets/css/master.css') }}" rel="stylesheet">
 
     <style>
-        .hms-sa-badge {
-            display: inline-block;
-            font-size: 11px;
-            letter-spacing: .06em;
+        /* ---- Super Admin panel: dark sidebar + nav identity (scoped to .sa-panel) ---- */
+        .sa-panel #sidebar {
+            background: #0b3c66;
+            background-image: linear-gradient(180deg, #0b3c66 0%, #082c4d 100%);
+            border-right: 1px solid #072742;
+        }
+
+        .sa-panel #sidebar .sidebar-brand {
+            padding: .65rem .8rem !important;
+            border-bottom: 1px solid rgba(255, 255, 255, .12);
+        }
+
+        .sa-panel #sidebar .sidebar-brand a {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+
+        .sa-panel #sidebar .sidebar-brand a i {
+            color: #7cc2ff;
+            font-size: 15px;
+        }
+
+        .sa-panel #sidebar .sidebar-brand a small {
+            display: block;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: .1em;
             text-transform: uppercase;
+            color: #9dc6e9;
+        }
+
+        .sa-panel #sidebar ul.components {
+            padding: .4rem 0 1rem !important;
+        }
+
+        .sa-panel #sidebar ul.components li a {
+            color: #cfe2f3;
+            padding: .5rem .8rem !important;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+        }
+
+        .sa-panel #sidebar ul.components li a i {
+            color: #8fc4ea;
+        }
+
+        .sa-panel #sidebar ul.components li a:hover {
+            background: rgba(255, 255, 255, .08);
+            border-left-color: #4dabf7;
+            color: #fff;
+        }
+
+        .sa-panel #sidebar ul.components li a.active {
+            background: rgba(15, 127, 212, .3);
+            border-left-color: #4dabf7;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .sa-panel #body .navbar {
+            min-height: 44px;
+            background: #fff;
+            border-bottom: 1px solid #e3ebf3;
+        }
+
+        .sa-page-title {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            color: #0b3c66;
+            margin-left: .55rem;
+            white-space: nowrap;
+        }
+
+        .sa-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
             background: #0b3c66;
             color: #fff;
-            padding: 3px 9px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            padding: 4px 10px;
             border-radius: 999px;
+            white-space: nowrap;
         }
 
-        .hms-sa-sidebar-brand a {
-            color: #fff;
-            font-weight: 700;
-            letter-spacing: .04em;
+        .sa-user {
+            font-size: 12px;
+            color: #61748a;
+            margin-left: .5rem;
+            white-space: nowrap;
         }
 
-        .hms-sa-stat {
+        .sa-panel #body .navbar .btn-light {
+            color: #0b3c66;
+            background: #eef4fb;
+            border: 1px solid #e3ebf3;
+        }
+
+        .sa-panel #body .navbar .btn-light:hover {
+            background: #e3ebf3;
+        }
+
+        .sa-stat {
             border: 1px solid #e3ebf3;
             border-radius: 8px;
-            padding: 16px;
+            padding: 14px 16px;
             background: #fff;
             height: 100%;
         }
 
-        .hms-sa-stat .value {
-            font-size: 26px;
+        .sa-stat .value {
+            font-size: 24px;
             font-weight: 600;
+            color: #0b3c66;
+            line-height: 1.15;
         }
 
-        .hms-sa-stat .label {
-            font-size: 12px;
+        .sa-stat .label {
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: .05em;
             color: #61748a;
@@ -59,16 +157,17 @@
     @livewireStyles
 </head>
 
-<body class="clinic_version">
+<body class="clinic_version sa-panel">
 
     <div class="wrapper">
         <nav id="sidebar">
-            <div class="sidebar-brand hms-sa-sidebar-brand">
+            <div class="sidebar-brand">
                 <a href="{{ route('superadmin.dashboard') }}">
-                    <i class="fas fa-shield-halved"></i> HMS Console
+                    <i class="fas fa-shield-halved"></i>
+                    <span>HMS Console<small>Platform</small></span>
                 </a>
             </div>
-            <ul class="list-unstyled components text-secondary">
+            <ul class="list-unstyled components">
                 <li>
                     <a href="{{ route('superadmin.dashboard') }}"
                         class="{{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
@@ -91,10 +190,6 @@
                     </a>
                 </li>
             </ul>
-            <div class="sidebar-role">
-                <i class="fas fa-user-shield"></i>
-                <span class="hms-sa-badge">Super Admin</span>
-            </div>
         </nav>
 
         <div id="body">
@@ -102,13 +197,13 @@
                 <button type="button" id="sidebarCollapse" class="btn btn-light">
                     <i class="fas fa-bars"></i>
                 </button>
+                <span class="sa-page-title">{{ $title }}</span>
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="nav navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <span class="nav-link text-secondary">
-                                <i class="fas fa-user"></i> {{ auth()->user()->name ?? '' }}
-                            </span>
+                        <li class="nav-item d-flex align-items-center">
+                            <span class="sa-badge"><i class="fas fa-user-shield"></i> Super Admin</span>
+                            <span class="sa-user d-none d-md-inline">{{ auth()->user()->name ?? '' }}</span>
                         </li>
                         <li class="nav-item">
                             <form method="POST" action="{{ route('superadmin.logout') }}">

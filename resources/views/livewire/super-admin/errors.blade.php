@@ -18,19 +18,19 @@
 
     <div class="row mb-3">
         <div class="col-md-4 mb-2">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Open</div>
                 <div class="value" style="color:#d9534f">{{ $counts['unresolved'] }}</div>
             </div>
         </div>
         <div class="col-md-4 mb-2">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Critical open</div>
                 <div class="value" style="color:#a94442">{{ $counts['critical'] }}</div>
             </div>
         </div>
         <div class="col-md-4 mb-2">
-            <div class="hms-sa-stat">
+            <div class="sa-stat">
                 <div class="label">Resolved</div>
                 <div class="value" style="color:#5cb85c">{{ $counts['resolved'] }}</div>
             </div>
