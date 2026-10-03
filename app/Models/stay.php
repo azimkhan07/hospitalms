@@ -13,6 +13,7 @@ class stay extends Model
     protected $fillable = [
         'patient_id',
         'room_id',
+        'bed_id',
         'start_time',
         'end_time',
         'status',
@@ -64,5 +65,24 @@ class stay extends Model
     public function room()
     {
         return $this->belongsTo(rooms::class);
+    }
+
+    /**
+     * The exact numbered bed this stay occupies, per PLAN.md section 9b.
+     */
+    public function bed()
+    {
+        return $this->belongsTo(beds::class, 'bed_id');
+    }
+
+    /**
+     * Printable "Room / Bed" for lists and reports.
+     */
+    public function bedLabel(): string
+    {
+        $room = $this->room?->name ?: ($this->room_id ? 'Room #'.$this->room_id : '-');
+        $bed = $this->bed?->label();
+
+        return $bed ? $room.' / Bed '.$bed : $room;
     }
 }

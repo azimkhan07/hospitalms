@@ -15,12 +15,24 @@ class Tenant extends Model
         'phone', 'email', 'address', 'city', 'state', 'country', 'working_hours',
         'logo', 'hero_image', 'facilities', 'trial_ends_at', 'created_by',
         'latitude', 'longitude', 'geo_radius_meters',
+        'private_room_enabled', 'private_room_count',
     ];
 
     protected $casts = [
         'facilities' => 'array',
         'trial_ends_at' => 'datetime',
+        'private_room_enabled' => 'boolean',
+        'private_room_count' => 'integer',
     ];
+
+    /**
+     * Does this facility charge for private rooms? Asked by the Super Admin at
+     * onboarding (PLAN.md section 9b); a private room always holds one patient.
+     */
+    public function hasPrivateRooms(): bool
+    {
+        return (bool) $this->private_room_enabled && (int) $this->private_room_count > 0;
+    }
 
     public function users()
     {
