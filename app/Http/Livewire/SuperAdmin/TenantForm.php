@@ -79,6 +79,25 @@ class TenantForm extends Component
 
     public bool $has_ambulance = false;
 
+    /**
+     * Where the hospital is. Staff may only sign in from inside this radius;
+     * the tenant admin is exempt and may sign in from anywhere.
+     */
+    public $latitude = null;
+
+    public $longitude = null;
+
+    public $geo_radius_meters = 200;
+
+    /**
+     * Fill the coordinates from the browser so the platform does not have to
+     * read them off a map.
+     */
+    public function useCurrentLocation(): void
+    {
+        $this->dispatch('capture-location');
+    }
+
     #[On('open-tenant-form')]
     public function open($id = null): void
     {
@@ -118,6 +137,9 @@ class TenantForm extends Component
         $this->subdomain = (string) $tenant->subdomain;
         $this->existingLogo = $tenant->logo;
         $this->existingHero = $tenant->hero_image;
+        $this->latitude = $tenant->latitude;
+        $this->longitude = $tenant->longitude;
+        $this->geo_radius_meters = $tenant->geo_radius_meters ?: 200;
 
         $this->beds = $facilities['beds'] ?? null;
         $this->staff = $facilities['staff'] ?? null;
@@ -139,12 +161,14 @@ class TenantForm extends Component
             'admin_name', 'admin_email', 'admin_password', 'logo', 'hero_image',
             'existingLogo', 'existingHero', 'beds', 'staff', 'floors',
             'departments', 'services', 'has_lab', 'has_ot', 'has_ambulance',
+            'latitude', 'longitude', 'geo_radius_meters',
         ]);
 
         $this->mode = 'hospital';
         $this->status = 'active';
         $this->create_admin = true;
         $this->step = 1;
+        $this->geo_radius_meters = 200;
     }
 
     public function updatedName(): void
@@ -191,6 +215,9 @@ class TenantForm extends Component
             'services' => ['nullable', 'string'],
             'logo' => ['nullable', 'image', 'max:2048'],
             'hero_image' => ['nullable', 'image', 'max:4096'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'geo_radius_meters' => ['nullable', 'integer', 'between:20,5000'],
         ];
 
         if ($this->create_admin) {
@@ -220,6 +247,9 @@ class TenantForm extends Component
             'domain' => $this->domain ?: null,
             'subdomain' => $this->subdomain ?: null,
             'facilities' => $this->facilitiesPayload(),
+            'latitude' => $this->latitude !== '' && $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== '' && $this->longitude !== null ? (float) $this->longitude : null,
+            'geo_radius_meters' => $this->geo_radius_meters ?: 200,
         ];
 
         if ($this->logo) {

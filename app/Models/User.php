@@ -46,6 +46,19 @@ class User extends Authenticatable
         return $this->belongsTo(\App\Models\Tenant::class);
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * The signed-in session this user currently has open, if any.
+     */
+    public function openAttendance()
+    {
+        return $this->attendances()->whereNull('check_out_at')->latest('check_in_at')->first();
+    }
+
     public function isActive(): bool
     {
         return (bool) $this->is_active;

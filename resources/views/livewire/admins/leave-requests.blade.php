@@ -1,10 +1,12 @@
 <div class="box box-primary">
     <div class="box-header d-flex align-items-center flex-wrap">
         <ul class="nav nav-pills" style="font-size:11.5px">
-            <li class="nav-item">
-                <button type="button" class="nav-link py-1 px-2 {{ $tab === 'mine' ? 'active' : '' }}"
-                    wire:click="setTab('mine')">My Requests</button>
-            </li>
+            @if ($canApply)
+                <li class="nav-item">
+                    <button type="button" class="nav-link py-1 px-2 {{ $tab === 'mine' ? 'active' : '' }}"
+                        wire:click="setTab('mine')">My Requests</button>
+                </li>
+            @endif
             @if ($canReview)
                 <li class="nav-item">
                     <button type="button"
@@ -33,7 +35,7 @@
             <div class="alert alert-danger py-1 px-2">{{ session('error') }}</div>
         @endif
 
-        @if ($tab === 'mine')
+        @if ($tab === 'mine' && $canApply)
             <div class="row">
                 <div class="col-lg-4">
                     <form wire:submit.prevent="submitRequest" class="border rounded p-2">
@@ -43,9 +45,9 @@
                         </div>
                         <p class="text-muted mb-2" style="font-size:11px; line-height:1.4">
                             Applying as <strong>{{ $applicant?->name }}</strong>
-                            ({{ hms_role_label($applicant) }}). Every signed-in user &mdash; admin or
-                            staff &mdash; applies here for their own leave; it then goes to
-                            {{ $reviewerNames ?: 'the reviewers' }} for approval.
+                            ({{ hms_role_label($applicant) }}). Staff apply here for their own leave; it
+                            then goes to {{ $reviewerNames ?: 'the reviewers' }} for approval. The admin
+                            runs the system and does not apply for leave.
                         </p>
                         <div class="form-group">
                             <label>Leave Type</label>
@@ -209,7 +211,7 @@
                     </div>
                 </div>
             @endif
-        @else
+        @elseif ($canReview)
             <table class="table table-sm table-bordered mb-0">
                 <thead>
                     <tr>

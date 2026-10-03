@@ -195,6 +195,137 @@ if (! function_exists('hms_tenant_brand')) {
     }
 }
 
+if (! function_exists('hms_geo_distance_meters')) {
+    /**
+     * Great-circle distance between two coordinates, in metres.
+     */
+    function hms_geo_distance_meters(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earth = 6371000;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+
+        return $earth * 2 * atan2(sqrt($a), sqrt(1 - $a));
+    }
+}
+
+if (! function_exists('hms_geo_restricted')) {
+    /**
+     * Is this account only allowed to sign in from the hospital premises?
+     *
+     * The tenant admin runs the system and may work remotely, so they are
+     * exempt. Everyone else is pinned to the hospital, unless the platform has
+     * not pinned a location yet (then nobody is blocked).
+     */
+    function hms_geo_restricted(?object $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        if (! $user || $user->isPlatformAdmin()) {
+            return false;
+        }
+
+        // The tenant admin runs the system and may work remotely.
+        if ($user->roleSlug() === 'admin') {
+            return false;
+        }
+
+        return $user->tenant?->latitude !== null
+            && $user->tenant?->longitude !== null;
+    }
+}
+
+if (! function_exists('hms_geo_check')) {
+    /**
+     * Check a submitted location against the tenant's premises.
+     *
+     * Returns null when the sign-in is allowed, otherwise a message explaining
+     * why it was refused.
+     */
+    function hms_geo_check(?object $user, ?float $lat, ?float $lng): ?string
+    {
+        if (! hms_geo_restricted($user)) {
+            return null;
+        }
+
+        if ($lat === null || $lng === null) {
+            return 'We could not read your location. Turn on location for this site in your browser, then sign in again — staff may only sign in from the hospital.';
+        }
+
+        $tenant = $user->tenant;
+        $radius = (int) ($tenant->geo_radius_meters ?: 200);
+        $distance = hms_geo_distance_meters((float) $tenant->latitude, (float) $tenant->longitude, $lat, $lng);
+
+        if ($distance > $radius) {
+            return sprintf(
+                'You are about %s away from %s. Staff may only sign in from the hospital (within %d m). Admin accounts can sign in from anywhere.',
+                $distance >= 1000 ? round($distance / 1000, 1).' km' : round($distance).' m',
+                $tenant->name,
+                $radius
+            );
+        }
+
+        return null;
+    }
+}
+
+if (! function_exists('hms_attendance')) {
+    /**
+     * Attendance (presency) rules.
+     */
+    function hms_attendance(): array
+    {
+        return array_merge([
+            'full_day_hours' => 8,
+            'half_day_hours' => 4,
+        ], config('hms.attendance', []));
+    }
+
+    /**
+     * Classify a worked duration into a presence status.
+     */
+    function hms_attendance_status(?int $workedMinutes): string
+    {
+        if ($workedMinutes === null) {
+            return 'pending';
+        }
+
+        $rules = hms_attendance();
+
+        if ($workedMinutes >= $rules['full_day_hours'] * 60) {
+            return 'present';
+        }
+
+        return $workedMinutes >= $rules['half_day_hours'] * 60 ? 'half_day' : 'absent';
+    }
+}
+
+if (! function_exists('hms_sidebar_allows')) {
+    /**
+     * May the current user see this sidebar entry?
+     *
+     * An entry normally needs its own module, but may also list "anyModules" so
+     * a page stays reachable for read-only roles. Leave, for instance, is
+     * reachable by staff who apply for it and by reviewers who only decide on
+     * it, and the admin has the review permission without the apply one.
+     */
+    function hms_sidebar_allows(array $item): bool
+    {
+        if (! empty($item['anyModules'])) {
+            foreach ($item['anyModules'] as $module) {
+                if (hms_can($module)) {
+                    return true;
+                }
+            }
+        }
+
+        return hms_can($item['module']);
+    }
+}
+
 if (! function_exists('hms_sidebar_tree')) {
     /**
      * Nested admin sidebar: single links and collapsible groups.
@@ -220,6 +351,14 @@ if (! function_exists('hms_sidebar_tree')) {
                 'icon' => 'fa-plane-departure',
                 'route' => 'admin_leave',
                 'module' => 'leave',
+                // The admin does not apply for leave but still reviews it.
+                'anyModules' => ['leave.review'],
+            ],
+            [
+                'label' => 'Attendance',
+                'icon' => 'fa-user-check',
+                'route' => 'admin_attendance',
+                'module' => 'attendance',
             ],
             [
                 'label' => 'Staff',
@@ -291,7 +430,7 @@ if (! function_exists('hms_sidebar_tree')) {
 
         foreach ($groups as $group) {
             if (empty($group['children'])) {
-                if (hms_can($group['module'])) {
+                if (hms_sidebar_allows($group)) {
                     $tree[] = $group;
                 }
 
@@ -301,7 +440,7 @@ if (! function_exists('hms_sidebar_tree')) {
             $children = array_values(array_filter(
                 $group['children'],
                 function ($child) {
-                    if (! hms_can($child['module'])) {
+                    if (! hms_sidebar_allows($child)) {
                         return false;
                     }
 

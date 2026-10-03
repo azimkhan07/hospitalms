@@ -109,6 +109,43 @@
                         @endif
                         @error('logo') <small class="text-danger d-block">{{ $message }}</small> @enderror
                     </div>
+
+                    <div class="col-12 form-group">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label style="font-size:13px">Hospital location</label>
+                            <button type="button" class="btn btn-xs btn-outline-primary"
+                                wire:click="useCurrentLocation">
+                                <i class="fas fa-crosshairs"></i> Use my current location
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="number" step="0.0000001" class="form-control" placeholder="Latitude"
+                                    wire:model="latitude">
+                                @error('latitude') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" step="0.0000001" class="form-control" placeholder="Longitude"
+                                    wire:model="longitude">
+                                @error('longitude') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="number" min="20" max="5000" class="form-control"
+                                        placeholder="Allowed radius" wire:model="geo_radius_meters">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">m</span>
+                                    </div>
+                                </div>
+                                @error('geo_radius_meters') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Staff may only sign in from inside this radius of the hospital. The tenant admin
+                            is exempt and may sign in from anywhere. Leave both coordinates empty to let
+                            everyone sign in from anywhere.
+                        </small>
+                    </div>
                     <div class="col-md-6 form-group">
                         <label style="font-size:13px">Hero image</label>
                         <input type="file" class="form-control-file" wire:model="hero_image" accept="image/*">
@@ -199,3 +236,26 @@
     </div>
     @endif
 </div>
+
+@script
+    <script>
+        // "Use my current location" reads the browser's GPS instead of making
+        // the platform type coordinates in by hand.
+        window.addEventListener('capture-location', () => {
+            if (! navigator.geolocation) {
+                alert('This browser cannot read your location.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    // Values must go through the Livewire property, not by
+                    // assigning to a Blade-rendered literal (that compiles to
+                    // something like "null = ..." and throws in the browser).
+                    $wire.set('latitude', pos.coords.latitude);
+                    $wire.set('longitude', pos.coords.longitude);
+                },
+                () => alert('Could not read your location. Allow location access and try again.')
+            );
+        });
+    </script>
+@endscript

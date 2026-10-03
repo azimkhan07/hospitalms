@@ -33,22 +33,34 @@ class LeaveRequests extends Component
 
     public string $reviewNote = '';
 
+    public function mount(): void
+    {
+        // A reviewer who cannot apply (the admin) lands straight on the queue.
+        if (! $this->canApply && $this->canReview) {
+            $this->tab = 'review';
+        }
+    }
+
     public function render()
     {
-        if (! hms_can('leave')) {
+        $canApply = hms_can('leave');
+        $canReview = hms_can('leave.review');
+
+        if (! $canApply && ! $canReview) {
             abort(403);
         }
 
-        $canReview = hms_can('leave.review');
-
         return view('livewire.admins.leave-requests', [
+            'canApply' => $canApply,
             'canReview' => $canReview,
             'applicant' => auth()->user(),
             'reviewerNames' => $canReview ? $this->reviewerNames() : '',
-            'mine' => LeaveRequest::where('user_id', auth()->id())
-                ->orderByDesc('created_at')
-                ->limit(12)
-                ->get(),
+            'mine' => $canApply
+                ? LeaveRequest::where('user_id', auth()->id())
+                    ->orderByDesc('created_at')
+                    ->limit(12)
+                    ->get()
+                : collect(),
             'queue' => $canReview
                 ? $this->reviewableQuery()
                     ->with(['user.role:id,name,slug', 'reviewer:id,name'])
@@ -66,6 +78,22 @@ class LeaveRequests extends Component
                     ->get()
                 : collect(),
         ]);
+    }
+
+    /**
+     * May this user apply for their own leave? The admin may not.
+     */
+    public function getCanApplyProperty(): bool
+    {
+        return hms_can('leave');
+    }
+
+    /**
+     * May this user decide on other people's leave?
+     */
+    public function getCanReviewProperty(): bool
+    {
+        return hms_can('leave.review');
     }
 
     /**
@@ -104,17 +132,31 @@ class LeaveRequests extends Component
 
     public function setTab(string $tab): void
     {
-        // Only reviewers may open the review tabs, otherwise the view would
-        // render a null queue.
-        if (in_array($tab, ['review', 'decided'], true) && ! hms_can('leave.review')) {
+        if (! in_array($tab, ['mine', 'review', 'decided'], true)) {
             $tab = 'mine';
         }
 
-        $this->tab = in_array($tab, ['mine', 'review', 'decided'], true) ? $tab : 'mine';
+        // Only reviewers may open the review tabs, otherwise the view would
+        // render a null queue.
+        if (in_array($tab, ['review', 'decided'], true) && ! $this->canReview) {
+            $tab = 'mine';
+        }
+
+        // The admin cannot apply for leave, so there is no "mine" tab for them.
+        if ($tab === 'mine' && ! $this->canApply) {
+            $tab = $this->canReview ? 'review' : 'mine';
+        }
+
+        $this->tab = $tab;
     }
 
     public function submitRequest(): void
     {
+        // The admin manages the system and does not apply for leave.
+        if (! $this->canApply) {
+            abort(403);
+        }
+
         $this->validate([
             'type' => 'required|in:casual,sick,annual,maternity,unpaid',
             'fromDate' => 'required|date',

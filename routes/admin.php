@@ -20,6 +20,10 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/leave', App\Http\Livewire\Admins\LeaveRequests::class)->name('admin_leave');
 
+    Route::get('/attendance', App\Http\Livewire\Admins\AttendanceRegister::class)->name('admin_attendance');
+
+    Route::get('/attendance/report', App\Http\Livewire\Admins\AttendanceReport::class)->name('admin_attendance_report');
+
     Route::get('/staff', App\Http\Livewire\Admins\StaffDirectory::class)->name('admin_staff');
 
     Route::get('/prescriptions', App\Http\Livewire\Admins\Prescriptions::class)->name('admin_prescriptions');

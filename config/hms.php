@@ -16,6 +16,7 @@ return [
             'roles' => ['admin', 'receptionist', 'doctor', 'pharmacist'],
             'modules' => [
                 'dashboard', 'meetings', 'meetings.manage', 'leave', 'leave.review',
+                'attendance',
                 'staff', 'appointments', 'prescriptions', 'history', 'medicines',
                 'expiry', 'patients', 'bills', 'subscribers', 'messages', 'settings',
             ],
@@ -28,10 +29,35 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Attendance (presency)
+    |--------------------------------------------------------------------------
+    | Presence is derived from when a user signs in and out. Anyone who works
+    | at least full_day_hours counts as present, half_day_hours as a half day
+    | and anything less as absent.
+    */
+    'attendance' => [
+        'full_day_hours' => 8,
+        'half_day_hours' => 4,
+        // Weekly off, used only so the monthly report can tell a genuine
+        // absent day apart from a scheduled holiday. 0 = Sunday.
+        'weekend_days' => [5, 6],
+    ],
+
     'admin' => [
         'label' => 'Admin',
         'icon' => 'fa-user-shield',
-        'modules' => ['*'],
+        // Everything except "leave": the admin runs the system and works from
+        // anywhere, so they do not apply for leave. They still review it.
+        'modules' => [
+            'dashboard', 'meetings', 'meetings.manage', 'attendance',
+            'staff', 'appointments', 'prescriptions', 'history', 'medicines',
+            'expiry', 'patients', 'bills', 'subscribers', 'messages', 'settings',
+            'employees', 'departments', 'hods', 'rooms', 'beds', 'blocks',
+            'nurses', 'operations', 'births', 'discharges', 'reports',
+            'leave.review',
+        ],
     ],
     'moderator' => [
         'label' => 'Moderator',
@@ -40,14 +66,14 @@ return [
             'dashboard', 'patients', 'employees', 'staff', 'departments', 'rooms',
             'beds', 'appointments', 'operations', 'births', 'reports', 'blocks',
             'prescriptions', 'history', 'discharges', 'meetings', 'meetings.manage',
-            'leave', 'leave.review', 'subscribers', 'messages',
+            'attendance', 'leave', 'leave.review', 'subscribers', 'messages',
         ],
     ],
     'doctor' => [
         'label' => 'Doctor',
         'icon' => 'fa-user-md',
         'modules' => [
-            'dashboard', 'patients', 'operations', 'births',
+            'dashboard', 'patients', 'operations', 'births', 'attendance',
             'appointments', 'prescriptions', 'history', 'meetings', 'leave',
         ],
     ],
@@ -55,7 +81,7 @@ return [
         'label' => 'Nurse',
         'icon' => 'fa-user-nurse',
         'modules' => [
-            'dashboard', 'patients', 'beds', 'rooms', 'nurses',
+            'dashboard', 'patients', 'beds', 'rooms', 'nurses', 'attendance',
             'history', 'meetings', 'leave',
         ],
     ],
@@ -63,7 +89,7 @@ return [
         'label' => 'Receptionist',
         'icon' => 'fa-concierge-bell',
         'modules' => [
-            'dashboard', 'patients', 'appointments', 'subscribers', 'messages',
+            'dashboard', 'patients', 'appointments', 'subscribers', 'messages', 'attendance',
             'meetings', 'leave',
         ],
     ],
@@ -71,35 +97,35 @@ return [
         'label' => 'Pharmacist',
         'icon' => 'fa-pills',
         'modules' => [
-            'dashboard', 'medicines', 'expiry', 'prescriptions', 'meetings', 'leave',
+            'dashboard', 'medicines', 'expiry', 'prescriptions', 'attendance', 'meetings', 'leave',
         ],
     ],
     'laboratorist' => [
         'label' => 'Laboratorist',
         'icon' => 'fa-flask',
         'modules' => [
-            'dashboard', 'patients', 'history', 'meetings', 'leave',
+            'dashboard', 'patients', 'history', 'attendance', 'meetings', 'leave',
         ],
     ],
     'accountant' => [
         'label' => 'Accountant',
         'icon' => 'fa-calculator',
         'modules' => [
-            'dashboard', 'bills', 'meetings', 'leave',
+            'dashboard', 'bills', 'attendance', 'meetings', 'leave',
         ],
     ],
     'storekeeper' => [
         'label' => 'Store Keeper',
         'icon' => 'fa-boxes-stacked',
         'modules' => [
-            'dashboard', 'medicines', 'expiry', 'blocks', 'meetings', 'leave',
+            'dashboard', 'medicines', 'expiry', 'blocks', 'attendance', 'meetings', 'leave',
         ],
     ],
     'hr' => [
         'label' => 'HR Manager',
         'icon' => 'fa-users-cog',
         'modules' => [
-            'dashboard', 'employees', 'staff', 'departments', 'hods', 'leave',
+            'dashboard', 'employees', 'staff', 'departments', 'hods', 'attendance', 'leave',
             'leave.review', 'meetings',
         ],
     ],
