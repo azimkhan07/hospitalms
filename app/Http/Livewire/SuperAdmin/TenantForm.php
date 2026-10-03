@@ -80,6 +80,13 @@ class TenantForm extends Component
     public bool $has_ambulance = false;
 
     /**
+     * Hospital onboarding (PLAN.md §9b): private rooms are optional and asked
+     * about at creation. "Yes/No" controls the conditional quantity field.
+     */
+    public bool $private_room_enabled = false;
+    public $private_room_count = null;
+
+    /**
      * Where the hospital is. Staff may only sign in from inside this radius;
      * the tenant admin is exempt and may sign in from anywhere.
      */
@@ -141,6 +148,9 @@ class TenantForm extends Component
         $this->longitude = $tenant->longitude;
         $this->geo_radius_meters = $tenant->geo_radius_meters ?: 200;
 
+        $this->private_room_enabled = (bool) $tenant->private_room_enabled;
+        $this->private_room_count = $tenant->private_room_count;
+
         $this->beds = $facilities['beds'] ?? null;
         $this->staff = $facilities['staff'] ?? null;
         $this->floors = $facilities['floors'] ?? null;
@@ -162,6 +172,7 @@ class TenantForm extends Component
             'existingLogo', 'existingHero', 'beds', 'staff', 'floors',
             'departments', 'services', 'has_lab', 'has_ot', 'has_ambulance',
             'latitude', 'longitude', 'geo_radius_meters',
+            'private_room_enabled', 'private_room_count',
         ]);
 
         $this->mode = 'hospital';
@@ -169,6 +180,8 @@ class TenantForm extends Component
         $this->create_admin = true;
         $this->step = 1;
         $this->geo_radius_meters = 200;
+        $this->private_room_enabled = false;
+        $this->private_room_count = null;
     }
 
     public function updatedName(): void
@@ -220,6 +233,12 @@ class TenantForm extends Component
             'geo_radius_meters' => ['nullable', 'integer', 'between:20,5000'],
         ];
 
+        if ($this->mode === 'hospital' && $this->private_room_enabled) {
+            $rules['private_room_count'] = ['required', 'integer', 'min:1', 'max:999'];
+        } else {
+            $rules['private_room_count'] = ['nullable', 'integer', 'min:0'];
+        }
+
         if ($this->create_admin) {
             $rules['admin_name'] = ['required', 'string', 'max:150'];
             $rules['admin_email'] = ['required', 'email', 'max:150', Rule::unique('users', 'email')];
@@ -250,6 +269,8 @@ class TenantForm extends Component
             'latitude' => $this->latitude !== '' && $this->latitude !== null ? (float) $this->latitude : null,
             'longitude' => $this->longitude !== '' && $this->longitude !== null ? (float) $this->longitude : null,
             'geo_radius_meters' => $this->geo_radius_meters ?: 200,
+            'private_room_enabled' => (bool) $this->private_room_enabled,
+            'private_room_count' => $this->private_room_enabled ? (int) ($this->private_room_count ?? 0) : null,
         ];
 
         if ($this->logo) {

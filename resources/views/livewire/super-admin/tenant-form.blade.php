@@ -200,6 +200,25 @@
                                     style="font-size:13px">Ambulance</label>
                             </div>
                         </div>
+
+                        <!-- Private rooms (PLAN.md §9b): Yes / No at hospital creation -->
+                        <div class="col-md-4 form-group">
+                            <label style="font-size:13px">Do you provide private rooms?</label>
+                            <select class="form-control" wire:model.live="private_room_enabled">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                            @error('private_room_enabled') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                        @if ((bool)$private_room_enabled)
+                            <div class="col-md-4 form-group">
+                                <label style="font-size:13px">How many private rooms?</label>
+                                <input type="number" class="form-control" wire:model="private_room_count"
+                                    min="1" max="999" placeholder="e.g. 2">
+                                <small class="text-muted">Private rooms are listed in their own section with one bed each.</small>
+                                @error('private_room_count') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                            </div>
+                        @endif
                     @endif
 
                     @push('scripts')
