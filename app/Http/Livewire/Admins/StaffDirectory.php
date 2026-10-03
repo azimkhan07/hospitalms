@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -21,6 +22,17 @@ class StaffDirectory extends Component
         }
     }
 
+    /**
+     * Staff belonging to the signed-in tenant.
+     *
+     * Platform accounts have no tenant, so they never surface in a tenant
+     * directory and can never be toggled from one.
+     */
+    private function tenantStaff(): Builder
+    {
+        return User::where('tenant_id', auth()->user()->tenant_id);
+    }
+
     public function render()
     {
         if (! hms_can('staff')) {
@@ -29,7 +41,8 @@ class StaffDirectory extends Component
 
         $enabled = hms_enabled_roles();
 
-        $users = User::with('role:id,name,slug,level')
+        $users = $this->tenantStaff()
+            ->with('role:id,name,slug,level')
             ->when(is_array($enabled), fn ($q) => $q->whereHas(
                 'role',
                 fn ($r) => $r->whereIn('slug', $enabled)
@@ -52,7 +65,7 @@ class StaffDirectory extends Component
 
         return view('livewire.admins.staff-directory', [
             'users' => $users,
-            'roles' => Role::withCount('users')
+            'roles' => Role::withCount(['users' => fn ($q) => $q->where('tenant_id', auth()->user()->tenant_id)])
                 ->when(is_array($enabled), fn ($q) => $q->whereIn('slug', $enabled))
                 ->orderBy('level')
                 ->get(),
@@ -65,7 +78,7 @@ class StaffDirectory extends Component
             abort(403);
         }
 
-        $user = User::findOrFail($id);
+        $user = $this->tenantStaff()->findOrFail($id);
 
         if ($user->is_super_admin) {
             session()->flash('error', 'The super admin account cannot be disabled.');

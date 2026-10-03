@@ -6,6 +6,7 @@ use App\Models\LeaveRequest;
 use App\Models\Role;
 use App\Notifications\LeaveRequestStatus;
 use App\Notifications\LeaveRequested;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -43,26 +44,51 @@ class LeaveRequests extends Component
         return view('livewire.admins.leave-requests', [
             'canReview' => $canReview,
             'applicant' => auth()->user(),
-            'reviewerNames' => $canReview ? $this->reviewerNames() : collect(),
+            'reviewerNames' => $canReview ? $this->reviewerNames() : '',
             'mine' => LeaveRequest::where('user_id', auth()->id())
                 ->orderByDesc('created_at')
                 ->limit(12)
                 ->get(),
             'queue' => $canReview
-                ? LeaveRequest::with(['user.role:id,name,slug', 'reviewer:id,name'])
+                ? $this->reviewableQuery()
+                    ->with(['user.role:id,name,slug', 'reviewer:id,name'])
                     ->where('status', 'pending')
                     ->where('user_id', '!=', auth()->id())
                     ->orderBy('from_date')
                     ->paginate(10)
                 : null,
             'decided' => $canReview
-                ? LeaveRequest::with(['user:id,name', 'reviewer:id,name'])
+                ? $this->reviewableQuery()
+                    ->with(['user:id,name', 'reviewer:id,name'])
                     ->whereIn('status', ['approved', 'rejected'])
                     ->orderByDesc('reviewed_at')
                     ->limit(10)
                     ->get()
                 : collect(),
         ]);
+    }
+
+    /**
+     * Leave raised by staff of the signed-in tenant.
+     *
+     * Leave rows carry no tenant_id of their own, so the tenant boundary is
+     * applied through the applicant. Without this an admin of one tenant would
+     * see and decide on another tenant's requests.
+     */
+    private function reviewableQuery(): Builder
+    {
+        return LeaveRequest::whereHas(
+            'user',
+            fn (Builder $q) => $q->where('tenant_id', auth()->user()->tenant_id)
+        );
+    }
+
+    /**
+     * A request this tenant is allowed to act on, or null.
+     */
+    private function findReviewable(int $id): ?LeaveRequest
+    {
+        return $this->reviewableQuery()->find($id);
     }
 
     /**
@@ -122,6 +148,7 @@ class LeaveRequests extends Component
         $reviewerRoleIds = Role::whereIn('slug', ['admin', 'moderator', 'hr'])->pluck('id');
 
         \App\Models\User::whereIn('role_id', $reviewerRoleIds)
+            ->where('tenant_id', auth()->user()->tenant_id)
             ->where('id', '!=', auth()->id())
             ->where('is_active', true)
             ->get()
@@ -134,10 +161,10 @@ class LeaveRequests extends Component
             abort(403);
         }
 
-        $leave = LeaveRequest::findOrFail($id);
+        $leave = $this->findReviewable($id);
 
-        // Nobody reviews their own request, not even an admin.
-        if ($leave->user_id === auth()->id()) {
+        // Another tenant's request, or nobody reviews their own.
+        if (! $leave || $leave->user_id === auth()->id()) {
             abort(403);
         }
 
@@ -159,7 +186,11 @@ class LeaveRequests extends Component
             'reviewNote' => $status === 'rejected' ? 'required|max:300' : 'nullable|max:300',
         ]);
 
-        $leave = LeaveRequest::findOrFail($this->reviewingId);
+        $leave = $this->findReviewable($this->reviewingId);
+
+        if (! $leave) {
+            abort(403);
+        }
 
         if ($leave->user_id === auth()->id() || $leave->status !== 'pending') {
             session()->flash('error', 'That request is no longer awaiting your decision.');
