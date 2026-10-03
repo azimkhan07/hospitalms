@@ -134,8 +134,11 @@
             </div>
         @elseif ($tab === 'review' && $canReview)
             <p class="text-muted mb-2" style="font-size:11px">
-                Requests from other staff awaiting your decision. Your own requests are never listed
-                here &mdash; they sit under <strong>My Requests</strong>.
+                Requests from other staff awaiting a decision. {{ $canDecide
+                    ? 'These are yours to clear.'
+                    : 'The <strong>'.$approver.'</strong> clears these first; you can read them here.' }}
+                Your own requests are never listed here &mdash; they sit under
+                <strong>My Requests</strong>.
             </p>
             <div class="text-info" wire:loading>Loading..</div>
             <table class="table table-sm table-bordered mb-0">
@@ -161,7 +164,7 @@
                             <td style="max-width:260px">{{ \Illuminate\Support\Str::limit($leave->reason ?? '-', 60) }}</td>
                             <td>
                                 <button type="button" class="btn btn-xs btn-outline-primary"
-                                    wire:click="openReview({{ $leave->id }})">Review</button>
+                                    wire:click="openReview({{ $leave->id }})">{{ $canDecide ? 'Review' : 'View' }}</button>
                             </td>
                         </tr>
                     @empty
@@ -193,20 +196,28 @@
                                 ({{ $current?->from_date && $current?->to_date ? $current->from_date->diffInDays($current->to_date) + 1 : 0 }} days)
                             </div>
                             <div class="p-2 bg-light rounded mt-2">{{ $current?->reason ?: 'No reason given.' }}</div>
-                            <div class="form-group mt-2">
-                                <label>Note {{ $reviewNote === '' ? '' : '' }}</label>
-                                <textarea rows="2" class="form-control form-control-sm"
-                                    placeholder="Required when rejecting" wire:model="reviewNote"></textarea>
-                                @error('reviewNote')
-                                    <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="d-flex">
-                                <button type="button" class="btn btn-sm btn-success mr-2"
-                                    wire:click="decide('approved')"><i class="fas fa-check"></i> Approve</button>
-                                <button type="button" class="btn btn-sm btn-danger"
-                                    wire:click="decide('rejected')"><i class="fas fa-times"></i> Reject</button>
-                            </div>
+                            @if ($canDecide)
+                                <div class="form-group mt-2">
+                                    <label>Note {{ $reviewNote === '' ? '' : '' }}</label>
+                                    <textarea rows="2" class="form-control form-control-sm"
+                                        placeholder="Required when rejecting" wire:model="reviewNote"></textarea>
+                                    @error('reviewNote')
+                                        <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="d-flex">
+                                    <button type="button" class="btn btn-sm btn-success mr-2"
+                                        wire:click="decide('approved')"><i class="fas fa-check"></i> Approve</button>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                        wire:click="decide('rejected')"><i class="fas fa-times"></i> Reject</button>
+                                </div>
+                            @else
+                                <div class="alert alert-warning mb-0 py-2" style="font-size:11px">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    Waiting on the <strong>{{ $approver }}</strong>. You can read the
+                                    request, but {{ strtolower($approver) }} clears it first.
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

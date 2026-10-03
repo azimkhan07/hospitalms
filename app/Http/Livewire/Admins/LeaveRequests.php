@@ -45,6 +45,7 @@ class LeaveRequests extends Component
     {
         $canApply = hms_can('leave');
         $canReview = hms_can('leave.review');
+        $canDecide = hms_can_decide_leave();
 
         if (! $canApply && ! $canReview) {
             abort(403);
@@ -53,6 +54,8 @@ class LeaveRequests extends Component
         return view('livewire.admins.leave-requests', [
             'canApply' => $canApply,
             'canReview' => $canReview,
+            'canDecide' => $canDecide,
+            'approver' => hms_leave_approver_label(),
             'applicant' => auth()->user(),
             'reviewerNames' => $canReview ? $this->reviewerNames() : '',
             'mine' => $canApply
@@ -97,6 +100,24 @@ class LeaveRequests extends Component
     }
 
     /**
+     * May this user actually approve/reject, as opposed to only watching the
+     * queue? The Dean decides first; the admin only decides when there is no
+     * Dean to do it.
+     */
+    public function getCanDecideProperty(): bool
+    {
+        return hms_can_decide_leave();
+    }
+
+    /**
+     * Label for whoever holds the first refusal right now.
+     */
+    public function getApproverProperty(): string
+    {
+        return hms_leave_approver_label();
+    }
+
+    /**
      * Leave raised by staff of the signed-in tenant.
      *
      * Leave rows carry no tenant_id of their own, so the tenant boundary is
@@ -121,10 +142,15 @@ class LeaveRequests extends Component
 
     /**
      * Role names of the staff who can act on a leave request.
+     *
+     * Names whoever currently holds the first refusal, so the UI does not
+     * advertise an admin who is only standing in for a vacant Dean post.
      */
     private function reviewerNames(): string
     {
-        return Role::whereIn('slug', ['admin', 'moderator', 'hr'])
+        $slugs = hms_leave_approver_slugs();
+
+        return Role::whereIn('slug', $slugs)
             ->pluck('name')
             ->filter()
             ->implode(', ');
@@ -187,7 +213,9 @@ class LeaveRequests extends Component
 
     private function notifyReviewers(LeaveRequest $leave): void
     {
-        $reviewerRoleIds = Role::whereIn('slug', ['admin', 'moderator', 'hr'])->pluck('id');
+        // Only whoever can actually decide right now gets pinged, so a Dean is
+        // not notified about requests the admin is going to clear anyway.
+        $reviewerRoleIds = Role::whereIn('slug', hms_leave_approver_slugs())->pluck('id');
 
         \App\Models\User::whereIn('role_id', $reviewerRoleIds)
             ->where('tenant_id', auth()->user()->tenant_id)
@@ -199,7 +227,7 @@ class LeaveRequests extends Component
 
     public function openReview(int $id): void
     {
-        if (! hms_can('leave.review')) {
+        if (! $this->canReview) {
             abort(403);
         }
 
@@ -216,7 +244,8 @@ class LeaveRequests extends Component
 
     public function decide(string $status): void
     {
-        if (! hms_can('leave.review')) {
+        // Watching the queue is allowed for every reviewer; deciding is not.
+        if (! $this->canDecide) {
             abort(403);
         }
 

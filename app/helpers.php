@@ -94,6 +94,84 @@ if (! function_exists('hms_enabled_roles')) {
     }
 }
 
+if (! function_exists('hms_has_dean')) {
+    /**
+     * Does this tenant have a Dean (moderator) who can approve leave?
+     *
+     * The Dean is the first approver; the admin only steps in when the post is
+     * vacant or disabled, which is the normal case in clinic mode where the
+     * moderator role does not exist.
+     */
+    function hms_has_dean(?object $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        if (! $user || ! $user->tenant_id) {
+            return false;
+        }
+
+        if (! hms_role_enabled('moderator')) {
+            return false;
+        }
+
+        return \App\Models\User::where('tenant_id', $user->tenant_id)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('slug', 'moderator'))
+            ->exists();
+    }
+}
+
+if (! function_exists('hms_leave_approver_slugs')) {
+    /**
+     * Role slugs allowed to approve/reject a leave request right now.
+     *
+     * Dean first, admin as the fallback when no Dean is available. HR sits
+     * alongside whichever is active because it handles the paperwork either way.
+     *
+     * @return array<int, string>
+     */
+    function hms_leave_approver_slugs(?object $user = null): array
+    {
+        $user ??= Auth::user();
+
+        if (! $user) {
+            return [];
+        }
+
+        $primary = hms_has_dean($user) ? 'moderator' : 'admin';
+
+        return [$primary, 'hr'];
+    }
+}
+
+if (! function_exists('hms_can_decide_leave')) {
+    /**
+     * May this user approve/reject a leave request?
+     */
+    function hms_can_decide_leave(?object $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        if (! $user || ! hms_can('leave.review', $user)) {
+            return false;
+        }
+
+        return in_array($user->roleSlug(), hms_leave_approver_slugs($user), true);
+    }
+}
+
+if (! function_exists('hms_leave_approver_label')) {
+    /**
+     * Who currently holds the first refusal, for the UI.
+     */
+    function hms_leave_approver_label(?object $user = null): string
+    {
+        $user ??= Auth::user();
+
+        return hms_has_dean($user) ? 'Dean' : 'Admin';
+    }
+}
+
 if (! function_exists('hms_role_enabled')) {
     function hms_role_enabled(?string $slug, ?string $mode = null): bool
     {
