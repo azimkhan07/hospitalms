@@ -42,6 +42,8 @@ class LeaveRequests extends Component
 
         return view('livewire.admins.leave-requests', [
             'canReview' => $canReview,
+            'applicant' => auth()->user(),
+            'reviewerNames' => $canReview ? $this->reviewerNames() : collect(),
             'mine' => LeaveRequest::where('user_id', auth()->id())
                 ->orderByDesc('created_at')
                 ->limit(12)
@@ -49,6 +51,7 @@ class LeaveRequests extends Component
             'queue' => $canReview
                 ? LeaveRequest::with(['user.role:id,name,slug', 'reviewer:id,name'])
                     ->where('status', 'pending')
+                    ->where('user_id', '!=', auth()->id())
                     ->orderBy('from_date')
                     ->paginate(10)
                 : null,
@@ -59,15 +62,29 @@ class LeaveRequests extends Component
                     ->limit(10)
                     ->get()
                 : collect(),
-            'reviewers' => $canReview
-                ? Role::whereIn('slug', ['admin', 'moderator', 'hr'])->pluck('name', 'id')
-                : collect(),
         ]);
+    }
+
+    /**
+     * Role names of the staff who can act on a leave request.
+     */
+    private function reviewerNames(): string
+    {
+        return Role::whereIn('slug', ['admin', 'moderator', 'hr'])
+            ->pluck('name')
+            ->filter()
+            ->implode(', ');
     }
 
     public function setTab(string $tab): void
     {
-        $this->tab = $tab;
+        // Only reviewers may open the review tabs, otherwise the view would
+        // render a null queue.
+        if (in_array($tab, ['review', 'decided'], true) && ! hms_can('leave.review')) {
+            $tab = 'mine';
+        }
+
+        $this->tab = in_array($tab, ['mine', 'review', 'decided'], true) ? $tab : 'mine';
     }
 
     public function submitRequest(): void
@@ -117,6 +134,13 @@ class LeaveRequests extends Component
             abort(403);
         }
 
+        $leave = LeaveRequest::findOrFail($id);
+
+        // Nobody reviews their own request, not even an admin.
+        if ($leave->user_id === auth()->id()) {
+            abort(403);
+        }
+
         $this->reviewingId = $id;
         $this->reviewNote = '';
     }
@@ -127,11 +151,24 @@ class LeaveRequests extends Component
             abort(403);
         }
 
+        if (! in_array($status, ['approved', 'rejected'], true)) {
+            abort(422);
+        }
+
         $this->validate([
             'reviewNote' => $status === 'rejected' ? 'required|max:300' : 'nullable|max:300',
         ]);
 
         $leave = LeaveRequest::findOrFail($this->reviewingId);
+
+        if ($leave->user_id === auth()->id() || $leave->status !== 'pending') {
+            session()->flash('error', 'That request is no longer awaiting your decision.');
+
+            $this->reviewingId = null;
+            $this->reviewNote = '';
+
+            return;
+        }
 
         $leave->update([
             'status' => $status,

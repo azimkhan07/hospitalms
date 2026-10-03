@@ -13,7 +13,7 @@
     <link href="{{ asset('assets/vendor/fontawesome/css/brands.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/flagiconcss/css/flag-icon.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/css/master.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/master.css') }}?v={{ filemtime(public_path('assets/css/master.css')) }}" rel="stylesheet">
 
     <style>
         .sa-panel #sidebar {
@@ -48,6 +48,29 @@
         .sa-panel #sidebar .sidebar-role {
             color: #cfe2f3;
         }
+        /* submenu sits on the dark panel: give it its own opaque, readable palette */
+        .sa-panel #sidebar ul.components ul.submenu {
+            background: #093054;
+            box-shadow: inset 3px 0 0 rgba(255, 255, 255, .06);
+        }
+        .sa-panel #sidebar ul.components ul.submenu li a {
+            background: transparent;
+            color: #d6e7f7;
+        }
+        .sa-panel #sidebar ul.components ul.submenu li a::before {
+            background: #8fb6d8;
+        }
+        .sa-panel #sidebar ul.components ul.submenu li a:hover {
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+        }
+        .sa-panel #sidebar ul.components ul.submenu li a.active {
+            background: rgba(15, 127, 212, .35);
+            color: #fff;
+        }
+        .sa-panel #sidebar ul.components ul.submenu li a.active::before {
+            background: #fff;
+        }
     </style>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -56,10 +79,16 @@
 
 <body class="clinic_version sa-panel">
 
+    @php
+        $brand = hms_tenant_brand();
+    @endphp
+
     <div class="wrapper">
         <nav id="sidebar">
             <div class="sidebar-brand">
-                <a href="{{ route('admin_dashboard') }}">HMS</a>
+                <a href="{{ route('admin_dashboard') }}" title="{{ $brand['name'] }}">
+                    <img src="{{ $brand['logo'] }}" alt="{{ $brand['name'] }}">
+                </a>
             </div>
             <ul class="list-unstyled components text-secondary">
                 @foreach (hms_sidebar_tree() as $item)
@@ -110,10 +139,6 @@
                     @endif
                 @endforeach
             </ul>
-            <div class="sidebar-role">
-                <i class="fas fa-user-shield"></i>
-                <span>{{ hms_role_label() }}</span>
-            </div>
         </nav>
 
         <div id="body">

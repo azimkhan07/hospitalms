@@ -1,5 +1,5 @@
 <div class="box box-primary">
-    <div class="box-header d-flex align-items-center">
+    <div class="box-header d-flex align-items-center flex-wrap">
         <ul class="nav nav-pills" style="font-size:11.5px">
             <li class="nav-item">
                 <button type="button" class="nav-link py-1 px-2 {{ $tab === 'mine' ? 'active' : '' }}"
@@ -29,11 +29,24 @@
         @if (session()->has('success'))
             <div class="alert alert-success py-1 px-2">{{ session('success') }}</div>
         @endif
+        @if (session()->has('error'))
+            <div class="alert alert-danger py-1 px-2">{{ session('error') }}</div>
+        @endif
 
         @if ($tab === 'mine')
             <div class="row">
                 <div class="col-lg-4">
                     <form wire:submit.prevent="submitRequest" class="border rounded p-2">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <strong style="font-size:12.5px">Apply for Leave</strong>
+                            <span class="badge badge-secondary">For me</span>
+                        </div>
+                        <p class="text-muted mb-2" style="font-size:11px; line-height:1.4">
+                            Applying as <strong>{{ $applicant?->name }}</strong>
+                            ({{ hms_role_label($applicant) }}). Every signed-in user &mdash; admin or
+                            staff &mdash; applies here for their own leave; it then goes to
+                            {{ $reviewerNames ?: 'the reviewers' }} for approval.
+                        </p>
                         <div class="form-group">
                             <label>Leave Type</label>
                             <select class="form-control form-control-sm" wire:model="type">
@@ -117,7 +130,11 @@
                     </table>
                 </div>
             </div>
-        @elseif ($tab === 'review')
+        @elseif ($tab === 'review' && $canReview)
+            <p class="text-muted mb-2" style="font-size:11px">
+                Requests from other staff awaiting your decision. Your own requests are never listed
+                here &mdash; they sit under <strong>My Requests</strong>.
+            </p>
             <div class="text-info" wire:loading>Loading..</div>
             <table class="table table-sm table-bordered mb-0">
                 <thead>

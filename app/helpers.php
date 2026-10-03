@@ -173,6 +173,28 @@ if (! function_exists('hms_role_label')) {
     }
 }
 
+if (! function_exists('hms_tenant_brand')) {
+    /**
+     * Brand (name + logo) for the signed-in tenant.
+     *
+     * The logo uploaded by the platform super admin on the tenant record wins,
+     * then whatever the tenant set in its own settings, then the packaged
+     * default so the panel never renders a broken or empty brand.
+     *
+     * @return array{name: string, logo: string}
+     */
+    function hms_tenant_brand(): array
+    {
+        $tenant = Auth::user()?->tenant;
+        $site = \App\Models\SiteContent::get();
+
+        return [
+            'name' => $tenant?->name ?: ($site['name'] ?? 'HMS'),
+            'logo' => storage_url($tenant?->logo ?: ($site['logo'] ?? null), 'default.png'),
+        ];
+    }
+}
+
 if (! function_exists('hms_sidebar_tree')) {
     /**
      * Nested admin sidebar: single links and collapsible groups.
