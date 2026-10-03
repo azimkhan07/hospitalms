@@ -41,6 +41,9 @@ class Settings extends Component
         }
 
         $this->settings = SettingModel::all()->pluck('value', 'key')->toArray();
+
+        // Show the mode the tenant actually has, not a stale settings row.
+        $this->settings['institution_mode'] = hms_institution_mode();
     }
 
     public function updateSettings()
@@ -55,6 +58,16 @@ class Settings extends Component
 
         foreach ($this->settings as $key => $value) {
             if (in_array($key, $this->fileKeys, true)) {
+                continue;
+            }
+
+            // The tenant row owns the institution mode (the Super Admin picks it
+            // during onboarding), so writing it to settings here created a second
+            // source of truth that role/module gating never looked at.
+            if ($key === 'institution_mode') {
+                auth()->user()?->tenant?->update(['mode' => $value]);
+                SettingModel::updateOrCreate(['key' => $key], ['value' => $value]);
+
                 continue;
             }
 

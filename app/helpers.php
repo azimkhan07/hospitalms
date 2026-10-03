@@ -27,18 +27,40 @@ if (! function_exists('storage_url')) {
 if (! function_exists('hms_institution_mode')) {
     /**
      * The active institution mode: "clinic" or "hospital".
+     *
+     * The tenant row owns the mode (a Super Admin picks it during onboarding),
+     * so the signed-in user's tenant wins. The settings row is only a fallback
+     * for the public site, where nobody is authenticated and there is no tenant
+     * to read. Without this split, flipping a tenant to "clinic" in the
+     * Super Admin panel changed nothing, because everything still keyed off
+     * the settings row.
      */
     function hms_institution_mode(): string
     {
-        $mode = null;
+        $modes = config('hms.modes', []);
+        $valid = fn ($m) => is_string($m) && array_key_exists($m, $modes);
 
         try {
-            $mode = \App\Models\Settings::where('key', 'institution_mode')->value('value');
+            $user = Auth::user();
+
+            $tenantMode = $user && $user->tenant_id
+                ? $user->tenant()->value('mode')
+                : null;
+
+            if ($valid($tenantMode)) {
+                return $tenantMode;
+            }
         } catch (\Throwable $e) {
-            $mode = null;
+            // fall through to the settings row
         }
 
-        return array_key_exists((string) $mode, config('hms.modes', [])) ? $mode : 'hospital';
+        try {
+            $stored = \App\Models\Settings::where('key', 'institution_mode')->value('value');
+        } catch (\Throwable $e) {
+            $stored = null;
+        }
+
+        return $valid($stored) ? $stored : 'hospital';
     }
 }
 
