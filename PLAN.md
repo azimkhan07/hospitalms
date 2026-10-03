@@ -176,17 +176,24 @@ Goal: run one facility. Admin = Super Admin **of that tenant only**.
 - [x] Settings page (site name, contacts, socials, logo, mode).
 - [x] Clinic/Hospital mode stored per tenant.
 - [x] Staff directory (filtered by enabled roles).
-- [ ] Admin creates users per allowed role (clinic: doctor, receptionist, pharmacist; hospital: + nurse, laboratorist, storekeeper, accountant, dean).
+- [x] **Admin never applies for leave** — approve/reject only, and only as the
+      fallback approver when no Dean exists (§9b.5, §9.5).
+- [x] **Admin is view-only on clinical data** — prescriptions and reports are
+      read-only for the admin; no editing of a clinical body.
+- [x] **Admin is view-only on allocation** — beds/rooms are allocated by the
+      Dean (executed by reception), the admin only sees occupancy.
+- [x] **Admin creates users per allowed role** — the create form only offers
+      roles the tenant's mode allows (clinic: doctor, receptionist, pharmacist;
+      hospital: + nurse, laboratorist, storekeeper, accountant, dean/moderator).
+- [x] Mode hides what the mode does not have (PLAN.md §16 verified by test).
 - [ ] Departments management.
 - [ ] All **appointments** visible to admin.
-- [ ] **Prescriptions / reports are view-only** for admin (no editing clinical data).
 - [ ] Admin dashboard cards: patients today, appointments, beds occupied/free, revenue, low stock, unresolved items.
 - [ ] Facility profile edit (name, number, timing, logo, images, beds).
-- [ ] Ward/Bed **setup** (create wards + beds) — see recommendation in §9.
 - [ ] Reports: daily/monthly, doctor-wise, department-wise, revenue, pharmacy, lab.
 - [ ] Bulk import staff/patients (optional).
 
-**Acceptance:** an admin can create every staff role allowed by the mode, see all appointments, and never edit a prescription/report body.
+**Acceptance:** an admin can create every staff role allowed by the mode, see all appointments, read occupancy and reports, and never edit a prescription/report body or allocate a bed.
 
 ---
 
@@ -286,9 +293,50 @@ Goal: execute doctor's orders round the clock and log everything via the system.
 ## 9. Recommendations (open questions the user asked)
 
 1. **Who assigns the doctor?** → **Receptionist** assigns for normal OPD walk-ins, choosing from the on-duty list. **Dean** controls the duty roster and handles IPD/emergency reassignment and exceptions. Reason: receptionist is at the counter when the patient arrives; the dean owns staffing.
-2. **Who creates beds/wards?** → **Admin (or Dean) creates wards + bed numbers** during setup (this is configuration, done once). **Receptionist allocates** a free bed at admission; **Nurse** updates occupied/cleaning status. In clinic mode there is no bed module at all.
+2. **Who creates beds/wards?** → **Dean** creates rooms + bed numbers during setup (this is configuration, done once). **Receptionist allocates** a free bed at admission; **Nurse** updates occupied/cleaning status. **Admin is view-only** — they see occupancy and reports but never allocate. In clinic mode there is no bed module at all.
 3. **Vitals** → captured by **receptionist for OPD**, by **nurse for IPD**, both editable by the **doctor**. This matches the user's two statements.
 4. **Mode** → the Super Admin picks clinic/hospital at creation; Admin can request a change; only Super Admin flips it.
+5. **Who owns allocation?** → **Dean**. The admin stays in view-only: occupancy, bed maps and reports are readable, but allocation and release are not available to them. Receptionist executes at the counter; the Dean owns the beds.
+
+---
+
+## 9b. Rooms, beds and private rooms (agreed model)
+
+The user distinguishes three kinds of in-patient accommodation, and they are
+stored differently.
+
+| Kind | Stored as | Has bed numbers | Occupancy |
+|---|---|---|---|
+| **General ward** | one `rooms` row of type `general`, `capacity` beds | yes — bed numbers `G1..Gn` | many patients per room |
+| **ICU** | one `rooms` row of type `icu`, `capacity` beds | yes — bed numbers `ICU1..ICUn` | one patient per bed |
+| **Private room** | one `rooms` row of type `private`, `capacity = 1` | yes — bed number `P1..Pn` | one patient, whole room |
+
+Rules:
+
+- A **bed number always exists** for ward, ICU and private. Nothing is stored as a
+  bare "occupied room" without a numbered bed, so a bed map can be printed and
+  a discharge can free exactly one bed.
+- A **private room is a separate section**, never mixed into the general ward
+  list, because it is billed differently and a private patient is not expected
+  to share.
+- **Private rooms are optional and asked about at creation.** In the Super Admin
+  hospital wizard: *"Do you provide private rooms?"* → **Yes / No**.
+  - **Yes** → reveal a quantity field *"How many private rooms?"* (min 1).
+  - **No** → the quantity field is hidden and not validated, nothing is created.
+- The private room yes/no + quantity is a **tenant property**
+  (`private_room_enabled`, `private_room_count`), so it is fixed by the
+  Super Admin at onboarding and only editable by them afterwards.
+- Rooms, beds and their occupancy are **hospital-mode only**. Clinic mode hides
+  the whole module (see §16).
+
+Pending implementation:
+
+- [ ] `rooms`: add `name`, `type` += `icu`, `capacity`, `daily_rate`, `floor`.
+- [ ] `beds`: add `bed_number` (unique per room), `status` += `cleaning`, `reserved`.
+- [ ] `stays`: add `bed_id` so a stay occupies a numbered bed, not just a room.
+- [ ] Super Admin wizard: private room Yes/No + quantity (conditional field).
+- [ ] Dean room/bed setup screen; admin sees the same screen read-only.
+- [ ] Private rooms listed in their own section, separate from general ward.
 
 ---
 
