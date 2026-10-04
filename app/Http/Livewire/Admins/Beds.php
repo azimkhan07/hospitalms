@@ -2,151 +2,319 @@
 
 namespace App\Http\Livewire\Admins;
 
+use App\Models\Tenant;
 use App\Models\beds as ModelsBeds;
-use App\Models\rooms;
 use App\Models\patient;
-use Livewire\Component;
+use App\Models\rooms;
 use Livewire\Attributes\Layout;
-use Livewire\WithPagination;
+use Livewire\Component;
 
 #[Layout('admins.layouts.app')]
 class Beds extends Component
 {
+    /**
+     * Accommodation sections, in the order they are shown on the bed map.
+     * A private room is never mixed in with the general ward because it is
+     * billed separately and never shared (PLAN.md section 9b).
+     */
+    public const SECTIONS = [
+        'general' => ['label' => 'General Ward', 'prefix' => 'G', 'private' => false],
+        'ward' => ['label' => 'Ward', 'prefix' => 'W', 'private' => false],
+        'icu' => ['label' => 'ICU', 'prefix' => 'ICU', 'private' => false],
+        'private' => ['label' => 'Private Rooms', 'prefix' => 'P', 'private' => true],
+        'semi-private' => ['label' => 'Semi-Private Rooms', 'prefix' => 'SP', 'private' => false],
+    ];
 
-    use WithPagination;
+    public string $_page = 'index';
 
-    protected $paginationTheme = 'bootstrap';
-    public $room;
+    public ?int $room_id = null;
 
-    public $patient_id;
-    public $room_id;
-    public $alloted_time = '';
-    public $discharge_time = '';
-    public $edit_bed_id;
-    public $button_text = "Add New Bed";
+    public ?int $patient_id = null;
 
-    public $_page;
-    public function mount()
+    public string $alloted_time = '';
+
+    public string $discharge_time = '';
+
+    public string $bed_number = '';
+
+    /**
+     * Patient picked per bed number in the allocation dropdown, keyed by bed id.
+     */
+    public array $allocatePatient = [];
+
+    public ?int $edit_bed_id = null;
+
+    public string $button_text = 'Add New Bed';
+
+    public function mount(): void
     {
         $this->_page = 'index';
     }
 
-    public function show_create_form()
+    /**
+     * Read-only means: no room setup, no allocation, no status change. The
+     * admin still sees the whole bed map (PLAN.md section 9b.5).
+     */
+    public function canManage(): bool
     {
-        $this->_page = "create";
+        return hms_can('beds.manage');
     }
 
-    public function show_edit_form($id)
+    public function canAllocate(): bool
     {
-        $this->_page = "edit";
-        $Room = ModelsBeds::findOrFail($id);
-        $this->edit_bed_id = $id;
-        $this->room_id = $Room->room_id;
-        $this->patient_id = $Room->patient_id;
-        $this->alloted_time = $Room->alloted_time;
-        $this->discharge_time = $Room->discharge_time;
-
-        $this->button_text = "Update Room";
+        return hms_can('beds.allocate');
     }
 
-    public function show_index()
+    public function canChangeStatus(): bool
     {
-        $this->_page = "index";
+        return hms_can('beds.status');
     }
 
-    public function add_bed()
+    /**
+     * Is private accommodation switched on for this facility? Answered by the
+     * Super Admin at hospital creation; always off for a clinic.
+     */
+    public function hasPrivateRooms(): bool
+    {
+        $tenant = auth()->user()?->tenant;
+
+        return (bool) $tenant?->hasPrivateRooms();
+    }
+
+    public function show_create_form(): void
+    {
+        $this->authorizeAction('beds.manage');
+        $this->_page = 'create';
+    }
+
+    public function show_edit_form($id): void
+    {
+        $this->authorizeAction('beds.manage');
+        $this->_page = 'edit';
+        $bed = ModelsBeds::findOrFail($id);
+        $this->edit_bed_id = $bed->id;
+        $this->room_id = $bed->room_id;
+        $this->patient_id = $bed->patient_id;
+        $this->alloted_time = (string) ($bed->alloted_time ?? '');
+        $this->bed_number = (string) $bed->bed_number;
+        $this->button_text = 'Update Bed';
+    }
+
+    public function show_index(): void
+    {
+        $this->_page = 'index';
+    }
+
+    /**
+     * Guard a mutating action. The bed map is visible to the admin, but every
+     * write path is refused for them.
+     */
+    protected function authorizeAction(string $permission): void
+    {
+        abort_unless(hms_can($permission), 403);
+    }
+
+    public function add_bed(): void
     {
         if ($this->edit_bed_id) {
-
             $this->update($this->edit_bed_id);
 
-        } else {
-
-            $this->validate([
-                'room_id' => 'required|numeric',
-                'patient_id' => 'required|numeric',
-                'alloted_time' => "required",
-            ]);
-
-            ModelsBeds::create([
-                'room_id' => $this->room_id,
-                'patient_id' => $this->patient_id,
-                'alloted_time' => $this->alloted_time,
-                'status' => 'alloted',
-            ]);
-
-            $this->room_id = null;
-            $this->patient_id = null;
-            $this->alloted_time = null;
-
-            session()->flash('message', 'Bed Assigned successfully.');
-            $this->_page = "index";
+            return;
         }
 
-    }
-
-
-
-    public function update($id)
-    {
+        $this->authorizeAction('beds.manage');
         $this->validate([
             'room_id' => 'required|numeric',
-            'patient_id' => 'required|numeric',
-            'alloted_time' => "required",
-            'discharge_time' => "required",
+            'bed_number' => 'required|string|max:20',
+            'alloted_time' => 'required',
+        ]);
+
+        ModelsBeds::create([
+            'room_id' => $this->room_id,
+            'bed_number' => $this->bed_number,
+            'patient_id' => $this->patient_id,
+            'alloted_time' => $this->alloted_time,
+            'status' => $this->patient_id ? 'alloted' : 'available',
+        ]);
+
+        $this->resetFormFields();
+        session()->flash('message', 'Bed created successfully.');
+        $this->_page = 'index';
+    }
+
+    public function update($id): void
+    {
+        $this->authorizeAction('beds.manage');
+        $this->validate([
+            'room_id' => 'required|numeric',
+            'bed_number' => 'required|string|max:20',
+            'patient_id' => 'nullable|numeric',
+            'alloted_time' => 'nullable',
+            'discharge_time' => 'nullable',
         ]);
 
         $bed = ModelsBeds::findOrFail($id);
         $bed->room_id = $this->room_id;
-        $bed->patient_id = $this->patient_id;
-        $bed->alloted_time = $this->alloted_time;
-        $bed->discharge_time = $this->discharge_time;
-        $bed->status = "available";
+        $bed->bed_number = $this->bed_number;
+        $bed->patient_id = $this->patient_id ?: null;
+        $bed->alloted_time = $this->alloted_time ?: null;
+        $bed->discharge_time = $this->discharge_time ?: null;
+        $bed->status = $bed->patient_id ? 'alloted' : 'available';
 
         $bed->save();
 
-        $this->room_id = null;
-        $this->patient_id = null;
-        $this->alloted_time = null;
-        $this->discharge_time = null;
-
-        $this->edit_bed_id = null;
-
-        session()->flash('message', 'Bed Updated Successfully.');
-
-        $this->button_text = "Add New Bed";
-        $this->_page = "index";
-
+        $this->resetFormFields();
+        $this->button_text = 'Add New Bed';
+        session()->flash('message', 'Bed updated successfully.');
+        $this->_page = 'index';
     }
 
-    public function delete($id)
+    /**
+     * Hand a free bed to a patient. Owned by the Dean; the receptionist runs it
+     * at the counter. The admin may not allocate (PLAN.md section 9b.5).
+     */
+    public function allocate(int $bedId): void
     {
-        ModelsBeds::findOrFail($id)->delete();
-        session()->flash('message', 'Room Deleted Successfully.');
+        $this->authorizeAction('beds.allocate');
 
+        $patientId = (int) ($this->allocatePatient[$bedId] ?? 0);
+
+        if (! $patientId) {
+            session()->flash('error', 'Pick a patient first.');
+
+            return;
+        }
+
+        $bed = ModelsBeds::findOrFail($bedId);
+
+        if (! $bed->isAllocatable()) {
+            session()->flash('error', 'That bed is not free.');
+
+            return;
+        }
+
+        $bed->update([
+            'patient_id' => $patientId,
+            'status' => 'alloted',
+            'alloted_time' => now(),
+            'discharge_time' => null,
+        ]);
+
+        unset($this->allocatePatient[$bedId]);
+
+        session()->flash('message', 'Bed '.$bed->label().' allocated.');
+    }
+
+    /**
+     * Free a bed. A discharge releases exactly the one numbered bed, not the
+     * whole room.
+     */
+    public function release(int $bedId): void
+    {
+        $this->authorizeAction('beds.allocate');
+
+        $bed = ModelsBeds::findOrFail($bedId);
+        $bed->update([
+            'patient_id' => null,
+            'status' => 'cleaning',
+            'discharge_time' => now(),
+        ]);
+
+        session()->flash('message', 'Bed '.$bed->label().' released, pending cleaning.');
+    }
+
+    /**
+     * Nurse action: mark a bed as cleaned and back in service, or out of order.
+     */
+    public function setStatus(int $bedId, string $status): void
+    {
+        $this->authorizeAction('beds.status');
+
+        abort_unless(in_array($status, ['available', 'cleaning', 'maintenance'], true), 422);
+
+        $bed = ModelsBeds::findOrFail($bedId);
+
+        if ($bed->patient_id && $status !== 'available') {
+            session()->flash('error', 'This bed still has a patient in it.');
+
+            return;
+        }
+
+        $bed->update(['status' => $status]);
+        session()->flash('message', 'Bed '.$bed->label().' marked as '.$status.'.');
+    }
+
+    public function delete($id): void
+    {
+        $this->authorizeAction('beds.manage');
+        ModelsBeds::findOrFail($id)->delete();
+        session()->flash('message', 'Bed deleted successfully.');
+        $this->resetFormFields();
+    }
+
+    protected function resetFormFields(): void
+    {
         $this->room_id = null;
         $this->patient_id = null;
-        $this->alloted_time = null;
-        $this->discharge_time = null;
+        $this->alloted_time = '';
+        $this->discharge_time = '';
+        $this->bed_number = '';
+        $this->edit_bed_id = null;
     }
+
+    /**
+     * The bed map, grouped by accommodation section. Rooms are loaded with
+     * their beds in one query rather than one query per room.
+     */
+    public function sections()
+    {
+        $query = rooms::with(['beds' => fn ($q) => $q->with('patient')])
+            ->orderBy('floor')
+            ->orderBy('name');
+
+        $grouped = $query->get()->groupBy('type');
+
+        $out = [];
+
+        foreach (self::SECTIONS as $type => $meta) {
+            // A clinic has no in-patient accommodation at all, and a hospital
+            // that answered "No" at creation gets no private section either.
+            if ($type === 'private' && ! $this->hasPrivateRooms()) {
+                continue;
+            }
+
+            $roomsForType = $grouped->get($type, collect());
+
+            $total = $roomsForType->sum(fn ($r) => $r->beds->count());
+            $occupied = $roomsForType->sum(fn ($r) => $r->beds->where('status', 'alloted')->count());
+
+            $out[$type] = [
+                'label' => $meta['label'],
+                'rooms' => $roomsForType,
+                'total' => $total,
+                'occupied' => $occupied,
+                'free' => $total - $occupied,
+            ];
+        }
+
+        return $out;
+    }
+
     public function render()
     {
-        if (! hms_can('beds')) { abort(403); }
+        abort_unless(hms_can('beds'), 403);
 
-        if ($this->_page == "index") {
-            return view('livewire.admins.beds.index', [
-                'beds' => ModelsBeds::latest()->paginate(10)
-            ]);
-        } else if ($this->_page == "create") {
+        if ($this->_page === 'create' || $this->_page === 'edit') {
             return view('livewire.admins.beds.create', [
-                'patients' => patient::all(),
-                'rooms' => rooms::where('status', 'available')->get(),
-            ]);
-        } else if ($this->_page == "edit") {
-            return view('livewire.admins.beds.edit', [
-                'patients' => patient::all(),
-                'rooms' => rooms::where('status', 'available')->get(),
+                'patients' => patient::orderBy('name')->get(),
+                'rooms' => rooms::orderBy('name')->get(),
             ]);
         }
+
+        return view('livewire.admins.beds.index', [
+            'sections' => $this->sections(),
+            'rooms' => rooms::orderBy('name')->get(),
+            'patients' => patient::orderBy('name')->get(),
+        ]);
     }
 }

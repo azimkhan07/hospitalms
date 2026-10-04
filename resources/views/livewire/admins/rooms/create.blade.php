@@ -21,6 +21,14 @@
                         <div class="text-capitalize bg-dark p-2 shadow mb-3 text-center text-lg text-light rounded">
                             {{ __('Add New room') }}</div>
                         <div class="form-group">
+                            <label for="name">Room name / number</label>
+                            <input type="text" name="name" wire:model.lazy="name" class="form-control" required
+                                placeholder="General Ward A / ICU / Private 1">
+                            @error('name')
+                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="department">Department</label>
                             <select name="department" wire:model.lazy="department" class="form-control" required>
                                 <option selected value="">Choose Department</option>
@@ -40,12 +48,51 @@
                             <select required wire:model.lazy="type" class="form-control" name="type"
                                 id="">
                                 <option value="">Select Type</option>
+                                <option value="general">General Ward</option>
                                 <option value="ward">Ward</option>
-                                <option value="private">Private</option>
-                                <option value="semi-private">Semi-Private</option>
-                                <option value="general">general</option>
+                                <option value="icu">ICU</option>
+                                @if ($privateEnabled)
+                                    <option value="private">Private</option>
+                                    <option value="semi-private">Semi-Private</option>
+                                @endif
                             </select>
+                            @if (! $privateEnabled)
+                                <small class="text-muted">
+                                    Private rooms are switched off for this facility.
+                                </small>
+                            @elseif ($privateQuota)
+                                <small class="text-muted">
+                                    The facility declared {{ $privateQuota }} private room(s) at creation.
+                                </small>
+                            @endif
                             @error('type')
+                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        @if ($type !== 'private')
+                            <div class="form-group">
+                                <label for="capacity">Number of beds</label>
+                                <input type="number" min="1" max="200" name="capacity" wire:model.lazy="capacity" class="form-control"
+                                    required>
+                                <small class="text-muted">
+                                    Each bed is created with a number (G1, G2, ICU1, ...).
+                                </small>
+                                @error('capacity')
+                                    <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        @endif
+                        <div class="form-group">
+                            <label for="floor">Floor</label>
+                            <input type="text" name="floor" wire:model.lazy="floor" class="form-control" placeholder="1">
+                            @error('floor')
+                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="daily_rate">Rate per day</label>
+                            <input type="number" min="0" step="0.01" name="daily_rate" wire:model.lazy="daily_rate" class="form-control">
+                            @error('daily_rate')
                                 <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
                             @enderror
                         </div>
@@ -69,3 +116,4 @@
                 </div>
             </div>
         </div>
+

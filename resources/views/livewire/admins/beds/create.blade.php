@@ -26,12 +26,26 @@
                             <select name="Room" wire:model.lazy="room_id" class="form-control" required>
                                 <option selected>Choose Room</option>
                                 @forelse ($rooms as $room)
-                                    <option value="{{ $room->id }}">room {{ $room->id }}</option>
+                                    <option value="{{ $room->id }}">
+                                        {{ $room->name }} ({{ ucfirst($room->type) }})
+                                    </option>
                                 @empty
                                     <option value="">Null</option>
                                 @endforelse
                             </select>
                             @error('room_id')
+                                <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bed_number">Bed number</label>
+                            <input type="text" name="bed_number" wire:model.lazy="bed_number" class="form-control"
+                                placeholder="G1 / ICU1 / P1" required>
+                            <small class="text-muted">
+                                Every bed is numbered. General ward uses G, ICU uses ICU, private rooms use P.
+                            </small>
+                            @error('bed_number')
                                 <span class="text-red-500 text-danger text-xs">{{ $message }}</span>
                             @enderror
                         </div>
@@ -69,3 +83,4 @@
         </div>
     </div>
 </div>
+

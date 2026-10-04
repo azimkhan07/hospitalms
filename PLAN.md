@@ -316,6 +316,10 @@ Rules:
 - A **bed number always exists** for ward, ICU and private. Nothing is stored as a
   bare "occupied room" without a numbered bed, so a bed map can be printed and
   a discharge can free exactly one bed.
+- **Bed numbers run per accommodation kind across the whole facility**, not per
+  room: the second general ward continues `G5..G8`, and the second private room
+  is `P2`, never another `P1`. Existing numbers are never renumbered, so a stay
+  keeps pointing at the same bed.
 - A **private room is a separate section**, never mixed into the general ward
   list, because it is billed differently and a private patient is not expected
   to share.
@@ -323,20 +327,27 @@ Rules:
   hospital wizard: *"Do you provide private rooms?"* → **Yes / No**.
   - **Yes** → reveal a quantity field *"How many private rooms?"* (min 1).
   - **No** → the quantity field is hidden and not validated, nothing is created.
+- A facility that answered **No** cannot create a private room later either; the
+  room form refuses it, so the declared capacity cannot drift.
 - The private room yes/no + quantity is a **tenant property**
   (`private_room_enabled`, `private_room_count`), so it is fixed by the
   Super Admin at onboarding and only editable by them afterwards.
 - Rooms, beds and their occupancy are **hospital-mode only**. Clinic mode hides
   the whole module (see §16).
+- Access split (see §9b.5): Dean creates rooms + bed numbers (`beds.manage`),
+  Dean and receptionist allocate (`beds.allocate`), nurse marks a bed cleaned or
+  out of order (`beds.status`). Admin has none of the three.
 
 Pending implementation:
 
-- [ ] `rooms`: add `name`, `type` += `icu`, `capacity`, `daily_rate`, `floor`.
-- [ ] `beds`: add `bed_number` (unique per room), `status` += `cleaning`, `reserved`.
-- [ ] `stays`: add `bed_id` so a stay occupies a numbered bed, not just a room.
-- [ ] Super Admin wizard: private room Yes/No + quantity (conditional field).
-- [ ] Dean room/bed setup screen; admin sees the same screen read-only.
-- [ ] Private rooms listed in their own section, separate from general ward.
+- [x] `rooms`: add `name`, `type` += `icu`, `capacity`, `daily_rate`, `floor`.
+- [x] `beds`: add `bed_number`, `status` += `cleaning`, `reserved`, `maintenance`.
+- [x] `stays`: add `bed_id` so a stay occupies a numbered bed, not just a room.
+- [x] Super Admin wizard: private room Yes/No + quantity (conditional field).
+- [x] Dean room/bed setup screen; admin sees the same screen read-only.
+- [x] Private rooms listed in their own section, separate from general ward.
+- [ ] Seed a default general ward + ICU from the declared bed count at onboarding.
+- [ ] Print-friendly bed map.
 
 ---
 

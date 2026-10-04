@@ -45,11 +45,15 @@ return [
         'weekend_days' => [5, 6],
     ],
 
-    'admin' => [
+'admin' => [
         'label' => 'Admin',
         'icon' => 'fa-user-shield',
         // Everything except "leave": the admin runs the system and works from
         // anywhere, so they do not apply for leave. They still review it.
+        //
+        // "rooms" and "beds" are deliberately READ-ONLY for the admin (PLAN.md
+        // section 9b): no "beds.manage" and no "beds.allocate", so they can
+        // read occupancy but never create a room or hand a bed to a patient.
         'modules' => [
             'dashboard', 'meetings', 'meetings.manage', 'attendance',
             'staff', 'appointments', 'prescriptions', 'history', 'medicines',
@@ -64,7 +68,8 @@ return [
         'icon' => 'fa-user-tie',
         'modules' => [
             'dashboard', 'patients', 'employees', 'staff', 'departments', 'rooms',
-            'beds', 'appointments', 'operations', 'births', 'reports', 'blocks',
+            'beds', 'beds.manage', 'beds.allocate',
+            'appointments', 'operations', 'births', 'reports', 'blocks',
             'prescriptions', 'history', 'discharges', 'meetings', 'meetings.manage',
             'attendance', 'leave', 'leave.review', 'subscribers', 'messages',
         ],
@@ -77,20 +82,23 @@ return [
             'appointments', 'prescriptions', 'history', 'meetings', 'leave',
         ],
     ],
-    'nurse' => [
+'nurse' => [
         'label' => 'Nurse',
         'icon' => 'fa-user-nurse',
         'modules' => [
-            'dashboard', 'patients', 'beds', 'rooms', 'nurses', 'attendance',
-            'history', 'meetings', 'leave',
+            'dashboard', 'patients', 'beds', 'beds.status', 'rooms', 'nurses',
+            'attendance', 'history', 'meetings', 'leave',
         ],
     ],
     'receptionist' => [
         'label' => 'Receptionist',
         'icon' => 'fa-concierge-bell',
-        'modules' => [
+'modules' => [
             'dashboard', 'patients', 'appointments', 'subscribers', 'messages', 'attendance',
             'meetings', 'leave',
+            // The bed map is read-only here; allocation itself is allowed so
+            // the counter can hand a free bed to a patient (PLAN.md section 9b).
+            'rooms', 'beds', 'beds.allocate',
         ],
     ],
     'pharmacist' => [
