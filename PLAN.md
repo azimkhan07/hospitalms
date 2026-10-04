@@ -189,6 +189,10 @@ Goal: run one facility. Admin = Super Admin **of that tenant only**.
       server-side, so a forged `nurse` post on a clinic is rejected, and
       `super_admin` is never assignable from inside a tenant.
 - [x] Mode hides what the mode does not have (PLAN.md §16 verified by test).
+- [ ] **Facilities tab** (§9c.3): every hospital/clinic with a NEW badge while it
+      has no admin, its type, the roles it still needs and its staff/bed counts.
+- [ ] **Admin + Dean get CRUD for each ticked role** (§9c.4) — doctors, nurses,
+      labouratorist, store keeper, accountant, HR — scoped to their own tenant.
 - [ ] Departments management.
 - [ ] All **appointments** visible to admin.
 - [ ] Admin dashboard cards: patients today, appointments, beds occupied/free, revenue, low stock, unresolved items.
@@ -354,6 +358,147 @@ Pending implementation:
 
 ---
 
+## 9c. Clinic types, required roles, and the global tenants view
+
+The user wants the product to be sellable to any kind of facility worldwide, so
+a tenant is no longer just "hospital or clinic". A clinic also declares **what
+kind of clinic it is** and **which roles it actually needs**, and the platform
+can see all of that at a glance.
+
+### 9c.1 Clinic / facility types
+
+A clinic is not one thing. A dental clinic has no ward, no nurse and no ICU; a
+skin clinic has no labouratorist; a multispeciality clinic needs everything. So
+the wizard asks for a **type** and that type pre-suggests the roles.
+
+Types (seeded, editable by Super Admin, `applies_to` = hospital / clinic / both):
+
+| Type | Typical roles it needs |
+|---|---|
+| General | doctor, receptionist, pharmacist |
+| Dental | doctor, receptionist |
+| Skin / Dermatology | doctor, receptionist, pharmacist |
+| Eye / Ophthalmology | doctor, receptionist |
+| ENT | doctor, receptionist |
+| Orthopaedic | doctor, receptionist, nurse (if IPD), laboratorist |
+| Paediatric | doctor, receptionist, nurse (if IPD), laboratorist |
+| Gynaecology | doctor, receptionist, nurse (if IPD) |
+| Cardiology | doctor, receptionist, nurse (if IPD), laboratorist |
+| Neurology | doctor, receptionist, nurse (if IPD), laboratorist |
+| Oncology | doctor, receptionist, nurse (if IPD), laboratorist, storekeeper |
+| Nephrology / Dialysis | doctor, receptionist, nurse (if IPD), laboratorist |
+| Multispeciality | every operational role |
+
+- Type lives on the tenant (`clinic_type_id`) so it can be filtered, reported on
+  and shown to the customer.
+- The type is a **suggestion, not a lock**: the Super Admin ticks the final role
+  list themselves, because only they know what the facility actually bought.
+
+### 9c.2 Required roles are decided at creation
+
+- When a tenant is created, the wizard shows the roles its type suggests and
+  stores the **final ticked set** as the tenant's required roles
+  (`tenant_role_requirements`).
+- **Every screen in that tenant is driven by the required role list**, not by the
+  tenant's mode alone. A dental clinic never renders the laboratory or inventory
+  menu, a general clinic never renders the ward.
+- This one list is the source of truth for: sidebar entries, the admin's staff
+  create form, what the Dean may manage, and what the platform dashboard counts.
+- Roles are **closed by default**: a role the Super Admin did not tick cannot be
+  assigned to anybody in that tenant, and its pages 403 even if the URL is typed
+  by hand. This is the same server-side check as §9b.5, applied to whole
+  modules instead of single actions.
+
+### 9c.3 The admin's tab: every facility, with what is missing
+
+Inside the tenant admin panel a **"Facilities"** tab lists every hospital and
+clinic the platform hosts:
+
+- Facility **name**, **mode** and **type**.
+- A **NEW** badge while nobody has been made admin of it yet — a freshly created
+  tenant with no admin is un-sellable and un-usable, so this is the queue the
+  office works through.
+- **Which roles it still needs**: every ticked role with a headcount target and
+  how many are actually staffed, so a half-built facility is obvious.
+- **Staff count** and **bed count** per facility.
+- Clicking through assigns the admin and adjusts the role list.
+
+### 9c.4 Admin + Dean see CRUD for the roles that were ticked
+
+- Once the role list is set, the **admin and the Dean** get CRUD **for each ticked
+  role** — create the doctors, the nurses, the labouratorist, the store keeper —
+  scoped to their own tenant.
+- Both are still blocked from any role the facility did not tick.
+- The admin is the tenant owner, so the admin can also change the role list's
+  staffing plan; the Dean can create staff but not grant themselves a role.
+
+### 9c.5 Global (platform) view
+
+The Super Admin needs a sales-level view, not per-tenant detail:
+
+- Total facilities, split hospital / clinic.
+- Split **by type**, so it is visible that 14 dental clinics exist.
+- **Unassigned count** — how many facilities still have no admin.
+- Staff and bed totals, and utilisation.
+- Exportable, so it can be shown to a prospective customer.
+
+---
+
+## 9d. Machines, investigations and their calculation
+
+Every facility has diagnostic machines and each machine runs tests that are
+charged for. The user wants the **whole rate card configured and calculated in
+the system**, and a **print** of it.
+
+### 9d.1 Machine master
+
+- **Machine**: name, code, modality, department, location (OPD lab / each ICU),
+  serial, vendor, purchase date, warranty end, status (working / under service /
+  retired), **hourly or per-test rate**.
+- **Modalities** seeded: ECG, MRI, CT Scan, X-Ray, Ultrasound, Doppler, Echo,
+  Audiometry, Ophthalmology (OCT, Slit Lamp, Fundus), Pathology (Haematology,
+  Biochemistry, Microbiology, Serology), BP, Spirometry, Treadmill, EEG, EMG,
+  Dialysis, EMG/NCS, Mammography, Bone Densitometry, Cystoscopy, Endoscopy.
+- A machine can be **attached to a bed or a room**, which is what makes ICU
+  reporting work (§9d.3).
+
+### 9d.2 Tests and how a charge is calculated
+
+- **Test**: name, code, machine, department, turnaround time, and a **rate**.
+- The charge is **calculated, not typed**, so it cannot drift from the rate card:
+  - `base` — a flat fee for the test;
+  - `base + per_unit × units` — e.g. per slide, per exam, per hour of scan;
+  - `machine_rate × units` — used when the machine owns the price;
+  - `urgent × factor` — an urgent multiplier (default 1.5);
+  - optional `discount` and `tax %`, giving a final payable.
+- Every line shows **how it was arrived at** (the formula is printed), so the
+  counter and the patient see the same number.
+
+### 9d.3 ICU machines and reports by bed / room
+
+- **In the ICU the nurse and the doctor add machines themselves** — the ICU is
+  where machines live and it moves fast, so it cannot wait on the Dean's setup
+  round. Adding needs the ICU scope only (`icufacility`).
+- A doctor opens **"Reports"**, picks a **bed number or room number** from the
+  live bed map, and sees **everything recorded against that bed**: vitals,
+  investigations with their calculated charge, machine readings, notes and
+  medicines given.
+- The same screen prints: a single sheet per bed, printable with the bed number,
+  room, patient, machines used and the bill.
+- Read access is any clinical role that works in the ward (doctor, nurse, Dean);
+  the admin sees it read-only, same as §9b.5.
+
+### 9d.4 Build state
+
+- [ ] Machine master CRUD (Dean sets up, admin read-only).
+- [ ] Test / rate card with a visible formula per line.
+- [ ] Charge calculation + printable rate card.
+- [ ] Nurse + doctor add machines in the ICU; machines attach to a bed / room.
+- [ ] Doctor: pick bed / room → all reports for it.
+- [ ] Print sheet per bed.
+
+---
+
 ## 10. Phase 7 — Pharmacist + Store (Inventory)
 
 Goal: dispense medicines and keep stock correct. In **clinic mode the pharmacist also does store/inventory** (no accountant).
@@ -469,13 +614,24 @@ HOSPITAL : all roles
 
 Keep this table and `config/hms.php` in sync.
 
----
+**Refinement (§9c.2): mode is only the outer bound.** The tenant's **required role
+list**, ticked by the Super Admin at creation, is what actually drives the
+sidebar, the staff form, the Dean's permissions and the platform counts. So a
+*dental* clinic is narrower than the `CLINIC` line above, and a *multispeciality*
+hospital is wider than `HOSPITAL` implies. `config/hms.php` still bounds what a
+mode may ever allow; the tenant list narrows it further. Nothing can ever widen
+past the mode.
+
+```
 
 ## 17. Build Order (do not jump the line)
 
 ```
 1  Super Admin (tenant onboarding + admin + errors)      <-- start here
 2  Admin (roles, profile, dashboard, view-only clinical)
+2a Clinic type + required roles at creation (§9c.1, §9c.2)
+2b Facilities tab + role CRUD for admin & dean (§9c.3, §9c.4)
+2c Machines / investigations / ICU reporting (§9d)
 3  Receptionist + Appointments (+ IPD admission)
 4  Doctor (prescription engine + lab orders + follow-up)
 5  Laboratory
@@ -498,4 +654,6 @@ Keep this table and `config/hms.php` in sync.
 
 ---
 
-_Document created for the HMS build. Next action: start Phase 1 (Super Admin)._
+_Document created for the HMS build. Next action: Phase 1 done; Phase 2 in
+progress — next up is §9c.1/§9c.2 (clinic type + required roles at creation),
+then §9c.3 (facilities tab), then §9d (machines & ICU reporting)._
