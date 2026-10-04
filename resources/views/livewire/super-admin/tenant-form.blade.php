@@ -221,6 +221,51 @@
                         @endif
                     @endif
 
+                    {{-- Facility type + the roles it needs (PLAN.md §9c.1, §9c.2) --}}
+                    <div class="col-md-6 form-group">
+                        <label style="font-size:13px">What kind of facility is this? *</label>
+                        <select class="form-control" wire:model.live="clinic_type_id">
+                            <option value="">Select a type</option>
+                            @foreach ($clinicTypes as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">A dental clinic has no ward; a skin clinic has no laboratory.</small>
+                        @error('clinic_type_id') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="col-12 form-group">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label style="font-size:13px; margin:0">Which roles does this facility need? *</label>
+                            @if ($clinic_type_id)
+                                <button type="button" class="btn btn-link btn-sm p-0" style="font-size:12px"
+                                    wire:click="useSuggestedRoles">Reset to suggested</button>
+                            @endif
+                        </div>
+
+                        <div class="row">
+                            @foreach ($modeRoleSlugs as $slug)
+                                <div class="col-md-3 col-6 mb-1">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                            id="role-{{ $slug }}"
+                                            value="{{ $slug }}"
+                                            wire:model.live="requiredRoles">
+                                        <label class="form-check-label" for="role-{{ $slug }}"
+                                            style="font-size:13px">{{ $roleLabels[$slug] ?? $slug }}</label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <small class="text-muted">
+                            This list drives the facility's menu, its staff form and what its Dean may manage.
+                            Nothing outside it can be reached in this tenant.
+                        </small>
+                        @error('requiredRoles') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                        @error('requiredRoles.*') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                    </div>
+
                     @push('scripts')
                         <script src="{{ asset('js/country-state-city.js') }}"></script>
                         <script src="{{ asset('js/country-state-city-dropdown.js') }}"></script>

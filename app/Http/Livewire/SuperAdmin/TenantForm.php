@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\SuperAdmin;
 
+use App\Models\ClinicType;
 use App\Models\Tenant;
 use App\Services\TenantService;
 use Illuminate\Support\Facades\Storage;
@@ -87,6 +88,127 @@ class TenantForm extends Component
     public $private_room_count = null;
 
     /**
+     * What kind of facility this is (PLAN.md §9c.1). A clinic is not one thing:
+     * a dental clinic has no ward and a skin clinic has no labouratorist.
+     */
+    public string $clinic_type_id = '';
+
+    /**
+     * The roles the facility actually bought, ticked by the platform (PLAN.md
+     * §9c.2). Defaults to whatever the chosen type suggests; the tick boxes are
+     * the final word because only the platform knows what was sold.
+     *
+     * @var array<int, string>
+     */
+    public array $requiredRoles = [];
+
+    /**
+     * True while the tick list is untouched, so a hand-picked list is never
+     * silently overwritten by the next type change.
+     *
+     * Must be public: Livewire only carries public properties between requests,
+     * so a protected flag would silently reset on every round trip and undo the
+     * hand-picked list each time the type changed. Tampering with it is
+     * harmless -- validation and the persisted list never read it.
+     */
+    public bool $rolesPickedManually = false;
+
+    /** Roles this mode could ever have, regardless of type. */
+    public function modeRoleSlugs(): array
+    {
+        $roles = hms_enabled_roles($this->mode);
+
+        if (is_array($roles)) {
+            return $roles;
+        }
+
+        return config('hms.all_roles', \App\Models\Role::pluck('slug')->all());
+    }
+
+    /**
+     * The roles a tick box may hold right now: a real role the platform can sell,
+     * minus super_admin (never assignable from inside a facility), minus
+     * anything this mode forbids.
+     *
+     * @return array<int, string>
+     */
+    public function assignableRoleSlugs(): array
+    {
+        $real = \App\Models\Role::where('slug', '!=', 'super_admin')->pluck('slug')->all();
+
+        return array_values(array_intersect($real, $this->modeRoleSlugs()));
+    }
+
+    /** Types offered for the current mode. */
+    public function availableTypes()
+    {
+        return ClinicType::active()->forMode($this->mode)->orderBy('sort_order')->get();
+    }
+
+    /**
+     * Picking a type re-suggests the role list, but only while the platform has
+     * not hand-picked one -- otherwise changing the type after the fact would
+     * wipe a deliberate staffing plan.
+     */
+    public function updatedMode(): void
+    {
+        $this->clinic_type_id = '';
+        $this->applySuggestedRoles();
+    }
+
+    public function updatedClinicTypeId(): void
+    {
+        // Deliberately does not clear rolesPickedManually: a staffing plan the
+        // platform hand-picked must survive a type change, and only the explicit
+        // "Reset to suggested" button may overwrite it.
+        $this->applySuggestedRoles();
+    }
+
+    /**
+     * A tick box was touched. The list is now deliberate, so stop re-suggesting
+     * it on every type change -- only an explicit "Reset to suggested" may
+     * overwrite what the platform picked.
+     *
+     * Driven by Livewire's own updated hook, so a forged payload cannot slip a
+     * hand-picked list past this.
+     */
+    public function updatedRequiredRoles(): void
+    {
+        $this->rolesPickedManually = true;
+    }
+
+    public function useSuggestedRoles(): void
+    {
+        $this->rolesPickedManually = false;
+        $this->applySuggestedRoles();
+    }
+
+    protected function applySuggestedRoles(): void
+    {
+        if ($this->rolesPickedManually) {
+            return;
+        }
+
+        $type = ClinicType::find($this->clinic_type_id ?: null);
+
+        $suggested = $type ? $type->suggestedRoleSlugs() : $this->defaultRolesForMode();
+
+        // a tenant can never be given a role its mode forbids
+        $this->requiredRoles = array_values(array_intersect($suggested, $this->modeRoleSlugs()));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function defaultRolesForMode(): array
+    {
+        return $this->mode === 'clinic'
+            ? ['admin', 'receptionist', 'doctor', 'pharmacist']
+            : ['admin', 'moderator', 'receptionist', 'doctor', 'nurse', 'pharmacist',
+                'laboratorist', 'storekeeper', 'accountant', 'hr'];
+    }
+
+    /**
      * Where the hospital is. Staff may only sign in from inside this radius;
      * the tenant admin is exempt and may sign in from anywhere.
      */
@@ -151,6 +273,10 @@ class TenantForm extends Component
         $this->private_room_enabled = (bool) $tenant->private_room_enabled;
         $this->private_room_count = $tenant->private_room_count;
 
+        $this->clinic_type_id = (string) ($tenant->clinic_type_id ?: '');
+        $this->requiredRoles = $tenant->requiredRoles()->pluck('slug')->all();
+        $this->rolesPickedManually = true;
+
         $this->beds = $facilities['beds'] ?? null;
         $this->staff = $facilities['staff'] ?? null;
         $this->floors = $facilities['floors'] ?? null;
@@ -172,7 +298,7 @@ class TenantForm extends Component
             'existingLogo', 'existingHero', 'beds', 'staff', 'floors',
             'departments', 'services', 'has_lab', 'has_ot', 'has_ambulance',
             'latitude', 'longitude', 'geo_radius_meters',
-            'private_room_enabled', 'private_room_count',
+            'private_room_enabled', 'private_room_count', 'requiredRoles',
         ]);
 
         $this->mode = 'hospital';
@@ -182,6 +308,9 @@ class TenantForm extends Component
         $this->geo_radius_meters = 200;
         $this->private_room_enabled = false;
         $this->private_room_count = null;
+        $this->clinic_type_id = '';
+        $this->rolesPickedManually = false;
+        $this->requiredRoles = $this->defaultRolesForMode();
     }
 
     public function updatedName(): void
@@ -239,6 +368,20 @@ class TenantForm extends Component
             $rules['private_room_count'] = ['nullable', 'integer', 'min:0'];
         }
 
+        // A type is what a facility is, and at least one role has to be ticked or the
+        // tenant would come up empty and be un-usable.
+        $rules['clinic_type_id'] = ['required', Rule::exists('clinic_types', 'id')->where('is_active', true)];
+
+        $rules['requiredRoles'] = ['required', 'array', 'min:1'];
+        // Allowed = every real role, minus the platform one, minus anything the
+        // mode forbids. Rejecting out-of-mode roles here (rather than dropping
+        // them silently on save) tells the platform straight away that a nurse
+        // cannot be ticked on a clinic.
+        $rules['requiredRoles.*'] = [
+            'string',
+            Rule::in($this->assignableRoleSlugs()),
+        ];
+
         if ($this->create_admin) {
             $rules['admin_name'] = ['required', 'string', 'max:150'];
             $rules['admin_email'] = ['required', 'email', 'max:150', Rule::unique('users', 'email')];
@@ -269,8 +412,13 @@ class TenantForm extends Component
             'latitude' => $this->latitude !== '' && $this->latitude !== null ? (float) $this->latitude : null,
             'longitude' => $this->longitude !== '' && $this->longitude !== null ? (float) $this->longitude : null,
             'geo_radius_meters' => $this->geo_radius_meters ?: 200,
-            'private_room_enabled' => (bool) $this->private_room_enabled,
-            'private_room_count' => $this->private_room_enabled ? (int) ($this->private_room_count ?? 0) : null,
+            'clinic_type_id' => (int) $this->clinic_type_id,
+            // private rooms are a hospital concept; a clinic never carries the
+            // flag, so switching a facility to clinic cannot leave it "on".
+            'private_room_enabled' => $this->mode === 'hospital' && (bool) $this->private_room_enabled,
+            'private_room_count' => $this->mode === 'hospital' && $this->private_room_enabled
+                ? (int) ($this->private_room_count ?? 0)
+                : null,
         ];
 
         if ($this->logo) {
@@ -297,6 +445,12 @@ class TenantForm extends Component
         }
 
         $this->seedDefaultSettings($tenant);
+
+        // The ticked role list is the facility's staffing plan and is the only
+        // thing that drives its sidebar, its staff form and its Dean's
+        // permissions (PLAN.md §9c.2). Intersect with the mode so a forged
+        // payload cannot widen a facility past what its mode allows.
+        $tenant->syncRequiredRoles(array_intersect($this->requiredRoles, $this->modeRoleSlugs()));
 
         $this->show = false;
         $this->resetForm();
@@ -338,8 +492,17 @@ class TenantForm extends Component
 
     public function render()
     {
+        $roleLabels = [];
+
+        foreach (\App\Models\Role::where('slug', '!=', 'super_admin')->get() as $role) {
+            $roleLabels[$role->slug] = hms_role_label_for_slug($role->slug);
+        }
+
         return view('livewire.super-admin.tenant-form', [
             'modes' => config('hms.modes', []),
+            'clinicTypes' => $this->availableTypes(),
+            'modeRoleSlugs' => $this->modeRoleSlugs(),
+            'roleLabels' => $roleLabels,
         ]);
     }
 }

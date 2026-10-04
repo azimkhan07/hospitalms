@@ -173,7 +173,18 @@ if (! function_exists('hms_leave_approver_label')) {
 }
 
 if (! function_exists('hms_role_enabled')) {
-    function hms_role_enabled(?string $slug, ?string $mode = null): bool
+    /**
+     * Is a role switched on for the tenant in play?
+     *
+     * Two gates, both must pass. The mode is the outer bound (PLAN.md section 16)
+     * and the tenant's ticked role list narrows it further (PLAN.md section 9c.2),
+     * so a dental clinic is narrower than "clinic" implies and nothing can ever
+     * widen past the mode.
+     *
+     * A tenant with no ticked rows falls back to its mode rather than locking
+     * itself out of every module -- an unset list must never mean "nothing".
+     */
+    function hms_role_enabled(?string $slug, ?string $mode = null, ?object $user = null): bool
     {
         if ($slug === null) {
             return false;
@@ -186,7 +197,61 @@ if (! function_exists('hms_role_enabled')) {
 
         $roles = hms_enabled_roles($mode);
 
-        return $roles === null || in_array($slug, $roles, true);
+        if ($roles !== null && ! in_array($slug, $roles, true)) {
+            return false;
+        }
+
+        // No tenant in play (e.g. a console check, or the platform panel) means
+        // the mode is the only gate available.
+        $user ??= Auth::user();
+
+        if (! $user || ! $user->tenant_id) {
+            return true;
+        }
+
+        return hms_tenant_requires_role($slug, $user);
+    }
+}
+
+if (! function_exists('hms_tenant_required_roles')) {
+    /**
+     * Role slugs the active tenant was configured with.
+     *
+     * Falls back to the mode's full role list when the tenant has no explicit
+     * requirements recorded, so a tenant can never end up with nothing.
+     *
+     * @return array<int, string>
+     */
+    function hms_tenant_required_roles(?object $user = null): array
+    {
+        $user ??= Auth::user();
+
+        if (! $user || ! $user->tenant_id) {
+            return [];
+        }
+
+        $slugs = \App\Models\Tenant::requiredRoleSlugs($user->tenant_id);
+
+        return $slugs ?: (hms_enabled_roles() ?? \App\Models\Role::pluck('slug')->all());
+    }
+}
+
+if (! function_exists('hms_tenant_requires_role')) {
+    /**
+     * Did this tenant's owner tick this role at creation?
+     *
+     * Shares the fallback with hms_tenant_required_roles(): a tenant with no
+     * recorded requirements is governed by its mode, never by nothing.
+     */
+    function hms_tenant_requires_role(string $slug, ?object $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        if (! $user || ! $user->tenant_id) {
+            return false;
+        }
+
+        return in_array($slug, hms_tenant_required_roles($user), true);
     }
 }
 
@@ -213,7 +278,7 @@ if (! function_exists('hms_can')) {
 
         $slug = $user->roleSlug();
 
-        if (! hms_role_enabled($slug)) {
+        if (! hms_role_enabled($slug, null, $user)) {
             return false;
         }
 
@@ -270,6 +335,19 @@ if (! function_exists('hms_role_label')) {
         $slug = $user->roleSlug();
 
         return config('hms.'.$slug.'.label') ?? ucfirst((string) ($slug ?: 'user'));
+    }
+}
+
+if (! function_exists('hms_role_label_for_slug')) {
+    /**
+     * Display label for a role slug, without needing a signed-in user.
+     *
+     * Used by the platform screens that list roles a facility *could* have,
+     * where no user of that role exists yet.
+     */
+    function hms_role_label_for_slug(string $slug): string
+    {
+        return config('hms.'.$slug.'.label') ?? ucfirst(str_replace('_', ' ', $slug));
     }
 }
 

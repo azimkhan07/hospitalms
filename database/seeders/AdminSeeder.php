@@ -66,6 +66,29 @@ class AdminSeeder extends Seeder
             ]
         );
 
+        // The demo facility is a multispeciality hospital with private rooms, so
+        // it has to carry a type (PLAN.md 9c.1) and a ticked role list
+        // (9c.2) -- without them the sidebar and the staff form come up empty.
+        // The types themselves are seeded by the migration, so fall back to the
+        // tenant's mode if the row is not there.
+        $typeSlug = $tenant->mode === 'hospital' ? 'multispeciality' : 'general';
+        $tenant->forceFill([
+            'clinic_type_id' => $tenant->clinic_type_id
+                ?: \App\Models\ClinicType::where('slug', $typeSlug)->value('id')
+                ?: \App\Models\ClinicType::where('slug', 'general')->value('id'),
+            'private_room_enabled' => $tenant->mode === 'hospital',
+            'private_room_count' => $tenant->mode === 'hospital' ? 2 : null,
+        ])->save();
+
+        if ($tenant->requirements()->count() === 0) {
+            $defaults = $tenant->mode === 'hospital'
+                ? ['admin', 'moderator', 'receptionist', 'doctor', 'nurse', 'pharmacist',
+                    'laboratorist', 'storekeeper', 'accountant', 'hr']
+                : ['admin', 'receptionist', 'doctor', 'pharmacist'];
+
+            $tenant->syncRequiredRoles($defaults);
+        }
+
         if (! empty($roles['super_admin'])) {
             User::updateOrCreate(
                 ['email' => 'super@hms.com'],

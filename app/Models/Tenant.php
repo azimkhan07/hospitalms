@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Tenant extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'slug', 'mode', 'domain', 'subdomain', 'status',
+        'name', 'slug', 'mode', 'clinic_type_id', 'domain', 'subdomain', 'status',
         'phone', 'email', 'address', 'city', 'state', 'country', 'working_hours',
         'logo', 'hero_image', 'facilities', 'trial_ends_at', 'created_by',
         'latitude', 'longitude', 'geo_radius_meters',
@@ -23,7 +24,74 @@ class Tenant extends Model
         'trial_ends_at' => 'datetime',
         'private_room_enabled' => 'boolean',
         'private_room_count' => 'integer',
+        'clinic_type_id' => 'integer',
     ];
+
+    /**
+     * Role slugs this facility was configured with (PLAN.md section 9c.2).
+     *
+     * @return array<int, string>
+     */
+    public static function requiredRoleSlugs(int $tenantId): array
+    {
+        return TenantRoleRequirement::where('tenant_id', $tenantId)
+            ->join('roles', 'roles.id', '=', 'tenant_role_requirements.role_id')
+            ->orderBy('roles.id')
+            ->pluck('roles.slug')
+            ->all();
+    }
+
+    public function requiredRoles()
+    {
+        return Role::whereIn('id', $this->requirements()->pluck('role_id'))->orderBy('id')->get();
+    }
+
+    public function requirements()
+    {
+        return $this->hasMany(TenantRoleRequirement::class);
+    }
+
+    public function hasRole(string $slug): bool
+    {
+        return in_array($slug, static::requiredRoleSlugs($this->id), true);
+    }
+
+    /**
+     * Replace the ticked role list. Unknown or platform roles are ignored so a
+     * forged payload cannot smuggle super_admin into a facility.
+     *
+     * @param  array<int, string>  $slugs
+     */
+    public function syncRequiredRoles(array $slugs): void
+    {
+        $wanted = array_values(array_intersect(
+            array_unique($slugs),
+            Role::where('slug', '!=', 'super_admin')->pluck('slug')->all()
+        ));
+
+        DB::table('tenant_role_requirements')->where('tenant_id', $this->id)->delete();
+
+        $roleIds = Role::whereIn('slug', $wanted)->pluck('id');
+
+        foreach ($roleIds as $roleId) {
+            DB::table('tenant_role_requirements')->insert([
+                'tenant_id' => $this->id,
+                'role_id' => $roleId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    public function clinicType()
+    {
+        return $this->belongsTo(ClinicType::class, 'clinic_type_id');
+    }
+
+    public function typeLabel(): string
+    {
+        return $this->clinicType?->name ?? 'Not set';
+    }
 
     /**
      * Does this facility charge for private rooms? Asked by the Super Admin at
