@@ -43,8 +43,8 @@
                                 <td>{{ $department->name }}</td>
                                 <td><img width="50px" height="50px" src="{{ storage_url($department->photo_path, 'department-placeholder.jpg') }}"
                                           alt=""></td>
-                                <td>{{ $department->hod->doctor->employ->name }}</td>
-                                <td>{{ $department->block->blockname }}</td>
+<td>{{ $department->hod?->doctor?->employ?->name ?? '-' }}</td>
+                            <td>{{ $department->block?->blockname ?? '-' }}</td>
                                 <td>{{ $department->created_at }}</td>
                                 <td class="text-right">
                                     <button class="btn btn-outline-info btn-rounded"
