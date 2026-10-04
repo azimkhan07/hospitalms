@@ -61,7 +61,7 @@
                                     <option value="{{ $r->slug }}">{{ $r->name }}</option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">Only roles this facility's mode allows.</small>
+                            <small class="text-muted">Only the roles this facility was set up to need.</small>
                             @error('newRole')
                                 <span class="text-danger text-xs">{{ $message }}</span>
                             @enderror
@@ -153,7 +153,7 @@
                         <td>{{ $user->department ?? '-' }}</td>
                         <td>{{ $user->last_login_at?->format('d M Y H:i') ?? 'Never' }}</td>
                         <td class="text-right">
-                            @if ($canManage)
+@if ($canManage && $this->canManage($user))
                                 <button type="button" class="btn btn-xs btn-outline-info"
                                     wire:click="editStaff({{ $user->id }})" title="Edit">
                                     <i class="fas fa-pen"></i>

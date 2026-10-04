@@ -68,7 +68,8 @@ return [
         'label' => 'Moderator',
         'icon' => 'fa-user-tie',
         'modules' => [
-            'dashboard', 'patients', 'employees', 'staff', 'departments', 'rooms',
+            'dashboard', 'patients', 'employees', 'staff', 'staff.manage',
+            'departments', 'rooms',
             'beds', 'beds.manage', 'beds.allocate',
             'appointments', 'operations', 'births', 'reports', 'blocks',
             'prescriptions', 'history', 'discharges', 'meetings', 'meetings.manage',

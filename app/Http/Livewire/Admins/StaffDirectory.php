@@ -38,7 +38,10 @@ class StaffDirectory extends Component
 
     public function mount(?string $role = null): void
     {
-        if ($role && hms_role_enabled($role)) {
+        // The ?role= shortcut from the sidebar must not be a way to view a role
+        // the facility never ticked, so it is checked against the same list the
+        // directory itself uses.
+        if ($role && in_array($role, hms_tenant_required_roles(), true)) {
             $this->role = $role;
         }
     }
@@ -57,20 +60,58 @@ class StaffDirectory extends Component
     /**
      * Roles this facility may actually staff.
      *
-     * A clinic cannot hire a nurse, so the create form must not offer one; and
-     * "super_admin" is a platform account that must never be assignable from
-     * inside a tenant (PLAN.md Phase 2).
+     * Driven by what the tenant's owner ticked at creation, not merely by what
+     * the mode would allow: a multispeciality hospital that never asked for a
+     * labouratorist must not be able to hire one. "super_admin" is a platform
+     * account that must never be assignable from inside a tenant (PLAN.md
+     * Phase 2).
      *
      * @return \Illuminate\Support\Collection<int, Role>
      */
     public function assignableRoles()
     {
-        $enabled = hms_enabled_roles();
+        $ticked = hms_tenant_required_roles();
 
         return Role::where('slug', '!=', 'super_admin')
-            ->when(is_array($enabled), fn ($q) => $q->whereIn('slug', $enabled))
+            ->when($ticked !== [], fn ($q) => $q->whereIn('slug', $ticked))
+            ->when(! $this->actorMayStaffAdmins(), fn ($q) => $q->where('slug', '!=', 'admin'))
             ->orderBy('level')
             ->get();
+    }
+
+    /**
+     * May the signed-in user create, change or remove an admin account?
+     *
+     * The tenant admin may. A Dean runs the clinical side of the facility, so it
+     * staffs the ticked clinical roles but stops short of minting a peer who
+     * outranks it -- otherwise a delegated staffing right becomes a takeover.
+     */
+    protected function actorMayStaffAdmins(): bool
+    {
+        return auth()->user()?->roleSlug() !== 'moderator';
+    }
+
+    /** True when the signed-in user may change this particular account. */
+    public function canManage(?User $user = null): bool
+    {
+        if (! hms_can('staff.manage')) {
+            return false;
+        }
+
+        if ($user === null || $this->actorMayStaffAdmins()) {
+            return true;
+        }
+
+        return $user->roleSlug() !== 'admin';
+    }
+
+    /**
+     * A Dean must not reach an admin account through a hand-crafted id either,
+     * so the rule is enforced on the record, not only in the form.
+     */
+    protected function guardManageable(User $user): void
+    {
+        abort_if($user->roleSlug() === 'admin' && ! $this->actorMayStaffAdmins(), 403);
     }
 
     // --- create / edit ------------------------------------------------------
@@ -87,6 +128,7 @@ class StaffDirectory extends Component
     {
         $this->guardStaff();
         $user = $this->tenantStaff()->findOrFail($id);
+        $this->guardManageable($user);
 
         $this->editingId = $user->id;
         $this->name = $user->name;
@@ -151,6 +193,7 @@ class StaffDirectory extends Component
             session()->flash('message', 'Staff account created for '.$user->email.'.');
         } else {
             $user = $this->tenantStaff()->findOrFail($this->editingId);
+            $this->guardManageable($user);
 
             if ($this->password !== '') {
                 $this->validate(['password' => ['required', 'string', 'min:6', 'confirmed']]);
@@ -169,6 +212,7 @@ class StaffDirectory extends Component
     {
         $this->guardStaff();
         $user = $this->tenantStaff()->findOrFail($id);
+        $this->guardManageable($user);
 
         if ($user->id === auth()->id()) {
             session()->flash('error', 'You cannot remove your own account.');
@@ -214,13 +258,13 @@ class StaffDirectory extends Component
             abort(403);
         }
 
-        $enabled = hms_enabled_roles();
+        $ticked = hms_tenant_required_roles();
 
         $users = $this->tenantStaff()
             ->with('role:id,name,slug,level')
-            ->when(is_array($enabled), fn ($q) => $q->whereHas(
+            ->when($ticked !== [], fn ($q) => $q->whereHas(
                 'role',
-                fn ($r) => $r->whereIn('slug', $enabled)
+                fn ($r) => $r->whereIn('slug', $ticked)
             ))
             ->when($this->role !== '', fn ($q) => $q->whereHas(
                 'role',
