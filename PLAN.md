@@ -185,6 +185,9 @@ Goal: run one facility. Admin = Super Admin **of that tenant only**.
 - [x] **Admin creates users per allowed role** — the create form only offers
       roles the tenant's mode allows (clinic: doctor, receptionist, pharmacist;
       hospital: + nurse, laboratorist, storekeeper, accountant, dean/moderator).
+      `staff.manage` is an admin-only permission; the role list is re-checked
+      server-side, so a forged `nurse` post on a clinic is rejected, and
+      `super_admin` is never assignable from inside a tenant.
 - [x] Mode hides what the mode does not have (PLAN.md §16 verified by test).
 - [ ] Departments management.
 - [ ] All **appointments** visible to admin.

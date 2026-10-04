@@ -56,7 +56,8 @@ return [
         // read occupancy but never create a room or hand a bed to a patient.
         'modules' => [
             'dashboard', 'meetings', 'meetings.manage', 'attendance',
-            'staff', 'appointments', 'prescriptions', 'history', 'medicines',
+            'staff', 'staff.manage',
+            'appointments', 'prescriptions', 'history', 'medicines',
             'expiry', 'patients', 'bills', 'subscribers', 'messages', 'settings',
             'employees', 'departments', 'hods', 'rooms', 'beds', 'blocks',
             'nurses', 'operations', 'births', 'discharges', 'reports',
