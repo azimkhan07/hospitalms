@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class rooms extends Model
 {
-    use HasFactory,SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     /**
      * Accommodation kinds, per PLAN.md section 9b. A ward and an ICU hold many
@@ -18,6 +19,7 @@ class rooms extends Model
     public const TYPES = ['general', 'ward', 'icu', 'private', 'semi-private'];
 
     protected $fillable = [
+        'tenant_id',
         'name',
         'floor',
         'department_id',

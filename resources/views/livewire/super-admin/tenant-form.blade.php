@@ -50,6 +50,19 @@
                             <option value="suspended">Suspended</option>
                         </select>
                     </div>
+                    {{-- Type sits on step 1 because it is the facility's identity
+                         and it is what suggests the roles on step 2. --}}
+                    <div class="col-md-3 form-group">
+                        <label style="font-size:13px">What kind of facility is this? *</label>
+                        <select class="form-control" wire:model.live="clinic_type_id">
+                            <option value="">Select a type</option>
+                            @foreach ($clinicTypes as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">A dental clinic has no ward; a skin clinic has no laboratory.</small>
+                        @error('clinic_type_id') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                    </div>
                     <div class="col-md-3 form-group">
                         <label style="font-size:13px">Phone</label>
                         <input type="text" class="form-control" wire:model="phone">
@@ -221,23 +234,14 @@
                         @endif
                     @endif
 
-                    {{-- Facility type + the roles it needs (PLAN.md §9c.1, §9c.2) --}}
-                    <div class="col-md-6 form-group">
-                        <label style="font-size:13px">What kind of facility is this? *</label>
-                        <select class="form-control" wire:model.live="clinic_type_id">
-                            <option value="">Select a type</option>
-                            @foreach ($clinicTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">A dental clinic has no ward; a skin clinic has no laboratory.</small>
-                        @error('clinic_type_id') <small class="text-danger d-block">{{ $message }}</small> @enderror
-                    </div>
-
+                    {{-- The roles this facility needs (PLAN.md §9c.2); type was chosen on step 1 --}}
                     <div class="col-12 form-group">
                         <div class="d-flex align-items-center justify-content-between mb-1">
                             <label style="font-size:13px; margin:0">Which roles does this facility need? *</label>
                             @if ($clinic_type_id)
+                                <span class="text-muted" style="font-size:12px">
+                                    {{ $clinicTypes->firstWhere('id', (int) $clinic_type_id)?->name ?? 'Custom' }}
+                                </span>
                                 <button type="button" class="btn btn-link btn-sm p-0" style="font-size:12px"
                                     wire:click="useSuggestedRoles">Reset to suggested</button>
                             @endif

@@ -123,6 +123,7 @@ class Rooms extends Component
         $capacity = $this->type === 'private' ? 1 : max(1, (int) $this->capacity);
 
         $room = ModelsRooms::create([
+            'tenant_id' => auth()->user()->tenant_id,
             'name' => $this->name,
             'floor' => $this->floor ?: null,
             'department_id' => $this->department,
@@ -198,7 +199,7 @@ class Rooms extends Component
         for ($i = 0; $i < $count; $i++) {
             beds::firstOrCreate(
                 ['room_id' => $room->id, 'bed_number' => $prefix.$number],
-                ['status' => 'available'],
+                ['tenant_id' => $room->tenant_id, 'status' => 'available'],
             );
             $number++;
         }

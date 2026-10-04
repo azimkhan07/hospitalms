@@ -118,11 +118,14 @@ class TenantForm extends Component
     {
         $roles = hms_enabled_roles($this->mode);
 
-        if (is_array($roles)) {
-            return $roles;
+        if (! is_array($roles)) {
+            $roles = config('hms.all_roles', \App\Models\Role::pluck('slug')->all());
         }
 
-        return config('hms.all_roles', \App\Models\Role::pluck('slug')->all());
+        // Hospital mode allows every role, and "every role" includes the
+        // platform's own super_admin. That one is never assignable from inside
+        // a facility, so it must never reach a tick box.
+        return array_values(array_diff($roles, ['super_admin']));
     }
 
     /**
@@ -320,10 +323,21 @@ class TenantForm extends Component
         }
     }
 
+    /**
+     * Step 1 -> step 2.
+     *
+     * Only step 1's own fields are enforced here. The role tick list lives on
+     * step 2, so validating it while advancing would deadlock the wizard: the
+     * platform could never reach the boxes it is being asked about.
+     */
     public function next(): void
     {
         $rules = $this->rules();
-        unset($rules['admin_name'], $rules['admin_email'], $rules['admin_password']);
+        unset(
+            $rules['admin_name'], $rules['admin_email'], $rules['admin_password'],
+            $rules['requiredRoles'], $rules['requiredRoles.*'],
+            $rules['private_room_count']
+        );
 
         $this->validate($rules);
 

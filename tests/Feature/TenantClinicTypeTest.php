@@ -229,4 +229,72 @@ class TenantClinicTypeTest extends TestCase
             ->assertSet('clinic_type_id', (string) $tenant->clinic_type_id)
             ->assertSet('requiredRoles', ['admin', 'doctor', 'receptionist']);
     }
+
+    public function test_the_role_boxes_offered_on_step_two_follow_the_mode(): void
+    {
+        $this->actingAs($this->platform());
+
+        $dental = ClinicType::where('slug', 'dental')->value('id');
+
+        // A clinic only ever offers the roles its mode allows, and never
+        // super_admin, even though the platform holds that role itself.
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'Role Box Clinic')
+            ->set('slug', 'role-box-clinic')
+            ->set('mode', 'clinic')
+            ->set('clinic_type_id', $dental)
+            ->call('next')
+            ->assertSet('step', 2)
+            ->assertViewHas('modeRoleSlugs', function (array $slugs): bool {
+                $this->assertSame(['admin', 'receptionist', 'doctor', 'pharmacist'], $slugs);
+
+                return true;
+            })
+            ->assertViewHas('requiredRoles', function (array $roles): bool {
+                sort($roles);
+                $this->assertSame(['admin', 'doctor', 'receptionist'], $roles);
+
+                return true;
+            });
+
+        // A hospital is the wide mode: every sellable role is on offer.
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'Role Box Hospital')
+            ->set('slug', 'role-box-hospital')
+            ->set('mode', 'hospital')
+            ->set('clinic_type_id', ClinicType::where('slug', 'multispeciality')->value('id'))
+            ->call('next')
+            ->assertSet('step', 2)
+            ->assertViewHas('modeRoleSlugs', function (array $slugs): bool {
+                $this->assertContains('nurse', $slugs);
+                $this->assertContains('moderator', $slugs);
+                $this->assertNotContains('super_admin', $slugs);
+                $this->assertCount(10, $slugs);
+
+                return true;
+            });
+    }
+
+    public function test_step_one_can_be_left_before_the_role_list_is_ticked(): void
+    {
+        $this->actingAs($this->platform());
+
+        // The role boxes live on step two, so step one must not demand them --
+        // otherwise the wizard can never reach the boxes it is asking about.
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'Deadlock Check')
+            ->set('slug', 'deadlock-check')
+            ->set('mode', 'clinic')
+            ->set('clinic_type_id', ClinicType::where('slug', 'dental')->value('id'))
+            ->set('requiredRoles', [])
+            ->call('next')
+            ->assertSet('step', 2)
+            ->assertHasNoErrors();
+    }
 }

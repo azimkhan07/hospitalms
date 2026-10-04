@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Livewire\Admins\Blocks;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class department extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'name',
         'description',
         'photo_path',

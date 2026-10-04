@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class beds extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     /**
      * Bed states. 'reserved' holds a bed for a planned admission and
@@ -16,6 +17,7 @@ class beds extends Model
     public const STATUSES = ['available', 'alloted', 'reserved', 'cleaning', 'maintenance'];
 
     protected $fillable = [
+        'tenant_id',
         'room_id',
         'bed_number',
         'patient_id',

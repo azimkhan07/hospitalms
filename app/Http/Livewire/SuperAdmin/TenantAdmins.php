@@ -49,9 +49,29 @@ class TenantAdmins extends Component
         return $rules;
     }
 
+    public function mount(): void
+    {
+        // The tenants screen sends the platform here with ?tenant=<id> when it
+        // asks for an admin to be assigned, so the form opens on that facility
+        // rather than making them hunt for it in the dropdown.
+        $tenantId = request()->integer('tenant') ?: null;
+
+        if ($tenantId && Tenant::where('id', $tenantId)->exists()) {
+            $this->tenant_id = $tenantId;
+            $this->showForm = true;
+        }
+    }
+
     public function openCreate(): void
     {
+        // Arriving from the facilities list with ?tenant=<id> preselects that
+        // facility. Opening a blank form must keep that choice rather than
+        // silently wiping it back to "-- select --".
+        $preselectedTenant = $this->tenant_id;
+
         $this->resetForm();
+
+        $this->tenant_id = $preselectedTenant;
         $this->showForm = true;
     }
 

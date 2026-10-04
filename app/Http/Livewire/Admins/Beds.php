@@ -130,6 +130,7 @@ class Beds extends Component
         ]);
 
         ModelsBeds::create([
+            'tenant_id' => auth()->user()->tenant_id,
             'room_id' => $this->room_id,
             'bed_number' => $this->bed_number,
             'patient_id' => $this->patient_id,
