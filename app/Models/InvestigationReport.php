@@ -88,7 +88,8 @@ class InvestigationReport extends Model
         }
 
         if ($this->room_id && $this->room) {
-            return 'Room '.$this->room->room_number;
+            // rooms are named ("ICU-1"), there is no room_number column.
+            return 'Room '.($this->room->name ?: ('#'.$this->room->id));
         }
 
         return 'Not bed-bound';

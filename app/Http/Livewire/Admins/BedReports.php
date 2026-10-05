@@ -5,8 +5,11 @@ namespace App\Http\Livewire\Admins;
 use App\Models\beds;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\InvestigationReport;
+use App\Models\InvestigationTest;
 use App\Models\Machine;
 use App\Models\rooms;
+use App\Services\InvestigationCharge;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -41,6 +44,36 @@ class BedReports extends Component
     public ?int $machineBedId = null;
 
     public ?int $machineRoomId = null;
+
+    /** Recording an investigation is the doctor's job; the Dean owns the card. */
+    public bool $showReportForm = false;
+
+    public string $reportTestId = '';
+
+    public int $reportUnits = 1;
+
+    public bool $reportUrgent = false;
+
+    public string $reportDiscount = '';
+
+    public string $reportTaxPercent = '';
+
+    public string $reportMachineId = '';
+
+    public string $reportFindings = '';
+
+    public string $reportResult = '';
+
+    /** Live preview of what the patient will be charged, from the rate card. */
+    public function updatedReportTestId(): void
+    {
+        $this->reportUnits = $this->reportUnitsForTest();
+    }
+
+    public function updatedReportMachineId(): void
+    {
+        //
+    }
 
     public function pickBed(string $id): void
     {
@@ -80,7 +113,7 @@ class BedReports extends Component
      */
     public function createMachine(): void
     {
-        abort_unless(hms_can('machines.manage') || $this->inWard(), 403);
+        abort_unless($this->canAddWardMachine(), 403);
 
         $this->validate([
             'machineName' => ['required', 'string', 'max:150'],
@@ -109,13 +142,131 @@ class BedReports extends Component
         $this->showMachineForm = false;
     }
 
-    /** Doctors and nurses work in the ward; the Dean oversees it. */
+    /**
+     * A doctor records what was done at the bedside; the charge is worked out by
+     * InvestigationCharge and frozen onto the row, never typed in (PLAN.md 9d.2).
+     */
+    public function recordInvestigation(): void
+    {
+        abort_unless($this->canRecordInvestigation(), 403);
+
+        $this->validate([
+            'reportTestId' => ['required', 'integer'],
+            'reportUnits' => ['required', 'integer', 'min:1', 'max:999'],
+            'reportDiscount' => ['nullable', 'numeric', 'min:0'],
+            'reportTaxPercent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'reportMachineId' => ['nullable', 'integer'],
+            'reportFindings' => ['nullable', 'string', 'max:2000'],
+            'reportResult' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $test = InvestigationTest::findOrFail((int) $this->reportTestId);
+        $machineId = $this->reportMachineId !== '' ? (int) $this->reportMachineId : null;
+        $bed = $this->bedId !== '' ? beds::find($this->bedId) : null;
+        $room = $this->roomId !== '' ? rooms::find($this->roomId) : null;
+
+        // The machine the test ran on must be one this facility owns, and the
+        // machine_rate tests are priced off it.
+        if ($machineId && ! Machine::whereKey($machineId)->exists()) {
+            throw ValidationException::withMessages([
+                'reportMachineId' => 'That machine is not in this facility.',
+            ]);
+        }
+
+        $report = InvestigationReport::create([
+            'tenant_id' => auth()->user()->tenant_id,
+            'investigation_test_id' => $test->id,
+            'machine_id' => $machineId ?: $test->machine_id,
+            'patient_id' => $bed?->patient_id,
+            'room_id' => $room?->id,
+            'bed_id' => $bed?->id,
+            'units' => $this->reportUnitsForTest(),
+            'is_urgent' => $this->reportUrgent,
+            'discount' => (float) ($this->reportDiscount ?: 0),
+            'tax_percent' => (float) ($this->reportTaxPercent ?: 0),
+            'findings' => $this->reportFindings ?: null,
+            'result' => $this->reportResult ?: null,
+            'status' => 'reported',
+            'reported_at' => now(),
+        ]);
+
+        $report->recalculate();
+
+        session()->flash('message', $test->name.' recorded. Charge '.number_format((float) $report->charge, 2).'.');
+
+        $this->resetReportForm();
+    }
+
+    protected function resetReportForm(): void
+    {
+        $this->showReportForm = false;
+        $this->reportTestId = '';
+        $this->reportUnits = 1;
+        $this->reportUrgent = false;
+        $this->reportDiscount = '';
+        $this->reportTaxPercent = '';
+        $this->reportMachineId = '';
+        $this->reportFindings = '';
+        $this->reportResult = '';
+    }
+
+    /**
+     * Machines are added in the ICU by the nurse or doctor standing there, or by
+     * the Dean who owns the setup. The admin reads the ward and stays out of it.
+     */
+    protected function canAddWardMachine(): bool
+    {
+        if (hms_can('machines.manage')) {
+            return true;
+        }
+
+        return auth()->user()?->hasRole('doctor', 'nurse') ?? false;
+    }
+
+    /** The doctor records it; the Dean may too, since they own the rate card. */
+    protected function canRecordInvestigation(): bool
+    {
+        if (hms_can('investigations.manage')) {
+            return true;
+        }
+
+        return auth()->user()?->hasRole('doctor') ?? false;
+    }
+
+    /** Units are capped by the rate card so a typo cannot bill 999 slides. */
+    protected function reportUnitsForTest(): int
+    {
+        $test = $this->selectedTest();
+
+        if (! $test) {
+            return 1;
+        }
+
+        return max(1, min($this->reportUnits ?: 1, (int) $test->max_units));
+    }
+
+    protected function selectedTest(): ?InvestigationTest
+    {
+        if ($this->reportTestId === '') {
+            return null;
+        }
+
+        return InvestigationTest::with('machine')
+            ->whereKey((int) $this->reportTestId)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /**
+     * May this user open the ward report at all?
+     *
+     * Read access belongs to every clinical role that works in the ward (doctor,
+     * nurse, Dean) plus the admin, who reads it (PLAN.md 9d.3). Asking whether
+     * the tenant ticks 'doctor' instead would refuse a nurse at a facility that
+     * has not ticked that role yet.
+     */
     protected function inWard(): bool
     {
-        // The permission list already carries the roles that work in a ward
-        // (doctor, nurse, and the admin who reads it), so this is just
-        // "may read ward reports" -- asking whether the tenant ticks 'doctor'
-        // instead would refuse a nurse at a facility that has not ticked it yet.
         return hms_can('bedreports');
     }
 
@@ -150,15 +301,51 @@ class BedReports extends Component
             ->orderBy('name')
             ->get();
 
+        $selectedTest = $this->selectedTest();
+
+        // What the patient will pay for the line being typed, worked out by the
+        // same service the report will be saved with.
+        $preview = null;
+
+        if ($selectedTest) {
+            $options = [
+                'units' => $this->reportUnitsForTest(),
+                'is_urgent' => $this->reportUrgent,
+                'discount' => (float) ($this->reportDiscount ?: 0),
+                'tax_percent' => (float) ($this->reportTaxPercent ?: 0),
+            ];
+
+            $charge = InvestigationCharge::for($selectedTest, $options);
+
+            $preview = [
+                'formula' => $charge->formula(),
+                'total' => number_format($charge->total(), 2),
+                'max_units' => (int) $selectedTest->max_units,
+                'calc_type' => $selectedTest->calc_type,
+            ];
+        }
+
         return view('livewire.admins.bed-reports', [
             'bed' => $bed,
             'room' => $room,
             'reports' => $reports,
             'machines' => $machines,
-            'beds' => beds::orderBy('bed_number')->get(['id', 'bed_number', 'status']),
+            'beds' => beds::with('room:id,name')->orderBy('bed_number')->get(['id', 'room_id', 'bed_number', 'status', 'patient_id']),
             'rooms' => rooms::orderBy('name')->get(['id', 'name', 'status']),
             'total' => $reports->sum(fn ($r) => (float) $r->charge),
-            'canAddMachine' => hms_can('machines.manage') || $this->inWard(),
+            'canAddMachine' => $this->canAddWardMachine(),
+            'canRecordInvestigation' => $this->canRecordInvestigation(),
+            'tests' => InvestigationTest::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'code', 'machine_id', 'max_units', 'calc_type']),
+            'wardMachines' => Machine::query()
+                ->where('status', 'working')
+                ->orderBy('name')
+                ->get(['id', 'name', 'modality']),
+            'selectedTest' => $selectedTest,
+            'preview' => $preview,
+            'patient' => $bed?->patient,
         ]);
     }
 }

@@ -70,7 +70,28 @@
                         &middot; {{ now()->format('d M Y H:i') }}
                     </div>
                 </div>
-                <div class="col-md-6 text-right">
+<div class="col-md-6 text-right">
+                    <div class="text-muted" style="font-size:12px">
+                        @if ($bed)
+                            {{ $bed->room?->name ? 'Room '.$bed->room->name.' &middot; ' : '' }}
+                            Bed {{ $bed->bed_number }}
+                            @if ($bed->status !== 'available')
+                                &middot; {{ ucfirst($bed->status) }}
+                            @endif
+                        @else
+                            Room {{ $room->name }}
+                        @endif
+                    </div>
+                    @if ($patient)
+                        <div style="font-size:13px">
+                            <strong>{{ $patient->name ?? ('Patient #'.$patient->id) }}</strong>
+                            @if ($patient->phone ?? null)
+                                <span class="text-muted" style="font-size:12px">{{ $patient->phone }}</span>
+                            @endif
+                        </div>
+                    @else
+                        <div class="text-muted" style="font-size:12px">No patient allotted to this bed.</div>
+                    @endif
                     <div style="font-size:26px; font-weight:700;">
                         {{ number_format((float) $total, 2) }}
                     </div>
@@ -177,9 +198,9 @@
                                                 wire:model="machineLocation">
                                         </div>
 {{-- The bed / room comes from the current selection, not from
-                                             here: wire:model cannot sync a hidden field. --}}
-                                        <div class="text-danger text-xs">
-                                            Record this machine against
+                                                    here: wire:model cannot sync a hidden field. --}}
+                                        <div class="text-muted text-xs">
+                                            This machine is recorded against
                                             {{ $bed ? 'bed '.$bed->bed_number : ($room ? 'room '.$room->name : 'nothing -- pick a bed or room first') }}.
                                         </div>
                                         <div class="d-flex">
@@ -198,6 +219,104 @@
                     @endif
                 </div>
             </div>
+
+            {{-- The doctor records what was done here. The charge is worked out
+                 by InvestigationCharge and shown before it is saved. --}}
+            @if ($canRecordInvestigation)
+                <div class="mt-3 no-print">
+                    @if ($showReportForm)
+                        <form class="card card-outline card-primary" wire:submit.prevent="recordInvestigation">
+                            <div class="card-body py-2">
+                                <div class="form-row">
+                                    <div class="col-md-5 form-group">
+                                        <label style="font-size:12px">Test *</label>
+                                        <select class="form-control form-control-sm @error('reportTestId') is-invalid @enderror"
+                                            wire:model.live="reportTestId">
+                                            <option value="">Pick a test from the rate card</option>
+                                            @foreach ($tests as $t)
+                                                <option value="{{ $t->id }}">
+                                                    {{ $t->name }}{{ $t->code ? ' ('.$t->code.')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('reportTestId') <span class="text-danger text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label style="font-size:12px">Units</label>
+                                        <input type="number" min="1"
+                                            max="{{ $selectedTest ? (int) $selectedTest->max_units : 1 }}"
+                                            class="form-control form-control-sm" wire:model="reportUnits">
+                                    </div>
+                                    <div class="col-md-4 form-group">
+                                        <label style="font-size:12px">Machine used</label>
+                                        <select class="form-control form-control-sm @error('reportMachineId') is-invalid @enderror"
+                                            wire:model.live="reportMachineId">
+                                            <option value="">Not on a machine</option>
+                                            @foreach ($wardMachines as $wm)
+                                                <option value="{{ $wm->id }}">{{ $wm->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('reportMachineId') <span class="text-danger text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="col-md-3 form-group">
+                                        <label style="font-size:12px">Discount</label>
+                                        <input type="number" min="0" step="0.01" class="form-control form-control-sm"
+                                            wire:model="reportDiscount" placeholder="0.00">
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label style="font-size:12px">Tax %</label>
+                                        <input type="number" min="0" max="100" step="0.01" class="form-control form-control-sm"
+                                            wire:model="reportTaxPercent" placeholder="0.00">
+                                    </div>
+                                    <div class="col-md-6 form-group d-flex align-items-end">
+                                        <label style="font-size:12px">
+                                            <input type="checkbox" wire:model="reportUrgent"> Urgent
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="col-md-6 form-group">
+                                        <label style="font-size:12px">Findings</label>
+                                        <textarea class="form-control form-control-sm" rows="2"
+                                            wire:model="reportFindings" placeholder="What the machine showed"></textarea>
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label style="font-size:12px">Result / impression</label>
+                                        <textarea class="form-control form-control-sm" rows="2"
+                                            wire:model="reportResult" placeholder="Doctor's read of it"></textarea>
+                                    </div>
+                                </div>
+
+                                @if ($preview)
+                                    <div class="alert alert-info py-1 px-2 mb-2" style="font-size:12px">
+                                        <strong>{{ $preview['formula'] }}</strong>
+                                        <span class="pull-right"><strong>{{ $preview['total'] }}</strong></span>
+                                        @if ((int) $reportUnits > $preview['max_units'])
+                                            <div class="text-danger">
+                                                Units capped at {{ $preview['max_units'] }} by the rate card.
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <div class="d-flex">
+                                    <button type="submit" class="btn btn-xs btn-primary mr-2">Record it</button>
+                                    <button type="button" class="btn btn-xs btn-default"
+                                        wire:click="$set('showReportForm', false)">Cancel</button>
+                                </div>
+                            </div>
+                        </form>
+                    @else
+                        <button type="button" class="btn btn-xs btn-primary" wire:click="$set('showReportForm', true)">
+                            <i class="fas fa-flask"></i> Record an investigation here
+                        </button>
+                    @endif
+                </div>
+            @endif
         @endif
     </div>
 </div>

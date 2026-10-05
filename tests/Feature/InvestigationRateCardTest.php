@@ -332,7 +332,95 @@ $otherBed = Bed::create([
             ->set('bedId', (string) $otherBed->id)
             ->viewData('reports');
 
-        $this->assertCount(0, $rows);
+$this->assertCount(0, $rows);
+    }
+
+    // --- recording an investigation at the bedside -----------------------
+
+    public function test_a_doctor_records_an_investigation_and_is_charged_from_the_rate_card(): void
+    {
+        $bed = $this->bed();
+        $test = $this->test(['calc_type' => 'per_unit', 'base_rate' => 1000, 'per_unit_rate' => 200, 'urgent_factor' => 1.5]);
+
+        $this->actingAs($this->staff('doctor'));
+
+        Livewire::test(\App\Http\Livewire\Admins\BedReports::class)
+            ->call('pickBed', (string) $bed->id)
+            ->set('showReportForm', true)
+            ->set('reportTestId', (string) $test->id)
+            ->set('reportUnits', 3)
+            ->set('reportUrgent', true)
+            ->set('reportFindings', 'Clean study')
+            ->call('recordInvestigation')
+            ->assertHasNoErrors();
+
+        $this->assertCount(1, InvestigationReport::all());
+
+        $report = InvestigationReport::first();
+
+        // 1000 + 200 x 3, then urgent x 1.5 -- worked out by the one service,
+        // not typed into the form.
+        $this->assertSame(2400.0, round((float) $report->charge, 2));
+        $this->assertSame($bed->id, $report->bed_id);
+        $this->assertStringContainsString('urgent', (string) $report->formula);
+        $this->assertSame('Clean study', $report->findings);
+    }
+
+    public function test_units_are_capped_by_the_rate_card(): void
+    {
+        $bed = $this->bed();
+        $test = $this->test(['calc_type' => 'per_unit', 'base_rate' => 100, 'per_unit_rate' => 50, 'max_units' => 2]);
+
+        $this->actingAs($this->staff('doctor'));
+
+        Livewire::test(\App\Http\Livewire\Admins\BedReports::class)
+            ->call('pickBed', (string) $bed->id)
+            ->set('reportTestId', (string) $test->id)
+            ->set('reportUnits', 99)
+            ->call('recordInvestigation')
+            ->assertHasNoErrors();
+
+        $this->assertSame(2, InvestigationReport::first()->units);
+    }
+
+    public function test_a_nurse_cannot_record_an_investigation(): void
+    {
+        $bed = $this->bed();
+        $test = $this->test();
+
+        $this->actingAs($this->staff('nurse'));
+
+        Livewire::test(\App\Http\Livewire\Admins\BedReports::class)
+            ->call('pickBed', (string) $bed->id)
+            ->set('reportTestId', (string) $test->id)
+            ->call('recordInvestigation')
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('investigation_reports', 0);
+    }
+
+    public function test_the_admin_reads_the_bed_report_but_does_not_record(): void
+    {
+        $bed = $this->bed();
+        $test = $this->test();
+
+        $this->actingAs($this->staff('admin'));
+
+        Livewire::test(\App\Http\Livewire\Admins\BedReports::class)
+            ->call('pickBed', (string) $bed->id)
+            ->assertSet('canRecordInvestigation', false)
+            ->assertSet('canAddMachine', false)
+            ->set('reportTestId', (string) $test->id)
+            ->call('recordInvestigation')
+            ->assertForbidden();
+
+        Livewire::test(\App\Http\Livewire\Admins\BedReports::class)
+            ->call('pickBed', (string) $bed->id)
+            ->set('machineName', 'Admin Ventilator')
+            ->call('createMachine')
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('investigation_reports', 0);
     }
 
     // --- tenant isolation --------------------------------------------------
