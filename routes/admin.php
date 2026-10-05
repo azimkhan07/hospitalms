@@ -48,6 +48,12 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/beds', App\Http\Livewire\Admins\Beds::class)->name('patients_beds');
 
+    Route::get('/machines', App\Http\Livewire\Admins\Machines::class)->name('admin_machines');
+
+    Route::get('/investigations', App\Http\Livewire\Admins\Investigations::class)->name('admin_investigations');
+
+    Route::get('/bedreports', App\Http\Livewire\Admins\BedReports::class)->name('admin_bed_reports');
+
     Route::get('/medicinesStore', App\Http\Livewire\Admins\Medicinestore::class)->name('medicinesStore');
 
     Route::get('/departments', App\Http\Livewire\Admins\Departments::class)->name('departments');

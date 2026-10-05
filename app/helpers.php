@@ -586,6 +586,15 @@ if (! function_exists('hms_sidebar_tree')) {
                 ],
             ],
             [
+                'label' => 'Diagnostics',
+                'icon' => 'fa-x-ray',
+                'children' => [
+                    ['label' => 'Machines', 'route' => 'admin_machines', 'module' => 'machines'],
+                    ['label' => 'Rate Card', 'route' => 'admin_investigations', 'module' => 'investigations'],
+                    ['label' => 'Bed Reports', 'route' => 'admin_bed_reports', 'module' => 'bedreports'],
+                ],
+            ],
+            [
                 'label' => 'Front Desk',
                 'icon' => 'fa-concierge-bell',
                 'children' => [

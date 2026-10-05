@@ -62,6 +62,10 @@ return [
             'employees', 'departments', 'hods', 'rooms', 'beds', 'blocks',
             'nurses', 'operations', 'births', 'discharges', 'reports',
             'leave.review',
+            // Read-only on the diagnostic setup, same deal as rooms/beds: the
+            // admin can see the rate card and the ICU reports, the Dean owns
+            // the machines and the prices (PLAN.md 9d.4).
+            'machines', 'investigations', 'bedreports',
         ],
     ],
     'moderator' => [
@@ -71,6 +75,9 @@ return [
             'dashboard', 'patients', 'employees', 'staff', 'staff.manage',
             'departments', 'rooms',
             'beds', 'beds.manage', 'beds.allocate',
+            'machines', 'machines.manage',
+            'investigations', 'investigations.manage',
+            'bedreports',
             'appointments', 'operations', 'births', 'reports', 'blocks',
             'prescriptions', 'history', 'discharges', 'meetings', 'meetings.manage',
             'attendance', 'leave', 'leave.review', 'subscribers', 'messages',
@@ -80,16 +87,18 @@ return [
         'label' => 'Doctor',
         'icon' => 'fa-user-md',
         'modules' => [
-            'dashboard', 'patients', 'operations', 'births', 'attendance',
-            'appointments', 'prescriptions', 'history', 'meetings', 'leave',
+'dashboard', 'patients', 'operations', 'births', 'attendance',
+        'appointments', 'prescriptions', 'history', 'meetings', 'leave',
+        'bedreports',
         ],
     ],
 'nurse' => [
         'label' => 'Nurse',
         'icon' => 'fa-user-nurse',
         'modules' => [
-            'dashboard', 'patients', 'beds', 'beds.status', 'rooms', 'nurses',
-            'attendance', 'history', 'meetings', 'leave',
+'dashboard', 'patients', 'beds', 'beds.status', 'rooms', 'nurses',
+        'attendance', 'history', 'meetings', 'leave',
+        'machines', 'bedreports',
         ],
     ],
     'receptionist' => [

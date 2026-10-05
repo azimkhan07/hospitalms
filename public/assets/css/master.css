@@ -991,3 +991,32 @@ button.hms-bell-row:hover {
 @media (max-width: 768px) {
     #body.active { margin-left: 0; }
 }
+/* HMS: printable rate card and ICU bed sheet (PLAN.md 9d.2, 9d.3) */
+.hms-quote {
+    background: #f2f8fd;
+    border: 1px solid #b9d9f2;
+    border-radius: 3px;
+    padding: 6px 10px;
+}
+
+@media print {
+    .no-print,
+    .main-sidebar,
+    .main-header,
+    .main-footer {
+        display: none !important;
+    }
+
+    .content-wrapper {
+        margin-left: 0 !important;
+    }
+
+    .box {
+        box-shadow: none !important;
+        border: 1px solid #999 !important;
+    }
+
+    .hms-print-table table {
+        font-size: 11px !important;
+    }
+}

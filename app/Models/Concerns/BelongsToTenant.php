@@ -5,6 +5,7 @@ namespace App\Models\Concerns;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Scopes a model to the signed-in facility.
@@ -32,11 +33,17 @@ trait BelongsToTenant
 
     public static function currentTenantId(): ?int
     {
-        if (app()->runningInConsole() && ! request()->hasSession()) {
+        // Console work with nobody signed in (seeders, migrations, most queued
+        // jobs) has no facility to scope to, so the scope stays off.
+        //
+        // The signed-in check matters: without it the scope would quietly switch
+        // itself off whenever runningInConsole() is true -- including under the
+        // test suite -- and tenant isolation would pass for the wrong reason.
+        if (app()->runningInConsole() && ! Auth::check()) {
             return null;
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         return $user?->tenant_id ? (int) $user->tenant_id : null;
     }
