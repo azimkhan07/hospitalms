@@ -17,7 +17,7 @@ return [
             'modules' => [
                 'dashboard', 'meetings', 'meetings.manage', 'leave', 'leave.review',
                 'attendance',
-                'staff', 'appointments', 'prescriptions', 'history', 'medicines',
+'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
                 'expiry', 'patients', 'bills', 'subscribers', 'messages', 'settings',
             ],
         ],
@@ -57,7 +57,7 @@ return [
         'modules' => [
             'dashboard', 'meetings', 'meetings.manage', 'attendance',
             'staff', 'staff.manage',
-            'appointments', 'prescriptions', 'history', 'medicines',
+            'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
             'expiry', 'patients', 'bills', 'subscribers', 'messages', 'settings',
             'employees', 'departments', 'hods', 'rooms', 'beds', 'blocks',
             'nurses', 'operations', 'births', 'discharges', 'reports',
@@ -137,7 +137,7 @@ return [
         'label' => 'Store Keeper',
         'icon' => 'fa-boxes-stacked',
         'modules' => [
-            'dashboard', 'medicines', 'expiry', 'blocks', 'attendance', 'meetings', 'leave',
+            'dashboard', 'medicines', 'medicines.manage', 'expiry', 'blocks', 'attendance', 'meetings', 'leave',
         ],
     ],
     'hr' => [

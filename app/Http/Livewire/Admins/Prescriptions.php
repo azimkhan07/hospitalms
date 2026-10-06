@@ -113,6 +113,9 @@ class Prescriptions extends Component
 
                 $prescription->items()->create([
                     'medicine' => $item['medicine'],
+                    // Exact-name matches wire dispensing to the master; a free
+                    // text line stays and is handed over without stock.
+                    'medicine_id' => \App\Models\medicine::where('name', $item['medicine'])->value('id'),
                     'dosage' => $item['dosage'] ?: null,
                     'frequency' => $item['frequency'] ?: null,
                     'duration' => $item['duration'] ?: null,

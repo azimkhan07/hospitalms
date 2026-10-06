@@ -571,8 +571,9 @@ if (! function_exists('hms_sidebar_tree')) {
                 'label' => 'Pharmacy',
                 'icon' => 'fa-pills',
                 'children' => [
-                    ['label' => 'Medicines Store', 'route' => 'medicinesStore', 'module' => 'medicines'],
-                    ['label' => 'Expired Medicines', 'route' => 'admin_expired_medicines', 'module' => 'expiry'],
+                    ['label' => 'Medicine & Store', 'route' => 'medicinesStore', 'module' => 'medicines'],
+                    ['label' => 'Dispense Counter', 'route' => 'admin_pharmacy', 'module' => 'prescriptions'],
+                    ['label' => 'Expiry Alerts', 'route' => 'admin_expired_medicines', 'module' => 'expiry'],
                 ],
             ],
             [

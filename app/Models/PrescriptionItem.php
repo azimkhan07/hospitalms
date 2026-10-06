@@ -12,12 +12,28 @@ class PrescriptionItem extends Model
     use BelongsToTenant, HasFactory;
 
     protected $fillable = [
-        'prescription_id', 'medicine', 'dosage',
+        'prescription_id', 'medicine', 'medicine_id', 'dosage',
         'frequency', 'duration', 'note',
+    ];
+
+    protected $casts = [
+        'medicine_id' => 'integer',
+        'dispensed_qty' => 'integer',
+        'dispensed_at' => 'datetime',
     ];
 
     public function prescription()
     {
         return $this->belongsTo(Prescription::class);
+    }
+
+    /**
+     * The joined drug from the master. Kept distinct from the string field
+     * `medicine` (the free-text name a doctor typed) so the blade can show
+     * both inside one row.
+     */
+    public function drug()
+    {
+        return $this->belongsTo(medicine::class, 'medicine_id');
     }
 }

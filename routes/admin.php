@@ -28,6 +28,8 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/prescriptions', App\Http\Livewire\Admins\Prescriptions::class)->name('admin_prescriptions');
 
+    Route::get('/pharmacy', App\Http\Livewire\Admins\Pharmacy::class)->name('admin_pharmacy');
+
     Route::get('/patient-history', App\Http\Livewire\Admins\PatientHistory::class)->name('admin_history');
 
     Route::get('/discharges', App\Http\Livewire\Admins\DischargeHistory::class)->name('admin_discharges');
