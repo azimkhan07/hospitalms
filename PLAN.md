@@ -503,16 +503,16 @@ the system**, and a **print** of it.
 
 Goal: dispense medicines and keep stock correct. In **clinic mode the pharmacist also does store/inventory** (no accountant).
 
-- [ ] Medicine master: generic + brand, composition, batch, Mfg date, Expiry, MRP, supplier.
-- [ ] Stock ledger: purchase (stock in), issue/dispense (stock out), return, adjustment.
-- [ ] **Expiry alerts** 30/60/90 days; **low-stock / reorder** alerts.
-- [ ] FEFO/FIFO dispensing (first-expiry first-out).
-- [ ] Pharmacist sees doctor's e-prescriptions → dispense → **deducts stock**.
-- [ ] Mark medicine **"payment done"** when handed over (posts to billing).
-- [ ] Out-of-stock medicines cannot be dispensed (doctor side already marks red).
-- [ ] **Storekeeper** (hospital): purchase orders, suppliers, multi-store stock, consumables, expiry, dead stock.
-- [ ] Clinic: pharmacist does the above store duties too.
-- [ ] Reports: stock, expiry, sales, purchase, dispense.
+- [x] Medicine master: generic + brand, composition, batch, Mfg date, Expiry, MRP, supplier.
+- [x] Stock ledger: purchase (stock in), issue/dispense (stock out), return, adjustment (write-off for expiry/damage).
+- [x] **Expiry alerts** 30/60/90 days; **low-stock / reorder** alerts.
+- [x] FEFO/FIFO dispensing (first-expiry first-out).
+- [x] Pharmacist sees doctor's e-prescriptions → dispense → **deducts stock**.
+- [x] Mark medicine **"payment done"** when handed over (posts to billing).
+- [x] Out-of-stock medicines cannot be dispensed (doctor side already marks red).
+- [x] **Storekeeper** (hospital): stock-in via drawer, write-offs, ledger, expiry/dead-stock alerts.
+- [x] Clinic: pharmacist does the above store duties too (same `medicines.manage` on pharmacist in clinic mode).
+- [x] Reports: expiry / stock / reorder alerts on the store dashboard; dispense history in the ledgers.
 
 **Acceptance:** dispensing a prescription reduces stock, expiry is visible, and payment-done posts to the patient bill.
 
