@@ -29,6 +29,17 @@ trait BelongsToTenant
                 );
             }
         });
+
+        // Stamp the facility on the way in, so a row cannot be written without
+        // one. Without this every screen that saves a row would have to pass
+        // tenant_id by hand, and the one that forgets would quietly file a
+        // patient's record under the wrong facility -- invisible until someone
+        // from the other facility opens the list.
+        static::creating(function (Model $model) {
+            if ($model->getAttribute('tenant_id') === null) {
+                $model->setAttribute('tenant_id', static::currentTenantId());
+            }
+        });
     }
 
     public static function currentTenantId(): ?int

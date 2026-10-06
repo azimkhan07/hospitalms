@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class hod extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
     protected $fillable=[
         'doctor_id',
     ];
