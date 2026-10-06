@@ -18,7 +18,7 @@ return [
                 'dashboard', 'meetings', 'meetings.manage', 'leave', 'leave.review',
                 'attendance',
 'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
-                'expiry', 'patients', 'bills', 'subscribers', 'messages', 'settings',
+'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
             ],
         ],
         'hospital' => [
@@ -58,7 +58,7 @@ return [
             'dashboard', 'meetings', 'meetings.manage', 'attendance',
             'staff', 'staff.manage',
             'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
-            'expiry', 'patients', 'bills', 'subscribers', 'messages', 'settings',
+            'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
             'employees', 'departments', 'hods', 'rooms', 'beds', 'blocks',
             'nurses', 'operations', 'births', 'discharges', 'reports',
             'leave.review',
@@ -126,11 +126,12 @@ return [
             'dashboard', 'patients', 'history', 'attendance', 'meetings', 'leave',
         ],
     ],
-    'accountant' => [
+'accountant' => [
         'label' => 'Accountant',
         'icon' => 'fa-calculator',
         'modules' => [
-            'dashboard', 'bills', 'attendance', 'meetings', 'leave',
+            'dashboard', 'bills', 'accounting', 'patients', 'staff',
+            'attendance', 'meetings', 'leave',
         ],
     ],
     'storekeeper' => [

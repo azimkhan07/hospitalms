@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  php:
+    name: PHP ${{ matrix.php }} + MySQL
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.2']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: hms_testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, intl, bcmath, pdo_mysql, fileinfo, zip, gd
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Lint PHP sources
+        run: |
+          for f in $(git ls-files 'app/*.php' 'routes/*.php' 'tests/*.php' 'database/migrations/*.php' 'config/*.php'); do
+            php -l "$f" >/dev/null || exit 1
+          done
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if php -r "new PDO('mysql:host=127.0.0.1;port=3306;dbname=hms_testing','root','')"; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Run test suite
+        run: php artisan test

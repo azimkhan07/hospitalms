@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AccountingController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\ResourceController;
 use Illuminate\Support\Facades\Route;
@@ -14,4 +15,5 @@ Route::prefix('admin')
         Route::get('/appointments', [ResourceController::class, 'appointments'])->name('appointments');
         Route::get('/medicines', [ResourceController::class, 'medicines'])->name('medicines');
         Route::get('/staff', [ResourceController::class, 'staff'])->name('staff');
+        Route::get('/accounting', [AccountingController::class, 'summary'])->name('accounting');
     });

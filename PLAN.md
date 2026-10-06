@@ -19,8 +19,8 @@ Phase 3 Reception    [#.........]   10%   (appointment module exists)
 Phase 4 Doctor       [##........]   20%   (prescriptions/history exist)
 Phase 5 Lab          [..........]    0%
 Phase 6 Nurse (IPD)  [..........]    0%
-Phase 7 Pharmacy/Store [..........]   0%
-Phase 8 Accountant   [..........]    0%
+Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
+Phase 8 Accountant   [####......]   38%   (GST-ready invoices, ledger + income/expense vouchers, salary run)
 Phase 9 Dean/Calendar [#.........]   15%   (meeting calendar exists)
 Phase 10 Reports/Notify ##.......   20%   (bell + notifications exist)
 Phase 11 Platform/Multi-tenant [.........]  5%   (tenants + tenant_id + scoping backfill)
@@ -69,6 +69,7 @@ The system has **two institution modes** (already in `config/hms.php`):
 
 - **Pure Laravel 12** (no October CMS) — Services in `app/Services/*`, resolved via the **Service Container** (`app()->make`, constructor injection). No business logic in Livewire components.
 - **Modular monolith** with clear **service boundaries** per domain (Tenant, Billing, Pharmacy, Lab, Clinical). Each module talks through a service interface so it can be extracted to a **microservice** later without rewriting callers.
+- **Decision (2026-10-06): stay a modular monolith for v1.** A real split (per-service DBs, bus, deploy units) is a multi-week re-architecture; today the `routes/api.php` module files (`api/v1/admin|site|appointments|superadmin`) are the extraction seam, and `app/Services/*` keep domains behind interfaces. CI/CD ships now; microservice split stays a future Phase if a scale need shows up.
 - **Redis** for queue + cache in production (`QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`). Code must use the queue/cache **abstractions only** (never call Redis directly) so this XAMPP box can run `sync`/`database` today. *This machine has no `redis` PHP extension yet — install before production.*
 - **Queues** for slow work: SMS/WhatsApp, report generation, notifications, nightly backups.
 - **Eager loading** (`with()`, `withCount()`) everywhere — no N+1; add a guard in review.
@@ -522,20 +523,19 @@ Goal: dispense medicines and keep stock correct. In **clinic mode the pharmacist
 
 Goal: all money in one place; **no external CA needed**. Easy UI for non-accountants.
 
-- [ ] **Invoice = per patient stay** (OPD visit or IPD admission).
-- [ ] **IPD bed charge** auto-calculated from **allocation date → discharge date** (per bed/day rate).
-- [ ] Doctor consultation charge, procedure/operation charges, lab/radiology charges.
-- [ ] **Operation charges entered in patient history** and flow to billing.
-- [ ] **Reception collects first payment** (registration/consult/advance).
-- [ ] Pharmacy: pharmacist marks "payment done" per medicine; **accountant handles the rest**.
-- [ ] **At discharge:** final bill generated, pending amount shown, payment cleared, receipt printed.
-- [ ] Advance payment tracking + adjustment.
-- [ ] Discounts / packages, partial payments, refunds.
-- [ ] **Ledger** (patient + accounts), **day book**, **trial balance**, **P&L**.
-- [ ] **Vouchers** (receipt/payment/journal/contra).
-- [ ] **Salary** run for all staff + payslip (basic, allowances, deductions).
-- [ ] GST-ready invoice fields (kept simple; no CA required).
-- [ ] Reports: daily collection, pending dues, doctor-wise revenue, department-wise.
+- [x] **Invoice fields** (GST-ready, kept simple): every bill carries amount, tax, discount, an `invoice_no`, and `paid_at` — no CA required.
+- [x] Pharmacy: pharmacist marks "payment done" per medicine (creates the bill + income); **accountant collects the rest** on open invoices.
+- [x] **Ledger**: every patient payment books an income voucher; every salary paid books an expense voucher; running balance is shown.
+- [x] **Vouchers**: receipt (income) + payment (expense) are auto-generated from the flow (no manual double-entry yet).
+- [x] **Salary run**: a month's payroll issues one due voucher per salaried staff (from `employees.salary`); "Pay" clears it and posts the expense.
+- [ ] **Payslip** with allowances and deductions (net is flat = gross today).
+- [ ] **Invoice = per patient stay** (OPD visit or IPD admission) with auto-charged bed / doctor / procedure / lab / radiology lines.
+- [ ] Operation charges entered in patient history flow to billing (bed charge auto-calculated from allocation → discharge date).
+- [ ] Reception collects first payment (registration/consult/advance) + advance adjustment.
+- [ ] **At discharge:** final bill, pending amount, payment cleared, receipt printed.
+- [ ] Discounts/packages, partial-payment statuses shown per line, refunds journal.
+- [ ] Full books: patient ledger, **day book**, **trial balance**, **P&L**.
+- [ ] CFO reports: daily collection, pending dues, doctor-wise revenue, department-wise revenue.
 
 **Acceptance:** a patient is admitted, charges accumulate (bed, doctor, lab, medicine, operation), and on discharge the accountant produces a final invoice and clears dues; salary run works.
 

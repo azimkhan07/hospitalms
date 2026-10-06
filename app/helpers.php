@@ -600,10 +600,17 @@ if (! function_exists('hms_sidebar_tree')) {
                 'icon' => 'fa-concierge-bell',
                 'children' => [
                     ['label' => 'Patients', 'route' => 'admin_patients', 'module' => 'patients'],
-                    ['label' => 'Patient Bills', 'route' => 'patient_bills', 'module' => 'bills'],
                     ['label' => 'Requested Appointments', 'route' => 'requestedAppointment', 'module' => 'appointments'],
                     ['label' => 'Subscribers', 'route' => 'subscibers', 'module' => 'subscribers'],
                     ['label' => 'Messages', 'route' => 'contactedus', 'module' => 'messages'],
+                ],
+            ],
+            [
+                'label' => 'Finance',
+                'icon' => 'fa-calculator',
+                'children' => [
+                    ['label' => 'Accountant Desk', 'route' => 'admin_accounting', 'module' => 'accounting'],
+                    ['label' => 'Patient Bills', 'route' => 'patient_bills', 'module' => 'bills'],
                 ],
             ],
             [

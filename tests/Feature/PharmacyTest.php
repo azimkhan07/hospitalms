@@ -249,9 +249,19 @@ $m = $service->purchase($m, 100, 'B1', 'GRN #1');
         $payment = payment::latest('id')->first();
 
         $this->assertSame((string) $patient->id, (string) $payment->patient_id);
-        $this->assertSame('40.00', (string) $payment->amount);
+$this->assertSame('40.00', (string) $payment->amount);
         $this->assertSame('paid', $payment->status);
         $this->assertSame('paid', $rx->fresh()->payment_status);
+
+        // The money lands on a GST-ready invoice and books an income voucher.
+        $bill = $payment->bill;
+        $this->assertSame('40.00', (string) $bill->fresh()->amount);
+        $this->assertTrue((bool) $bill->fresh()->invoice_no);
+        $this->assertSame('paid', $bill->fresh()->status);
+
+        $voucher = \App\Models\AccountingVoucher::where('type', 'income')->where('ref_type', 'payment')->first();
+        $this->assertNotNull($voucher);
+        $this->assertSame($payment->id, $voucher->ref_id);
     }
 
     public function test_payment_requires_every_line_dispensed(): void

@@ -107,16 +107,23 @@ class Pharmacy extends Component
 
         $bill = bill::firstOrCreate(
             ['patients_id' => $open->patient_id, 'status' => 'unpaid'],
-            ['patients_id' => $open->patient_id, 'status' => 'unpaid']
+            ['patients_id' => $open->patient_id, 'status' => 'unpaid', 'issued_by' => auth()->id()]
         );
 
-        payment::create([
+        $bill->amount = (float) $bill->amount + $total;
+        $bill->invoice_no ??= 'INV-'.$bill->id;
+        $bill->issued_by ??= auth()->id();
+        $bill->save();
+
+        $payment = payment::create([
             'patient_id' => $open->patient_id,
             'bill_id' => $bill->id,
             'amount' => number_format($total, 2, '.', ''),
             'status' => 'paid',
             'mode' => $mode,
         ]);
+
+        app(\App\Services\Accounting::class)->receivePayment($payment);
 
         $open->update(['payment_status' => 'paid']);
 

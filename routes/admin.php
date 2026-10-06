@@ -46,6 +46,8 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/patientBills', App\Http\Livewire\Admins\Bills::class)->name('patient_bills');
 
+    Route::get('/accounting', App\Http\Livewire\Admins\Accounts::class)->name('admin_accounting');
+
     Route::get('/rooms', App\Http\Livewire\Admins\Rooms::class)->name('rooms');
 
     Route::get('/beds', App\Http\Livewire\Admins\Beds::class)->name('patients_beds');
