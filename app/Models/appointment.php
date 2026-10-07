@@ -37,6 +37,13 @@ class appointment extends Model
         'status' => 'pending',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            $model->intime ??= now();
+        });
+    }
+
     public function patient()
     {
         return $this->belongsTo(patient::class);
