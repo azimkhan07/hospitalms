@@ -52,19 +52,21 @@ return new class extends Migration
         // Backfill with plain SQL rather than the Eloquent models: at this point
         // the schema has already changed but the models may not know about the
         // new columns yet, and a migration must not depend on application code.
-        \Illuminate\Support\Facades\DB::statement("UPDATE hms.rooms SET capacity = GREATEST(1, (SELECT COUNT(*) FROM hms.beds b WHERE b.room_id = hms.rooms.id AND b.deleted_at IS NULL)) WHERE capacity IS NULL OR capacity < 1");
+        $db = \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
 
-        \Illuminate\Support\Facades\DB::statement("UPDATE hms.rooms SET name = CONCAT(UPPER(type), '-', id) WHERE name IS NULL OR name = ''");
+        \Illuminate\Support\Facades\DB::statement("UPDATE `{$db}`.rooms SET capacity = GREATEST(1, (SELECT COUNT(*) FROM `{$db}`.beds b WHERE b.room_id = `{$db}`.rooms.id AND b.deleted_at IS NULL)) WHERE capacity IS NULL OR capacity < 1");
+
+        \Illuminate\Support\Facades\DB::statement("UPDATE `{$db}`.rooms SET name = CONCAT(UPPER(type), '-', id) WHERE name IS NULL OR name = ''");
 
         // Number every existing bed per PLAN.md section 9b.
         \Illuminate\Support\Facades\DB::statement("
-            UPDATE hms.beds b
+            UPDATE `{$db}`.beds b
             JOIN (
                 SELECT id,
                        ROW_NUMBER() OVER (PARTITION BY room_id ORDER BY id) AS rn
-                FROM hms.beds
+                FROM `{$db}`.beds
             ) n ON n.id = b.id
-            JOIN hms.rooms r ON r.id = b.room_id
+            JOIN `{$db}`.rooms r ON r.id = b.room_id
             SET b.bed_number = CASE r.type
                     WHEN 'icu' THEN CONCAT('ICU', n.rn)
                     WHEN 'private' THEN CONCAT('P', n.rn)
