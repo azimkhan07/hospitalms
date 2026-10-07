@@ -11,20 +11,20 @@ Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
 ## 0. Progress Overview
 
 ```
-Overall              [####......]  ~43%   (foundation + mode + landing + booking + super admin core + API v1 auth done)
+Overall              [####...#]  ~45%   (foundation + mode + landing + booking + super admin core + API v1 auth + angio/schemes done)
 
 Phase 1 Super Admin  [######....]   65%   (auth, panel, tenant CRUD, error monitor built + smoke-tested)
-Phase 2 Admin        [##........]   20%   (settings + mode + staff list exist)
-Phase 3 Reception    [#.........]   10%   (appointment module exists)
+Phase 2 Admin        [#####.....]   50%   (settings + mode + staff + angio machines + govt schemes + patient filters)
+Phase 3 Reception    [#.........]   10%   (appointment module exists; angio/scheme on appointment added)
 Phase 4 Doctor       [##........]   20%   (prescriptions/history exist)
 Phase 5 Lab          [..........]    0%
 Phase 6 Nurse (IPD)  [..........]    0%
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
-Phase 8 Accountant   [####......]   38%   (GST-ready invoices, ledger + income/expense vouchers, salary run)
+Phase 8 Accountant   [#######...]   50%   (GST-ready invoices, ledger + income/expense vouchers, salary run, scheme/angio income ledger)
 Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
 Phase 10 Reports/Notify [#######...] 70%   (reports hub + CSV + API mirror; SMS/WhatsApp channels + role KPIs pending)
 Phase 11 Platform/Multi-tenant [#######...] 75%   (host→tenant middleware, cross-tenant snapshot, audit trail, backup cmd; per-tenant DB = shared-schema by design)
-API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live)
+API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live; angio/schemes mirrored)
 ```
 
 Legend: `[#]` done · `[.]` pending. Recalculate `done / total` per phase when updating.
@@ -659,6 +659,38 @@ past the mode.
 2. Recompute the phase % = done / total, update the bar and the Overall line.
 3. Note the date next to major milestones.
 4. Keep this file committed so a crash never loses the roadmap.
+
+---
+
+## 18b. Angio Machines + Govt Schemes (yojna) — done 2026-10-07
+
+Decision (account vs finance): **no separate finance module**. Income — angio
+revenue and government scheme (yojna) grants — is booked into the existing
+**Accounting ledger** (`Accounting::bookIncome`, ref_type `scheme_grant` /
+`angio_revenue`), kept behind the "two doors" rule so the ledger is only ever
+written through `app/Services/Accounting.php`. Roles: admin reads only,
+moderator manages machines/schemes, accountant manages scheme money and books
+income.
+
+- [x] `angio_machines` table (tenant-scoped, soft deletes): name, code,
+      manufacturer, model, rate, status (working / maintenance / decommissioned).
+- [x] `schemes` table (tenant-scoped, soft deletes): name, code, provider,
+      coverage_type (amount / percent / referral), coverage_value, is_active.
+- [x] `patients.scheme_id` FK + `appointments.angio_machine_id` / `scheme_id` FKs.
+- [x] Livewire admin CRUD: AngioMachines + Schemes (moderator), read-only admin.
+- [x] Schemes "Record income" form → accounting voucher (incomes, scheme_grant).
+- [x] Patient list filters: by scheme, by angio-treated (has an appointment on an
+      angio machine), search; Scheme column on the table; scheme picker on create/edit.
+- [x] Appointment form: angio machine + scheme pickers; "Treatment" column (angio/scheme badges).
+- [x] API v1 mirror: `GET /api/v1/admin/angio-machines`, `GET /api/v1/admin/schemes`.
+- [x] Tests: `tests/Feature/AngioSchemeTest.php` (8 tests, tenant-scoped).
+
+**Note for tests:** `patient::create()` does not mass-assign `tenant_id`
+(not in `$fillable`) — the `BelongsToTenant` creating hook stamps it from the
+signed-in user. Rows created *before* `actingAs()` get `tenant_id = NULL` and
+silently vanish from every tenant-scoped query. Always act as a user before
+creating clinical rows in tests, and sync every role the test will act as
+(receptionist included) via `syncRequiredRoles()`.
 
 ---
 
