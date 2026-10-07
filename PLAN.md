@@ -22,7 +22,7 @@ Phase 6 Nurse (IPD)  [..........]    0%
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
 Phase 8 Accountant   [####......]   38%   (GST-ready invoices, ledger + income/expense vouchers, salary run)
 Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
-Phase 10 Reports/Notify ##.......   20%   (bell + notifications exist)
+Phase 10 Reports/Notify [#######...] 70%   (reports hub + CSV + API mirror; SMS/WhatsApp channels + role KPIs pending)
 Phase 11 Platform/Multi-tenant [.........]  5%   (tenants + tenant_id + scoping backfill)
 API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live)
 ```
@@ -567,10 +567,13 @@ Goal: dean manages staffing, approvals, and the facility calendar.
 ## 13. Phase 10 — Reports, Analytics & Notifications
 
 - [x] Notification bell + notifications table.
-- [ ] Reports hub: patient stats, OPD/IPD census, bed occupancy, revenue, pharmacy, lab, doctor performance, due list.
-- [ ] Date-range filters + export (CSV/PDF/print).
-- [ ] Notifications: appointment reminders, report-ready, low-stock, due-payment — via in-app + SMS/WhatsApp/email (configurable).
+- [x] Reports hub: patient stats, OPD/IPD census, bed occupancy, revenue, pharmacy, lab, doctor performance, due list.
+- [x] Date-range filters + presets (Today/Week/Month/All time).
+- [x] CSV export (PDF/print still open).
+- [x] In-app management digest (unpaid bills, low-stock, pending deliveries — once/day) + `NotificationDigest` service.
+- [ ] Notifications: appointment reminders, report-ready via SMS/WhatsApp/email channels (configurable).
 - [ ] Dashboard KPIs per role.
+- [x] API mirror: `GET /api/v1/admin/reports?from&to`.
 
 ---
 

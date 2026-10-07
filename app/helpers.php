@@ -657,6 +657,12 @@ if (! function_exists('hms_sidebar_tree')) {
                 ],
             ],
             [
+                'label' => 'Reports & Analytics',
+                'icon' => 'fa-chart-line',
+                'route' => 'admin_reports',
+                'module' => 'reports',
+            ],
+            [
                 'label' => 'Settings',
                 'icon' => 'fa-cog',
                 'route' => 'admin_settings',

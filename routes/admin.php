@@ -14,6 +14,10 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/dashboard', App\Http\Livewire\Admins\Dashboard::class)->name('admin_dashboard');
 
+    Route::get('/reports', App\Http\Livewire\Admins\Reports::class)->name('admin_reports');
+
+    Route::get('/reports/download', [App\Http\Controllers\Admin\ReportsExportController::class, 'csv'])->name('admin_reports_download');
+
     Route::get('/settings', App\Http\Livewire\Admins\Settings::class)->name('admin_settings');
 
     Route::get('/meetings', App\Http\Livewire\Admins\MeetingCalendar::class)->name('admin_meetings');

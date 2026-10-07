@@ -19,7 +19,7 @@ return [
                 'attendance', 'calendar', 'calendar.manage',
 'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
 'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
-'deliveries', 'deliveries.manage',
+'reports', 'deliveries', 'deliveries.manage',
             ],
         ],
         'hospital' => [
@@ -134,7 +134,7 @@ return [
         'icon' => 'fa-calculator',
         'modules' => [
             'dashboard', 'bills', 'accounting', 'patients', 'staff',
-            'attendance', 'meetings', 'calendar', 'leave',
+            'attendance', 'meetings', 'calendar', 'leave', 'reports',
         ],
     ],
     'storekeeper' => [
