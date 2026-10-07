@@ -43,9 +43,12 @@ return new class extends Migration
                 continue;
             }
 
-            DB::statement(
-                'CREATE INDEX IF NOT EXISTS '.$tableName.'_tenant_id_index ON '.$tableName.' (tenant_id)'
-            );
+            $index = $tableName.'_tenant_id_index';
+            if (! Schema::hasIndex($tableName, $index)) {
+                Schema::table($tableName, function (Blueprint $table) use ($index) {
+                    $table->index(['tenant_id'], $index);
+                });
+            }
         }
     }
 
@@ -53,7 +56,12 @@ return new class extends Migration
     {
         foreach (['departments', 'rooms', 'beds'] as $tableName) {
             if (Schema::hasColumn($tableName, 'tenant_id')) {
-                DB::statement('DROP INDEX IF EXISTS '.$tableName.'_tenant_id_index');
+                $index = $tableName.'_tenant_id_index';
+                if (Schema::hasIndex($tableName, $index)) {
+                    Schema::table($tableName, function (Blueprint $table) use ($index) {
+                        $table->dropIndex($index);
+                    });
+                }
                 Schema::table($tableName, function (Blueprint $table) {
                     $table->dropColumn('tenant_id');
                 });
