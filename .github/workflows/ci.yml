@@ -17,6 +17,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: '%'
           MYSQL_DATABASE: hms_testing
         ports:
           - 3306:3306
@@ -59,10 +60,11 @@ jobs:
 
       - name: Wait for MySQL
         run: |
-          for i in {1..30}; do
+          for i in {1..75}; do
             if php -r "new PDO('mysql:host=127.0.0.1;port=3306;dbname=hms_testing','root','')"; then exit 0; fi
-            sleep 2
+            sleep 3
           done
+          echo "Timed out waiting for MySQL" >&2
           exit 1
 
       - name: Run test suite
