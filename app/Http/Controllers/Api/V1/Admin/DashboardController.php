@@ -8,6 +8,7 @@ use App\Models\employee;
 use App\Models\medicine;
 use App\Models\patient;
 use App\Models\requestedAppointment;
+use App\Services\DashboardKpis;
 use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
@@ -17,6 +18,7 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
+                'kpi_cards' => DashboardKpis::cards(),
                 'employees' => employee::count(),
                 'patients' => patient::count(),
                 'appointments' => appointment::count(),

@@ -11,7 +11,7 @@ Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
 ## 0. Progress Overview
 
 ```
-Overall              [####...#]  ~45%   (foundation + mode + landing + booking + super admin core + API v1 auth + angio/schemes done)
+Overall              [######...]  ~48%   (foundation + mode + landing + booking + super admin core + API v1 auth + angio/schemes + dashboard KPIs done)
 
 Phase 1 Super Admin  [######....]   65%   (auth, panel, tenant CRUD, error monitor built + smoke-tested)
 Phase 2 Admin        [#####.....]   50%   (settings + mode + staff + angio machines + govt schemes + patient filters)
@@ -22,7 +22,7 @@ Phase 6 Nurse (IPD)  [..........]    0%
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
 Phase 8 Accountant   [#######...]   50%   (GST-ready invoices, ledger + income/expense vouchers, salary run, scheme/angio income ledger)
 Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
-Phase 10 Reports/Notify [#######...] 70%   (reports hub + CSV + API mirror; SMS/WhatsApp channels + role KPIs pending)
+Phase 10 Reports/Notify [########..]  80%   (reports hub + CSV + API mirror + per-role dashboard KPIs done; SMS/WhatsApp channels pending)
 Phase 11 Platform/Multi-tenant [#######...] 75%   (host→tenant middleware, cross-tenant snapshot, audit trail, backup cmd; per-tenant DB = shared-schema by design)
 API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live; angio/schemes mirrored)
 ```
@@ -691,6 +691,26 @@ signed-in user. Rows created *before* `actingAs()` get `tenant_id = NULL` and
 silently vanish from every tenant-scoped query. Always act as a user before
 creating clinical rows in tests, and sync every role the test will act as
 (receptionist included) via `syncRequiredRoles()`.
+
+---
+
+## 18c. Per-role Dashboard KPIs — done 2026-10-07
+
+The `/admin/dashboard` no longer shows the same 16 raw counts to everyone.
+`App\Services\DashboardKpis::cards()` returns a role-specific card set (5–6
+cards per role) computed once per request (`values()`), and both the Livewire
+dashboard and the API v1 `GET /api/v1/admin/dashboard` render from it so the
+two surfaces never drift.
+
+- [x] Per-role card sets: admin, moderator, doctor, nurse, receptionist,
+      pharmacist, laboratorist, accountant, storekeeper, hr (fallback = admin).
+- [x] Accountant cards use the ledger: `Accounting::collectedToday()`,
+      `outstanding()`, `salariesDue()`.
+- [x] Doctor/nurse/pharmacist/lab cards reuse `ReportBuilder`-style queries
+      (stock, low stock, beds, reports).
+- [x] `.hms-kpi-*` styles hoisted into `public/assets/css/master.css`.
+- [x] API mirror: `kpi_cards` added to `Api\V1\Admin\DashboardController`.
+- [x] Tests: `tests/Feature/DashboardKpiTest.php` (5 tests, incl. Sanctum API).
 
 ---
 

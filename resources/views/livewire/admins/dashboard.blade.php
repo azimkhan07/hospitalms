@@ -1,31 +1,14 @@
 <div>
     <div class="row">
-        @foreach ([
-            ['label' => 'Total Employees', 'value' => $employees, 'icon' => 'fa-users', 'bg' => 'primary'],
-            ['label' => 'Total Appointments', 'value' => $appointments, 'icon' => 'fa-calendar-check', 'bg' => 'success'],
-            ['label' => 'Total Birth Reports', 'value' => $birthreports, 'icon' => 'fa-baby', 'bg' => 'info'],
-            ['label' => 'Total Operation Reports', 'value' => $operationreports, 'icon' => 'fa-user-md', 'bg' => 'warning'],
-            ['label' => 'Total Patients', 'value' => $patients, 'icon' => 'fa-procedures', 'bg' => 'danger'],
-            ['label' => 'Total HODs', 'value' => $hods, 'icon' => 'fa-user-tie', 'bg' => 'secondary'],
-            ['label' => 'Total Blocks', 'value' => $blocks, 'icon' => 'fa-cube', 'bg' => 'dark'],
-            ['label' => 'Total Departments', 'value' => $departments, 'icon' => 'fa-building', 'bg' => 'light'],
-            ['label' => 'Total Rooms', 'value' => $rooms, 'icon' => 'fa-door-open', 'bg' => 'info'],
-            ['label' => 'Total Beds', 'value' => $beds, 'icon' => 'fa-bed', 'bg' => 'primary'],
-            ['label' => 'Total Subscribers', 'value' => $subscribers, 'icon' => 'fa-user-plus', 'bg' => 'success'],
-            ['label' => 'Requested Appointments', 'value' => $requestedAppointment, 'icon' => 'fa-calendar-plus', 'bg' => 'warning'],
-            ['label' => 'Active Staff Logins', 'value' => $staffAccounts, 'icon' => 'fa-user-friends', 'bg' => 'primary'],
-            ['label' => 'Pending Leave', 'value' => $pendingLeave, 'icon' => 'fa-plane-departure', 'bg' => 'info'],
-            ['label' => 'Upcoming Meetings', 'value' => $upcomingMeetings, 'icon' => 'fa-calendar-alt', 'bg' => 'success'],
-            ['label' => 'Expired Medicines', 'value' => $expiredMedicines, 'icon' => 'fa-exclamation-triangle', 'bg' => 'danger'],
-        ] as $card)
-            <div class="col-md-2 col-sm-4 col-6">
-                <div class="card bg-{{ $card['bg'] }} {{ in_array($card['bg'], ['light', 'warning'], true) ? '' : 'text-white' }}">
-                    <div class="card-body py-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="card-title mb-0" style="font-size:11px;font-weight:600">{{ $card['label'] }}</h6>
-                            <i class="fas {{ $card['icon'] }} opacity-75" style="font-size:12px"></i>
+        @foreach ($cards as $card)
+            <div class="col-lg-2 col-md-4 col-6 mb-2">
+                <div class="box box-primary hms-report-kpi" style="margin-bottom:0">
+                    <div class="box-body d-flex align-items-center" style="padding:.55rem .65rem">
+                        <div class="hms-kpi-icon" style="background:{{ $card['color'] }}"><i class="fas {{ $card['icon'] }}"></i></div>
+                        <div class="ml-2">
+                            <div class="hms-kpi-value">{{ $card['value'] }}</div>
+                            <div class="hms-kpi-label">{{ $card['label'] }}</div>
                         </div>
-                        <p class="card-text mb-0" style="font-size:19px;font-weight:700;line-height:1.2">{{ $card['value'] }}</p>
                     </div>
                 </div>
             </div>
@@ -74,8 +57,8 @@
                         <a href="{{ route('admin_leave') }}" class="ml-1">Open review queue &rarr;</a>
                     </div>
                 @endif
-                </div>
             </div>
         </div>
-    @endif
+    </div>
+@endif
 </div>
