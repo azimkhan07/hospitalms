@@ -61,7 +61,7 @@ jobs:
       - name: Wait for MySQL
         run: |
           for i in {1..75}; do
-            if php -r "new PDO('mysql:host=127.0.0.1;port=3306;dbname=hms_testing','root','')"; then exit 0; fi
+            if php -r "new PDO('mysql:host=127.0.0.1;port=3306;dbname=hms_testing','root','');"; then exit 0; fi
             sleep 3
           done
           echo "Timed out waiting for MySQL" >&2
