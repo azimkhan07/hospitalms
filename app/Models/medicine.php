@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\RecordsActivity;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class medicine extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes, RecordsActivity;
 
     protected $fillable = [
         'price',

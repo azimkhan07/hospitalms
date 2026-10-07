@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CalendarEvent extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, RecordsActivity;
 
     public const BLOOD_CAMP = 'blood_camp';
 
@@ -24,6 +25,11 @@ class CalendarEvent extends Model
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
     ];
+
+    public function auditName(): string
+    {
+        return (string) ($this->title ?? '#'.$this->getKey());
+    }
 
     public function creator()
     {

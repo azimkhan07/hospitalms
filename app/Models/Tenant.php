@@ -29,6 +29,27 @@ class Tenant extends Model
         'deliveries_enabled' => 'boolean',
     ];
 
+    protected static ?Tenant $current = null;
+
+    /**
+     * The facility a request belongs to, resolved from the host/domain by the
+     * ResolveTenant middleware (falls back to the signed-in user's tenant).
+     */
+    public static function current(): ?Tenant
+    {
+        return static::$current;
+    }
+
+    public static function setCurrent(?Tenant $tenant): void
+    {
+        static::$current = $tenant;
+    }
+
+    public static function currentId(): ?int
+    {
+        return static::$current?->id;
+    }
+
     /**
      * Role slugs this facility was configured with (PLAN.md section 9c.2).
      *

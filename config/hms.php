@@ -3,6 +3,18 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Host → tenant map (single-host installs)
+    |--------------------------------------------------------------------------
+    | ResolveTenant middleware maps an HTTP host to a tenant id. Real installs
+    | instead match `tenants.domain` / `tenants.subdomain`. Keys are lower-case.
+    */
+    'host_map' => [
+        '127.0.0.1' => 1,
+        'localhost' => 1,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Institution modes
     |--------------------------------------------------------------------------
     | A super admin can run the system either as a small clinic or a full

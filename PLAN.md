@@ -23,7 +23,7 @@ Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger,
 Phase 8 Accountant   [####......]   38%   (GST-ready invoices, ledger + income/expense vouchers, salary run)
 Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
 Phase 10 Reports/Notify [#######...] 70%   (reports hub + CSV + API mirror; SMS/WhatsApp channels + role KPIs pending)
-Phase 11 Platform/Multi-tenant [.........]  5%   (tenants + tenant_id + scoping backfill)
+Phase 11 Platform/Multi-tenant [#######...] 75%   (host→tenant middleware, cross-tenant snapshot, audit trail, backup cmd; per-tenant DB = shared-schema by design)
 API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live)
 ```
 
@@ -579,12 +579,12 @@ Goal: dean manages staffing, approvals, and the facility calendar.
 
 ## 14. Phase 11 — Platform / Multi-tenant (Super Admin infra)
 
-- [ ] `tenants` table + `tenant_id` on all business tables.
-- [ ] Host → tenant resolution middleware.
-- [ ] Super Admin cross-tenant access + per-tenant DB connection option.
-- [ ] Error monitor (Phase 1.4) reads across tenants.
-- [ ] Backups + restore runbook.
-- [ ] Audit log viewer.
+- [x] `tenants` table + `tenant_id` on all business tables (global scope via `BelongsToTenant`).
+- [x] Host → tenant resolution middleware (`ResolveTenant` + `hms.host_map`; matches `tenants.domain`/`subdomain`; inactive excluded).
+- [x] Super Admin cross-tenant access: read-only `GET /api/v1/superadmin/snapshot` per-tenant counts + `acrossTenants()` escape. Per-tenant DB connection not planned — shared schema by design.
+- [x] Error monitor (Phase 1.4) reads across tenants (shows tenant name per error).
+- [x] Backups: `hms:backup` (portable JSON manifest always + full mysqldump when binary present). Restore runbook: load dump into empty DB, run `php artisan migrate --seed` for roles, point `DB_DATABASE` back.
+- [x] Audit log viewer: `audit_logs` table + `RecordsActivity` trait on core models (patient, bill, appointment, medicine, calendar event, delivery, vouchers); Super Admin panel `/superadmin/audit-logs` + `GET /api/v1/superadmin/audit-logs`.
 
 ---
 

@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureApiStaff;
 use App\Http\Middleware\EnsureApiSuperAdmin;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\checksuperadmin;
 use App\Services\ErrorLogger;
 use Illuminate\Auth\Middleware\Authorize;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             AuthenticateSession::class,
+            ResolveTenant::class,
         ]);
 
         $middleware->alias([
@@ -48,6 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin' => EnsureSuperAdmin::class,
             'throttle' => ThrottleRequests::class,
             'verified' => EnsureEmailIsVerified::class,
+        ]);
+
+        $middleware->api(append: [
+            ResolveTenant::class,
         ]);
 
         $middleware->trustProxies(at: '*');

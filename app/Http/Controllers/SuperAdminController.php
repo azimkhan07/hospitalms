@@ -62,6 +62,11 @@ class SuperAdminController extends Controller
         return view('superadmin.errors');
     }
 
+    public function auditLogs()
+    {
+        return view('superadmin.audit-logs');
+    }
+
     public function admins()
     {
         return view('superadmin.admins');

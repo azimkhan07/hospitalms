@@ -200,6 +200,13 @@
                         <span>Error Monitor</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('superadmin.audit-logs') }}"
+                        class="{{ request()->routeIs('superadmin.audit-logs') ? 'active' : '' }}">
+                        <i class="fas fa-book-open"></i>
+                        <span>Audit Log</span>
+                    </a>
+                </li>
             </ul>
         </nav>
 

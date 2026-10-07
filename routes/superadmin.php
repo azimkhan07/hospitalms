@@ -36,4 +36,6 @@ Route::prefix('superadmin')->name('superadmin.')->middleware('superadmin')->grou
 
     Route::get('/errors', [SuperAdminController::class, 'errors'])->name('errors');
 
+    Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('audit-logs');
+
 });

@@ -742,3 +742,14 @@ if (! function_exists('hms_sidebar_url')) {
         return route($item['route']);
     }
 }
+
+if (! function_exists('hms_tenant')) {
+    /**
+     * The facility the current request resolves to (host-mapped by the
+     * ResolveTenant middleware), or null for the platform panel / console.
+     */
+    function hms_tenant(): ?\App\Models\Tenant
+    {
+        return \App\Models\Tenant::current();
+    }
+}
