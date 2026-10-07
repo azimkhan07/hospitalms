@@ -27,6 +27,10 @@ class Appiontment extends Component
 
     public $endtime = '';
 
+    public string $angioMachineId = '';
+
+    public string $schemeId = '';
+
     public string $status = 'pending';
 
     public string $notes = '';
@@ -50,6 +54,8 @@ class Appiontment extends Component
             'endtime' => 'nullable|date|after_or_equal:start_timeee',
             'status' => 'required|in:pending,confirmed,completed,cancelled',
             'notes' => 'nullable|max:500',
+            'angioMachineId' => 'nullable|exists:angio_machines,id',
+            'schemeId' => 'nullable|exists:schemes,id',
         ], [
             'patient.required' => 'Please choose a patient.',
             'doctor.required' => 'Please choose a doctor.',
@@ -60,13 +66,15 @@ class Appiontment extends Component
         appointment::create([
             'patient_id' => $this->patient,
             'doctor_id' => $this->doctor,
+            'angio_machine_id' => $this->angioMachineId ?: null,
+            'scheme_id' => $this->schemeId ?: null,
             'intime' => $this->start_timeee,
             'outtime' => $this->endtime ?: null,
             'status' => $this->status,
             'notes' => $this->notes ?: null,
         ]);
 
-        $this->reset(['patient', 'doctor', 'start_timeee', 'endtime', 'notes']);
+        $this->reset(['patient', 'doctor', 'start_timeee', 'endtime', 'notes', 'angioMachineId', 'schemeId']);
         $this->status = 'pending';
 
         session()->flash('message', 'Appointment created successfully.');
@@ -79,6 +87,8 @@ class Appiontment extends Component
         $this->edit_appointment_id = $id;
         $this->patient = $appointment->patient_id;
         $this->doctor = $appointment->doctor_id;
+        $this->angioMachineId = (string) $appointment->angio_machine_id;
+        $this->schemeId = (string) $appointment->scheme_id;
         $this->start_timeee = optional($appointment->intime)->format('Y-m-d\TH:i');
         $this->endtime = optional($appointment->outtime)->format('Y-m-d\TH:i');
         $this->status = $appointment->status ?? 'pending';
@@ -96,19 +106,23 @@ class Appiontment extends Component
             'endtime' => 'nullable|date|after_or_equal:start_timeee',
             'status' => 'required|in:pending,confirmed,completed,cancelled',
             'notes' => 'nullable|max:500',
+            'angioMachineId' => 'nullable|exists:angio_machines,id',
+            'schemeId' => 'nullable|exists:schemes,id',
         ]);
 
         $appointment = appointment::findOrFail($id);
         $appointment->update([
             'patient_id' => $this->patient,
             'doctor_id' => $this->doctor,
+            'angio_machine_id' => $this->angioMachineId ?: null,
+            'scheme_id' => $this->schemeId ?: null,
             'intime' => $this->start_timeee,
             'outtime' => $this->endtime ?: null,
             'status' => $this->status,
             'notes' => $this->notes ?: null,
         ]);
 
-        $this->reset(['patient', 'doctor', 'start_timeee', 'endtime', 'notes', 'edit_appointment_id']);
+        $this->reset(['patient', 'doctor', 'start_timeee', 'endtime', 'notes', 'angioMachineId', 'schemeId', 'edit_appointment_id']);
         $this->status = 'pending';
         $this->button_text = 'Add New Appointment';
 
@@ -124,7 +138,7 @@ class Appiontment extends Component
 
     public function cancelEdit(): void
     {
-        $this->reset(['patient', 'doctor', 'start_timeee', 'endtime', 'notes', 'edit_appointment_id']);
+        $this->reset(['patient', 'doctor', 'start_timeee', 'endtime', 'notes', 'angioMachineId', 'schemeId', 'edit_appointment_id']);
         $this->status = 'pending';
         $this->button_text = 'Add New Appointment';
     }
@@ -140,7 +154,7 @@ class Appiontment extends Component
             abort(403);
         }
 
-        $appointments = appointment::with(['patient:id,name', 'doctor.employ:id,name'])
+        $appointments = appointment::with(['patient:id,name', 'doctor.employ:id,name', 'angioMachine:id,name', 'scheme:id,name'])
             ->when($this->search !== '', function ($q) {
                 $term = '%'.mb_strtolower($this->search).'%';
                 $q->whereHas('patient', fn ($p) => $p->whereRaw('LOWER(name) LIKE ?', [$term]));
@@ -151,6 +165,8 @@ class Appiontment extends Component
         return view('livewire.admins.appiontment', [
             'patients' => patient::orderBy('name')->limit(300)->get(),
             'doctors' => doctor::with('employ:id,name')->get(),
+            'angioMachines' => \App\Models\AngioMachine::orderBy('name')->get(['id', 'name']),
+            'schemes' => \App\Models\Scheme::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'appointments' => $appointments,
         ]);
     }

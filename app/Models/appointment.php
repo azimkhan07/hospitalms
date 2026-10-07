@@ -15,6 +15,8 @@ class appointment extends Model
     protected $fillable = [
         'patient_id',
         'doctor_id',
+        'angio_machine_id',
+        'scheme_id',
         'intime',
         'outtime',
         'status',
@@ -52,6 +54,16 @@ class appointment extends Model
     public function doctor()
     {
         return $this->belongsTo(doctor::class);
+    }
+
+    public function angioMachine()
+    {
+        return $this->belongsTo(AngioMachine::class, 'angio_machine_id');
+    }
+
+    public function scheme()
+    {
+        return $this->belongsTo(Scheme::class, 'scheme_id');
     }
 
     public function checkups()

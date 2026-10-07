@@ -62,6 +62,10 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/machines', App\Http\Livewire\Admins\Machines::class)->name('admin_machines');
 
+    Route::get('/angio-machines', App\Http\Livewire\Admins\AngioMachines::class)->name('admin_angio_machines');
+
+    Route::get('/schemes', App\Http\Livewire\Admins\Schemes::class)->name('admin_schemes');
+
     Route::get('/investigations', App\Http\Livewire\Admins\Investigations::class)->name('admin_investigations');
 
     Route::get('/bedreports', App\Http\Livewire\Admins\BedReports::class)->name('admin_bed_reports');

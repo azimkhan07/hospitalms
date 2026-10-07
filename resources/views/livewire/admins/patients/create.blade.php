@@ -72,6 +72,15 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label for="scheme">Govt Scheme <span class="text-muted">(optional)</span></label>
+                            <select name="scheme" wire:model.lazy="scheme" class="form-control">
+                                <option value="">No scheme</option>
+                                @foreach ($schemes ?? [] as $s)
+                                    <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="Blood">Blood Group</label>
                             <select name="Blood" wire:model.lazy="bloodgroup" class="form-control">
                                 <option value="Null" class="text-red">Null</option>

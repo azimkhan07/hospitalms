@@ -127,6 +127,38 @@ class Accounting
         ]);
     }
 
+    /**
+     * Book a non-payment income, e.g. a Government scheme (yojna) grant that
+     * the state sends for a scheme-covered treatment (ref_type = scheme_grant)
+     * or angiography service revenue (ref_type = angio_revenue).
+     *
+     * The "two doors" rule says the ledger is only written here; components
+     * never touch AccountingVoucher directly.
+     */
+    public function bookIncome(
+        string $title,
+        float $amount,
+        string $refType = 'scheme_grant',
+        ?int $refId = null,
+        string $note = '',
+        ?User $by = null
+    ): AccountingVoucher {
+        if ($amount <= 0) {
+            throw new \RuntimeException('Income amount must be positive.');
+        }
+
+        return AccountingVoucher::create([
+            'type' => AccountingVoucher::INCOME,
+            'title' => $title,
+            'note' => $note,
+            'amount' => $amount,
+            'ref_type' => $refType,
+            'ref_id' => $refId,
+            'occurred_at' => now(),
+            'created_by' => $by?->id,
+        ]);
+    }
+
     public static function outstanding(): float
     {
         $open = bill::where('status', 'unpaid')->with('payments')->get();

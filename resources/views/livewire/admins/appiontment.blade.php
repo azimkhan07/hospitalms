@@ -58,6 +58,33 @@
 
                             <div class="form-row">
                                 <div class="form-group col-6">
+                                    <label>Angio machine <span class="text-muted">(optional)</span></label>
+                                    <select class="form-control form-control-sm" wire:model="angioMachineId">
+                                        <option value="">No angio machine</option>
+                                        @foreach ($angioMachines ?? [] as $am)
+                                            <option value="{{ $am->id }}">{{ $am->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('angioMachineId')
+                                        <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-6">
+                                    <label>Govt scheme <span class="text-muted">(optional)</span></label>
+                                    <select class="form-control form-control-sm" wire:model="schemeId">
+                                        <option value="">No scheme</option>
+                                        @foreach ($schemes ?? [] as $s)
+                                            <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('schemeId')
+                                        <span class="text-danger" style="font-size:10.5px">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-6">
                                     <label>Start</label>
                                     <input type="datetime-local" class="form-control form-control-sm"
                                         wire:model="start_timeee">
@@ -116,23 +143,35 @@
 
                         <table class="table table-sm table-bordered mb-0">
                             <thead>
+<tr>
+                                <th>#</th>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Treatment</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Status</th>
+                                <th style="width:90px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($appointments as $item)
                                 <tr>
-                                    <th>#</th>
-                                    <th>Patient</th>
-                                    <th>Doctor</th>
-                                    <th>Start</th>
-                                    <th>End</th>
-                                    <th>Status</th>
-                                    <th style="width:90px">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($appointments as $item)
-                                    <tr>
-                                        <td>{{ $item->id }}</td>
-                                        <td>{{ $item->patient?->name ?? 'Removed patient' }}</td>
-                                        <td>{{ $item->doctor?->employ?->name ?? '-' }}</td>
-                                        <td>{{ optional($item->intime)->format('d M Y, h:i A') ?? '-' }}</td>
+                                    <td>{{ $item->id }}</td>
+                                    <td>{{ $item->patient?->name ?? 'Removed patient' }}</td>
+                                    <td>{{ $item->doctor?->employ?->name ?? '-' }}</td>
+                                    <td>
+                                        @if ($item->angioMachine)
+                                            <span class="label label-danger" title="Done on angio machine">{{ $item->angioMachine->name }}</span>
+                                        @endif
+                                        @if ($item->scheme)
+                                            <span class="label label-info" title="Under Govt scheme">{{ $item->scheme->name }}</span>
+                                        @endif
+                                        @if (! $item->angioMachine && ! $item->scheme)
+                                            <span class="text-muted" style="font-size:11px">-</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ optional($item->intime)->format('d M Y, h:i A') ?? '-' }}</td>
                                         <td>{{ optional($item->outtime)->format('d M Y, h:i A') ?? 'Ongoing' }}</td>
                                         <td>
                                             <span class="badge badge-sm
@@ -155,7 +194,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-3">No appointments recorded.</td>
+                                        <td colspan="8" class="text-center text-muted py-3">No appointments recorded.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

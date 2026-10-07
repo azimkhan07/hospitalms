@@ -634,6 +634,7 @@ if (! function_exists('hms_sidebar_tree')) {
                 'icon' => 'fa-x-ray',
                 'children' => [
                     ['label' => 'Machines', 'route' => 'admin_machines', 'module' => 'machines'],
+                    ['label' => 'Angio / Cath Lab', 'route' => 'admin_angio_machines', 'module' => 'angio'],
                     ['label' => 'Rate Card', 'route' => 'admin_investigations', 'module' => 'investigations'],
                     ['label' => 'Bed Reports', 'route' => 'admin_bed_reports', 'module' => 'bedreports'],
                 ],
@@ -644,6 +645,7 @@ if (! function_exists('hms_sidebar_tree')) {
                 'children' => [
                     ['label' => 'Patients', 'route' => 'admin_patients', 'module' => 'patients'],
                     ['label' => 'Requested Appointments', 'route' => 'requestedAppointment', 'module' => 'appointments'],
+                    ['label' => 'Govt Schemes', 'route' => 'admin_schemes', 'module' => 'schemes'],
                     ['label' => 'Subscribers', 'route' => 'subscibers', 'module' => 'subscribers'],
                     ['label' => 'Messages', 'route' => 'contactedus', 'module' => 'messages'],
                 ],

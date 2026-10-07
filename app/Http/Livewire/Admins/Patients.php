@@ -26,15 +26,33 @@ class Patients extends Component
     public $age;
     public $address;
     public $bloodgroup;
+    public $scheme;
     public $photo;
     public $edit_photo;
     public $edit_patient_id;
     public $button_text = "Add New Patient";
 
+    public string $search = '';
+    public string $schemeFilter = '';
+    public string $angioFilter = '';
+
     public $_page;
     public function mount()
     {
         $this->_page = 'index';
+    }
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->schemeFilter = '';
+        $this->angioFilter = '';
+        $this->resetPage();
     }
 
     public function show_create_form()
@@ -54,6 +72,7 @@ class Patients extends Component
         $this->phone = $patient->phone;
         $this->age = $patient->age;
         $this->bloodgroup = $patient->bloodgroup;
+        $this->scheme = $patient->scheme_id;
         $this->edit_photo = $patient->photo_path;
     }
 
@@ -88,6 +107,7 @@ class Patients extends Component
                 'address' => $this->address,
                 'age' => $this->age,
                 'bloodgroup' => $this->bloodgroup,
+                'scheme_id' => $this->scheme ?: null,
                 'photo_path' => $this->storeImage(),
             ]);
             //unset variables
@@ -99,6 +119,7 @@ class Patients extends Component
             $this->bloodgroup = "";
             $this->address = "";
             $this->age = "";
+            $this->scheme = "";
             $this->photo = "";
 
             session()->flash('message', 'Patient Created successfully.');
@@ -139,6 +160,7 @@ class Patients extends Component
         $patient->age = $this->age;
         $patient->bloodgroup = $this->bloodgroup;
         $patient->phone = $this->phone;
+        $patient->scheme_id = $this->scheme ?: null;
 
         if ($this->photo) {
             Storage::disk('public')->delete($patient->photo_path);
@@ -155,6 +177,7 @@ class Patients extends Component
         $this->bloodgroup = "";
         $this->address = "";
         $this->age = "";
+        $this->scheme = "";
         $this->photo = "";
         $this->edit_photo = "";
         $this->edit_patient_id = "";
@@ -179,12 +202,31 @@ class Patients extends Component
 
         if ($this->_page == "index") {
             return view('livewire.admins.patients.index', [
-                'patients' => patient::latest()->paginate(10),
+                'patients' => patient::query()
+                    ->with('scheme:id,name')
+                    ->when($this->search !== '', function ($q) {
+                        $term = '%'.mb_strtolower($this->search).'%';
+                        $q->where(function ($q) use ($term) {
+                            $q->whereRaw('LOWER(name) LIKE ?', [$term])
+                                ->orWhereRaw('LOWER(phone) LIKE ?', [$term])
+                                ->orWhereRaw('LOWER(email) LIKE ?', [$term]);
+                        });
+                    })
+                    ->when($this->schemeFilter !== '', fn ($q) => $q->where('scheme_id', $this->schemeFilter))
+                    ->when($this->angioFilter === '1', fn ($q) => $q->whereHas('appointments', fn ($a) => $a->whereNotNull('angio_machine_id')))
+                    ->when($this->angioFilter === '0', fn ($q) => $q->whereDoesntHave('appointments', fn ($a) => $a->whereNotNull('angio_machine_id')))
+                    ->latest()
+                    ->paginate(10),
+                'schemes' => \App\Models\Scheme::orderBy('name')->get(['id', 'name']),
             ]);
         } else if ($this->_page == "create") {
-            return view('livewire.admins.patients.create');
+            return view('livewire.admins.patients.create', [
+                'schemes' => \App\Models\Scheme::orderBy('name')->get(['id', 'name']),
+            ]);
         } else if ($this->_page == "edit") {
-            return view('livewire.admins.patients.edit');
+            return view('livewire.admins.patients.edit', [
+                'schemes' => \App\Models\Scheme::orderBy('name')->get(['id', 'name']),
+            ]);
         }
     }
 }

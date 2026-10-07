@@ -22,11 +22,17 @@ class patient extends Model
         'age',
         'bloodgroup',
         'photo_path',
+        'scheme_id',
     ];
 
     public function appointments()
     {
         return $this->hasMany(appointment::class);
+    }
+
+    public function scheme()
+    {
+        return $this->belongsTo(Scheme::class, 'scheme_id');
     }
 
     public function prescriptions()

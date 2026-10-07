@@ -22,7 +22,7 @@ return [
     | "modules" = null means every module is allowed.
     */
     'modes' => [
-        'clinic' => [
+'clinic' => [
             'label' => 'Clinic',
             'description' => 'Small clinic: receptionist, doctor, pharmacist and admin only.',
             'roles' => ['admin', 'receptionist', 'doctor', 'pharmacist'],
@@ -31,7 +31,7 @@ return [
                 'attendance', 'calendar', 'calendar.manage',
 'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
 'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
-'reports', 'deliveries', 'deliveries.manage',
+'reports', 'deliveries', 'deliveries.manage', 'schemes',
             ],
         ],
         'hospital' => [
@@ -80,6 +80,10 @@ return [
             // admin can see the rate card and the ICU reports, the Dean owns
             // the machines and the prices (PLAN.md 9d.4).
             'machines', 'investigations', 'bedreports',
+            // Angio (cath lab) machines and Government schemes (yojna): the
+            // admin reads and manages patients/appointments; the Dean owns the
+            // angio machine master and the accountant books scheme money.
+            'angio', 'schemes',
         ],
     ],
     'moderator' => [
@@ -92,6 +96,7 @@ return [
             'machines', 'machines.manage',
             'investigations', 'investigations.manage',
             'bedreports',
+            'angio', 'angio.manage', 'schemes', 'schemes.manage',
             'appointments', 'operations', 'births', 'reports', 'blocks',
             'prescriptions', 'history', 'discharges', 'meetings', 'meetings.manage',
             'attendance', 'leave', 'leave.review', 'subscribers', 'messages',
@@ -147,6 +152,7 @@ return [
         'modules' => [
             'dashboard', 'bills', 'accounting', 'patients', 'staff',
             'attendance', 'meetings', 'calendar', 'leave', 'reports',
+            'schemes', 'schemes.manage',
         ],
     ],
     'storekeeper' => [
