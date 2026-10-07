@@ -14,11 +14,12 @@ return [
             'label' => 'Clinic',
             'description' => 'Small clinic: receptionist, doctor, pharmacist and admin only.',
             'roles' => ['admin', 'receptionist', 'doctor', 'pharmacist'],
-            'modules' => [
+'modules' => [
                 'dashboard', 'meetings', 'meetings.manage', 'leave', 'leave.review',
-                'attendance',
+                'attendance', 'calendar', 'calendar.manage',
 'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
 'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
+'deliveries', 'deliveries.manage',
             ],
         ],
         'hospital' => [
@@ -61,7 +62,8 @@ return [
             'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
             'employees', 'departments', 'hods', 'rooms', 'beds', 'blocks',
             'nurses', 'operations', 'births', 'discharges', 'reports',
-            'leave.review',
+            'leave.review', 'calendar', 'calendar.manage',
+            'deliveries', 'deliveries.manage',
             // Read-only on the diagnostic setup, same deal as rooms/beds: the
             // admin can see the rate card and the ICU reports, the Dean owns
             // the machines and the prices (PLAN.md 9d.4).
@@ -81,14 +83,15 @@ return [
             'appointments', 'operations', 'births', 'reports', 'blocks',
             'prescriptions', 'history', 'discharges', 'meetings', 'meetings.manage',
             'attendance', 'leave', 'leave.review', 'subscribers', 'messages',
+            'calendar', 'calendar.manage', 'deliveries', 'deliveries.manage',
         ],
     ],
-    'doctor' => [
+'doctor' => [
         'label' => 'Doctor',
         'icon' => 'fa-user-md',
         'modules' => [
 'dashboard', 'patients', 'operations', 'births', 'attendance',
-        'appointments', 'prescriptions', 'history', 'meetings', 'leave',
+        'appointments', 'prescriptions', 'history', 'meetings', 'calendar', 'leave',
         'bedreports',
         ],
     ],
@@ -97,7 +100,7 @@ return [
         'icon' => 'fa-user-nurse',
         'modules' => [
 'dashboard', 'patients', 'beds', 'beds.status', 'rooms', 'nurses',
-        'attendance', 'history', 'meetings', 'leave',
+        'attendance', 'history', 'meetings', 'calendar', 'leave',
         'machines', 'bedreports',
         ],
     ],
@@ -106,7 +109,7 @@ return [
         'icon' => 'fa-concierge-bell',
 'modules' => [
             'dashboard', 'patients', 'appointments', 'subscribers', 'messages', 'attendance',
-            'meetings', 'leave',
+            'meetings', 'calendar', 'deliveries', 'leave',
             // The bed map is read-only here; allocation itself is allowed so
             // the counter can hand a free bed to a patient (PLAN.md section 9b).
             'rooms', 'beds', 'beds.allocate',
@@ -116,14 +119,14 @@ return [
         'label' => 'Pharmacist',
         'icon' => 'fa-pills',
         'modules' => [
-            'dashboard', 'medicines', 'expiry', 'prescriptions', 'attendance', 'meetings', 'leave',
+            'dashboard', 'medicines', 'expiry', 'prescriptions', 'attendance', 'meetings', 'calendar', 'leave',
         ],
     ],
     'laboratorist' => [
         'label' => 'Laboratorist',
         'icon' => 'fa-flask',
         'modules' => [
-            'dashboard', 'patients', 'history', 'attendance', 'meetings', 'leave',
+            'dashboard', 'patients', 'history', 'attendance', 'meetings', 'calendar', 'leave',
         ],
     ],
 'accountant' => [
@@ -131,14 +134,15 @@ return [
         'icon' => 'fa-calculator',
         'modules' => [
             'dashboard', 'bills', 'accounting', 'patients', 'staff',
-            'attendance', 'meetings', 'leave',
+            'attendance', 'meetings', 'calendar', 'leave',
         ],
     ],
     'storekeeper' => [
         'label' => 'Store Keeper',
         'icon' => 'fa-boxes-stacked',
         'modules' => [
-            'dashboard', 'medicines', 'medicines.manage', 'expiry', 'blocks', 'attendance', 'meetings', 'leave',
+            'dashboard', 'medicines', 'medicines.manage', 'expiry', 'blocks',
+            'deliveries', 'deliveries.manage', 'attendance', 'meetings', 'calendar', 'leave',
         ],
     ],
     'hr' => [
@@ -146,7 +150,7 @@ return [
         'icon' => 'fa-users-cog',
         'modules' => [
             'dashboard', 'employees', 'staff', 'departments', 'hods', 'attendance', 'leave',
-            'leave.review', 'meetings',
+            'leave.review', 'meetings', 'calendar',
         ],
     ],
 ];

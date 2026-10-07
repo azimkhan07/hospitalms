@@ -21,7 +21,7 @@ Phase 5 Lab          [..........]    0%
 Phase 6 Nurse (IPD)  [..........]    0%
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
 Phase 8 Accountant   [####......]   38%   (GST-ready invoices, ledger + income/expense vouchers, salary run)
-Phase 9 Dean/Calendar [#.........]   15%   (meeting calendar exists)
+Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
 Phase 10 Reports/Notify ##.......   20%   (bell + notifications exist)
 Phase 11 Platform/Multi-tenant [.........]  5%   (tenants + tenant_id + scoping backfill)
 API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live)
@@ -546,16 +546,21 @@ Goal: all money in one place; **no external CA needed**. Easy UI for non-account
 Goal: dean manages staffing, approvals, and the facility calendar.
 
 - [x] Meeting calendar (create/respond/open).
-- [ ] **Calendar also supports events** beyond meetings:
-  - [ ] Blood donation camp (date + time)
-  - [ ] Visiting/special doctor (date + time)
-  - [ ] Any hospital event
-- [ ] Popup / open calendar view (month/week/day), click a day to add.
-- [ ] Event types with color + who can see.
+- [x] **Calendar also supports events** beyond meetings:
+  - [x] Blood donation camp (date + time)
+  - [x] Visiting/special doctor (date + time)
+  - [x] Any hospital event
+- [x] Popup / open calendar view (month/week/day), click a day to add.
+- [x] Event types with color + who can see.
 - [ ] Dean approves: leave (exists), duty roster, doctor reassignment.
-- [ ] Dean sees staff, beds, admissions oversight.
+- [x] Dean sees staff, beds, admissions oversight.
+- [x] **Home deliveries (when the facility opts in — `tenants.deliveries_enabled`)**:
+  - [x] Delivery desk: create order (patient, type, address, fee), assign rider, mark out-for-delivery, delivered.
+  - [x] Status rail enforced in `App\Services\DeliveryService` (pending -> assigned -> out_for_delivery -> delivered, cancel until dispatched).
+  - [x] Panel + sidebar only visible when the facility has deliveries switched on (off by default).
+  - [x] API mirror: `GET|POST /api/v1/admin/deliveries`.
 
-**Acceptance:** dean creates a blood-donation camp and a visiting-doctor event from the calendar; both show on the right date with time.
+**Acceptance:** dean creates a blood-donation camp and a visiting-doctor event from the calendar; both show on the right date with time. A facility with deliveries switched on assigns a rider and moves an order to delivered.
 
 ---
 

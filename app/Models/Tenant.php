@@ -17,6 +17,7 @@ class Tenant extends Model
         'logo', 'hero_image', 'facilities', 'trial_ends_at', 'created_by',
         'latitude', 'longitude', 'geo_radius_meters',
         'private_room_enabled', 'private_room_count',
+        'deliveries_enabled',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class Tenant extends Model
         'private_room_enabled' => 'boolean',
         'private_room_count' => 'integer',
         'clinic_type_id' => 'integer',
+        'deliveries_enabled' => 'boolean',
     ];
 
     /**

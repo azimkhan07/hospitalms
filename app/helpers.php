@@ -73,6 +73,30 @@ if (! function_exists('hms_mode_config')) {
     }
 }
 
+if (! function_exists('hms_deliveries_enabled')) {
+    /**
+     * Whether the signed-in facility runs its own home deliveries.
+     *
+     * A Super Admin flips tenants.deliveries_enabled during onboarding. While
+     * it is off, the Deliveries panel, the staff menu entry and the API
+     * endpoints all stay hidden (404) - most clinics do not deliver.
+     */
+    function hms_deliveries_enabled(): bool
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user && $user->tenant_id) {
+                return (bool) $user->tenant()->value('deliveries_enabled');
+            }
+        } catch (\Throwable $e) {
+            // fall through, deliveries off
+        }
+
+        return false;
+    }
+}
+
 if (! function_exists('hms_institution_label')) {
     function hms_institution_label(?string $mode = null): string
     {
@@ -492,6 +516,10 @@ if (! function_exists('hms_sidebar_allows')) {
      */
     function hms_sidebar_allows(array $item): bool
     {
+        if (isset($item['enabledWhen']) && is_callable($item['enabledWhen']) && ! $item['enabledWhen']()) {
+            return false;
+        }
+
         if (! empty($item['anyModules'])) {
             foreach ($item['anyModules'] as $module) {
                 if (hms_can($module)) {
@@ -523,6 +551,21 @@ if (! function_exists('hms_sidebar_tree')) {
                 'icon' => 'fa-calendar-alt',
                 'route' => 'admin_meetings',
                 'module' => 'meetings',
+            ],
+            [
+                'label' => 'Events & Camps',
+                'icon' => 'fa-bullhorn',
+                'route' => 'admin_calendar',
+                'module' => 'calendar',
+            ],
+            [
+                'label' => 'Home Deliveries',
+                'icon' => 'fa-truck',
+                'route' => 'admin_deliveries',
+                'module' => 'deliveries',
+                // Only facilities that opted into deliveries (super admin flag)
+                // see the panel at all - most clinics do not run them.
+                'enabledWhen' => fn () => hms_deliveries_enabled(),
             ],
             [
                 'label' => 'Leave',
