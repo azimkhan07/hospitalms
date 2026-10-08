@@ -18,6 +18,8 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/reports/download', [App\Http\Controllers\Admin\ReportsExportController::class, 'csv'])->name('admin_reports_download');
 
+    Route::get('/facilities', App\Http\Livewire\Admins\Facilities::class)->name('admin_facilities');
+
     Route::get('/settings', App\Http\Livewire\Admins\Settings::class)->name('admin_settings');
 
     Route::get('/meetings', App\Http\Livewire\Admins\MeetingCalendar::class)->name('admin_meetings');

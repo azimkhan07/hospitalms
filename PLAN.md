@@ -14,7 +14,7 @@ Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
 Overall              [######...]  ~48%   (foundation + mode + landing + booking + super admin core + API v1 auth + angio/schemes + dashboard KPIs done)
 
 Phase 1 Super Admin  [######....]   65%   (auth, panel, tenant CRUD, error monitor built + smoke-tested)
-Phase 2 Admin        [#####.....]   50%   (settings + mode + staff + angio machines + govt schemes + patient filters)
+Phase 2 Admin        [######....]   56%   (settings + mode + staff + angio machines + govt schemes + patient filters + facilities tab)
 Phase 3 Reception    [#.........]   10%   (appointment module exists; angio/scheme on appointment added)
 Phase 4 Doctor       [##........]   20%   (prescriptions/history exist)
 Phase 5 Lab          [..........]    0%
@@ -190,7 +190,7 @@ Goal: run one facility. Admin = Super Admin **of that tenant only**.
       server-side, so a forged `nurse` post on a clinic is rejected, and
       `super_admin` is never assignable from inside a tenant.
 - [x] Mode hides what the mode does not have (PLAN.md §16 verified by test).
-- [ ] **Facilities tab** (§9c.3): every hospital/clinic with a NEW badge while it
+- [x] **Facilities tab** (§9c.3): every hospital/clinic with a NEW badge while it
       has no admin, its type, the roles it still needs and its staff/bed counts.
 - [ ] **Admin + Dean get CRUD for each ticked role** (§9c.4) — doctors, nurses,
       labouratorist, store keeper, accountant, HR — scoped to their own tenant.
@@ -491,12 +491,15 @@ the system**, and a **print** of it.
 
 ### 9d.4 Build state
 
-- [ ] Machine master CRUD (Dean sets up, admin read-only).
-- [ ] Test / rate card with a visible formula per line.
-- [ ] Charge calculation + printable rate card.
-- [ ] Nurse + doctor add machines in the ICU; machines attach to a bed / room.
-- [ ] Doctor: pick bed / room → all reports for it.
-- [ ] Print sheet per bed.
+- [x] Machine master CRUD (Dean sets up, admin read-only).
+- [x] Test / rate card with a visible formula per line.
+- [x] Charge calculation + printable rate card.
+- [x] Nurse + doctor add machines in the ICU; machines attach to a bed / room.
+- [x] Doctor: pick bed / room → all reports for it.
+- [x] Print sheet per bed.
+
+_Verified by `tests/Feature/InvestigationRateCardTest.php` (22 tests) — see §18e
+for the API mirrors added on top._
 
 ---
 
@@ -637,9 +640,10 @@ past the mode.
 ```
 1  Super Admin (tenant onboarding + admin + errors)      <-- start here
 2  Admin (roles, profile, dashboard, view-only clinical)
-2a Clinic type + required roles at creation (§9c.1, §9c.2)
+2a Clinic type + required roles at creation (§9c.1, §9c.2)      <-- done 2026-10-04
 2b Facilities tab + role CRUD for admin & dean (§9c.3, §9c.4)
-2c Machines / investigations / ICU reporting (§9d)
+     §9c.3 facilities tab + §9c.5 global export <-- done 2026-10-08; §9c.4 role CRUD still open
+2c Machines / investigations / ICU reporting (§9d)               <-- done 2026-10-05
 3  Receptionist + Appointments (+ IPD admission)
 4  Doctor (prescription engine + lab orders + follow-up)
 5  Laboratory
@@ -755,6 +759,36 @@ style action per paper, using bare `Blade` + `dompdf`:
 
 ---
 
+## 18e. Facilities tab + super admin export + API mirrors - done 2026-10-08
+
+- [x] **Admin "Facilities" tab** (§9c.3): `App\Http\Livewire\Admins\Facilities`
+      (route `admin_facilities`, `facilities` module in `config/hms.php`, sidebar
+      entry before Print Center). Read-only cross-tenant list: name/mode/type,
+      **NEW** badge + "No admin assigned yet" while nobody runs it, per-role
+      staffing badges (target vs headcount), staff + bed counts, and
+      search / mode / type / **unassigned-only** filters bound to the query
+      string (`#[Url]`) so a filtered view can be shared.
+- [x] **Super Admin export** (§9c.5): the Tenants wizard now shows a **Beds**
+      card (total + % occupied) and exports
+      `GET /superadmin/tenants/export` → CSV of every facility with mode, type,
+      status, has-admin, **missing roles**, staff accounts, beds, alloted beds,
+      utilisation % and created date — same filters as the list.
+- [x] **API mirrors** (mobile, §9d): `GET /api/v1/admin/machines`,
+      `GET /api/v1/admin/investigations` (includes `charge_for_one` +
+      `formula` straight from `InvestigationCharge`), `GET /api/v1/admin/facilities`
+      (includes `missing_roles`). All tenant-scoped, `hms_can` gated, standard
+      `{success, data}` envelope.
+- [x] Bug found & fixed on the way: `InvestigationTest::scopeActive()` was
+      hinted `Eloquent\Query\Builder` but Laravel passes `Eloquent\Builder` —
+      every `active()` call would have fataled (found by the new rate-card API
+      test).
+- [x] Tests: `tests/Feature/FacilitiesViewTest.php` (9: 5 web incl. 403 gate
+      + CSV export, 4 API incl. 401). Full suite **137 tests / 432
+      assertions green**.
+
+---
+
 _Document created for the HMS build. Next action: Phase 1 done; Phase 2 in
-progress — next up is §9c.1/§9c.2 (clinic type + required roles at creation),
-then §9c.3 (facilities tab), then §9d (machines & ICU reporting)._
+progress — §9c.1/§9c.2 (clinic type + required roles), §9c.3 (facilities tab),
+§9c.5 (global export) and §9d API mirrors are shipped; next up is §9c.4 (admin +
+Dean CRUD for each ticked role), then Phase 3 (receptionist + appointments)._

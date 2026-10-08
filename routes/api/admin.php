@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\V1\Admin\AngioMachinesController;
 use App\Http\Controllers\Api\V1\Admin\CalendarEventsController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\DeliveriesController;
+use App\Http\Controllers\Api\V1\Admin\FacilitiesController;
+use App\Http\Controllers\Api\V1\Admin\InvestigationsController;
+use App\Http\Controllers\Api\V1\Admin\MachinesController;
 use App\Http\Controllers\Api\V1\Admin\PrintController;
 use App\Http\Controllers\Api\V1\Admin\ReportsController;
 use App\Http\Controllers\Api\V1\Admin\ResourceController;
@@ -29,4 +32,7 @@ Route::prefix('admin')
         Route::get('/deliveries', [DeliveriesController::class, 'index'])->name('deliveries');
         Route::post('/deliveries', [DeliveriesController::class, 'store'])->name('deliveries.create');
         Route::get('/print-center', [PrintController::class, 'index'])->name('print-center');
+        Route::get('/facilities', [FacilitiesController::class, 'index'])->name('facilities');
+        Route::get('/machines', [MachinesController::class, 'index'])->name('machines');
+        Route::get('/investigations', [InvestigationsController::class, 'index'])->name('investigations');
     });

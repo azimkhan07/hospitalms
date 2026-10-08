@@ -31,7 +31,7 @@ return [
                 'attendance', 'calendar', 'calendar.manage',
 'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
 'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
-'reports', 'deliveries', 'deliveries.manage', 'schemes', 'printout',
+'reports', 'deliveries', 'deliveries.manage', 'schemes', 'printout', 'facilities',
             ],
         ],
         'hospital' => [
@@ -83,7 +83,7 @@ return [
             // Angio (cath lab) machines and Government schemes (yojna): the
             // admin reads and manages patients/appointments; the Dean owns the
             // angio machine master and the accountant books scheme money.
-            'angio', 'schemes', 'printout',
+            'angio', 'schemes', 'printout', 'facilities',
         ],
     ],
     'moderator' => [

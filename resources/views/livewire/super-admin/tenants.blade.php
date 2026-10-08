@@ -9,6 +9,15 @@
         <button type="button" class="btn btn-primary btn-sm" wire:click="openCreate">
             <i class="fas fa-plus"></i> New tenant
         </button>
+        <a href="{{ route('superadmin.tenants.export', [
+            'search' => $search,
+            'status' => $status,
+            'mode' => $mode,
+            'type' => $type,
+            'unassigned' => $unassignedOnly ? 1 : 0,
+        ]) }}" class="btn btn-outline-primary btn-sm ml-1" title="Export visible facilities as CSV">
+            <i class="fas fa-file-csv"></i> Export
+        </a>
     </div>
 
     @if (session('sanotice'))
@@ -55,6 +64,15 @@
             <div class="card h-100"><div class="card-body py-2">
                 <div style="font-size:11px;color:#61748a">Facility types</div>
                 <div style="font-size:20px;color:#0b3c66">{{ $stats['byType']->count() }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-2 mb-2">
+            <div class="card h-100"><div class="card-body py-2">
+                <div style="font-size:11px;color:#61748a">Beds</div>
+                <div style="font-size:20px;color:#0b3c66">{{ $stats['beds'] }}</div>
+                <div style="font-size:11px;color:#61748a">
+                    {{ $stats['beds'] ? round(($stats['bedsAlloted'] / $stats['beds']) * 100) : 0 }}% occupied
+                </div>
             </div></div>
         </div>
     </div>

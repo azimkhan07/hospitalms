@@ -32,6 +32,8 @@ Route::prefix('superadmin')->name('superadmin.')->middleware('superadmin')->grou
 
     Route::get('/tenants', [SuperAdminController::class, 'tenants'])->name('tenants');
 
+    Route::get('/tenants/export', [SuperAdminController::class, 'exportTenants'])->name('tenants.export');
+
     Route::get('/tenant-admins', [SuperAdminController::class, 'admins'])->name('admins');
 
     Route::get('/errors', [SuperAdminController::class, 'errors'])->name('errors');

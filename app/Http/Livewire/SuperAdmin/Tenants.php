@@ -207,6 +207,8 @@ class Tenants extends Component
             })->count(),
             'byType' => $byType,
             'staff' => DB::table('users')->whereNotNull('tenant_id')->whereNull('deleted_at')->count(),
+            'beds' => DB::table('beds')->whereNull('deleted_at')->count(),
+            'bedsAlloted' => DB::table('beds')->where('status', 'alloted')->whereNull('deleted_at')->count(),
         ];
     }
 }

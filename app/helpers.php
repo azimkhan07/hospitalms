@@ -665,6 +665,12 @@ if (! function_exists('hms_sidebar_tree')) {
                 'module' => 'reports',
             ],
             [
+                'label' => 'Facilities',
+                'icon' => 'fa-hospital',
+                'route' => 'admin_facilities',
+                'module' => 'facilities',
+            ],
+            [
                 'label' => 'Print Center',
                 'icon' => 'fa-print',
                 'route' => 'admin_print_center',
