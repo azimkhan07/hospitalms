@@ -665,6 +665,12 @@ if (! function_exists('hms_sidebar_tree')) {
                 'module' => 'reports',
             ],
             [
+                'label' => 'Print Center',
+                'icon' => 'fa-print',
+                'route' => 'admin_print_center',
+                'module' => 'printout',
+            ],
+            [
                 'label' => 'Settings',
                 'icon' => 'fa-cog',
                 'route' => 'admin_settings',

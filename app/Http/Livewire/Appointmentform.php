@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Contracts\MessageSender;
 use App\Models\doctor;
 use App\Models\requestedAppointment;
 use Livewire\Component;
@@ -63,6 +64,14 @@ class Appointmentform extends Component
             'address' => $this->address,
             'message' => $this->message ?: 'Appointment request from website.',
         ]);
+
+        $doctorName = doctor::find($this->doctor_id)?->employ?->name;
+
+        $body = "Dear {$this->name}, your appointment with Dr. {$doctorName} at ".config('app.name', 'HospitalMS')
+            ." is requested for {$this->stime}. Our team will call to confirm.";
+
+        resolve(MessageSender::class)->whatsapp($this->phone, $body);
+        resolve(MessageSender::class)->sms($this->phone, $body);
 
         $this->reset(['name', 'email', 'phone', 'doctor_id', 'stime', 'address', 'message']);
         $this->booked = true;

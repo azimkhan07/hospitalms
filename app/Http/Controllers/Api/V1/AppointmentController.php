@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Contracts\MessageSender;
 use App\Http\Controllers\Controller;
 use App\Models\doctor;
 use App\Models\requestedAppointment;
@@ -31,6 +32,14 @@ class AppointmentController extends Controller
             'address' => $data['address'],
             'message' => ($data['message'] ?? null) ?: 'Appointment request from mobile app.',
         ]);
+
+        $doctorName = doctor::find($data['doctor_id'])?->employ?->name;
+
+        $body = "Dear {$data['name']}, your appointment with Dr. {$doctorName} at ".config('app.name', 'HospitalMS')
+            ." is requested for {$data['stime']}. Our team will call to confirm.";
+
+        resolve(MessageSender::class)->whatsapp($data['phone'], $body);
+        resolve(MessageSender::class)->sms($data['phone'], $body);
 
         return response()->json([
             'success' => true,

@@ -128,6 +128,11 @@
                                 <span class="badge badge-sm {{ $rx->status === 'issued' ? 'badge-success' : ($rx->status === 'draft' ? 'badge-warning' : 'badge-secondary') }}">
                                     {{ ucfirst($rx->status) }}
                                 </span>
+                                @if (hms_can('printout'))
+                                    <a href="{{ route('admin_print_prescription', $rx->id) }}" target="_blank" class="btn btn-xs btn-outline-info ml-1" title="Print">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                @endif
                                 @if ($rx->status === 'issued')
                                     <button type="button" class="btn btn-xs btn-outline-danger ml-1"
                                         wire:click="cancel({{ $rx->id }})">Cancel</button>

@@ -22,7 +22,7 @@ Phase 6 Nurse (IPD)  [..........]    0%
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
 Phase 8 Accountant   [#######...]   50%   (GST-ready invoices, ledger + income/expense vouchers, salary run, scheme/angio income ledger)
 Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
-Phase 10 Reports/Notify [########..]  80%   (reports hub + CSV + API mirror + per-role dashboard KPIs done; SMS/WhatsApp channels pending)
+Phase 10 Reports/Notify [##########] 100%  (reports hub + CSV + API mirror + per-role dashboard KPIs + SMS/WhatsApp + print-out done)
 Phase 11 Platform/Multi-tenant [#######...] 75%   (host→tenant middleware, cross-tenant snapshot, audit trail, backup cmd; per-tenant DB = shared-schema by design)
 API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live; angio/schemes mirrored)
 ```
@@ -711,6 +711,47 @@ two surfaces never drift.
 - [x] `.hms-kpi-*` styles hoisted into `public/assets/css/master.css`.
 - [x] API mirror: `kpi_cards` added to `Api\V1\Admin\DashboardController`.
 - [x] Tests: `tests/Feature/DashboardKpiTest.php` (5 tests, incl. Sanctum API).
+
+---
+
+## 18d. Print-out centre + SMS/WhatsApp notifications — done 2026-10-07
+
+Two cross-cutting rails, both container-built and mirrored to API v1:
+
+**Print-out centre** (`app/Services/PrintService` + `PrintController`) — a single
+listing action (`index(PrintListingRequest)`) back the centre; one `repository`-
+style action per paper, using bare `Blade` + `dompdf`:
+
+- [x] Final bill / invoice → A4 (`invoice.blade.php`).
+- [x] Daily medicine slip for a stayed patient → **58 mm thermal** paper
+      (`setPaper([0,0,164.4,2000],'portrait')`, dispensed items grouped by date).
+- [x] Case paper → A5 (`case-paper.blade.php`).
+- [x] Prescription → A5 (`prescription.blade.php`), rendered from the item list
+      already eager-loaded on the Livewire screen (no N+1).
+- [x] `App\Http\Requests\PrintListingRequest` gates on `hms_can('printout')` and
+      accepts `type|search|date|per_page`. Content type asserted by `is('application/pdf')`.
+- [x] Routes `admin_print_center|admin_print_invoice|admin_print_medicine_slip
+      |admin_print_case_paper|admin_print_prescription` (`routes/admin.php`) +
+      API mirror `GET /api/v1/admin/print-center`.
+- [x] Quick **print buttons** on the prescription and bill Livewire screens,
+      gated by `hms_can('printout')` (roles: admin, moderator, nurse,
+      receptionist, pharmacist, accountant, storekeeper).
+- [x] `PrintService` singleton bound in `AppServiceProvider::register()`.
+
+**SMS/WhatsApp notifications** — `App\Services\Messaging\*` behind two contracts:
+
+- [x] `App\Contracts\MessageTransport` (log / http) + `MessageSender` facade-ish
+      helper binding, switched by `config/messaging.php` (`MESSAGING_DRIVER`,
+      `MESSAGING_ENABLED`, `SMS_URL`, `WHATSAPP_URL`, ...).
+- [x] `message_logs` table + `App\Models\MessageLog` (tenant-scoped): channel,
+      to, payload hash, response/status/message, driver, and an optional FK to
+      the appointment. Enabled + phone present → sent; otherwise an **unsaved**
+      log is returned so callers can still flash "we have messaged you".
+- [x] Wired into the appointment request in both `Livewire\Appointmentform`
+      (`store_requested_appointment`) and `Api\V1\AppointmentController::request`
+      — same wording, same channel flags (SMS + WhatsApp).
+- [x] Tests: `tests/Feature/MessagingTest.php` (3) + `tests/Feature/PrintPdfTest.php`
+      (8: 7 web incl. 403 gate, 1 API). Full suite 128 tests / 394 assertions green.
 
 ---
 

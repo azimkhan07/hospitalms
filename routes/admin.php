@@ -88,4 +88,14 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/contactedus', App\Http\Livewire\Admins\Contactedus::class)->name('contactedus');
 
+    Route::get('/print-center', [App\Http\Controllers\Admin\PrintController::class, 'index'])->name('admin_print_center');
+
+    Route::get('/prints/invoice/{bill}', [App\Http\Controllers\Admin\PrintController::class, 'invoice'])->name('admin_print_invoice');
+
+    Route::get('/prints/medicine-slip/{patient}', [App\Http\Controllers\Admin\PrintController::class, 'medicineSlip'])->name('admin_print_medicine_slip');
+
+    Route::get('/prints/case-paper/{patient}', [App\Http\Controllers\Admin\PrintController::class, 'casePaper'])->name('admin_print_case_paper');
+
+    Route::get('/prints/prescription/{prescription}', [App\Http\Controllers\Admin\PrintController::class, 'prescription'])->name('admin_print_prescription');
+
 });

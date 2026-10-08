@@ -79,6 +79,11 @@
                                     <td class="text-center">{{ $bill->amount ?: 'Null' }}</td>
                                     <td class="text-center">{{ $bill->payed ? 'payed' : 'not payed' }}</td>
                                     <td class="text-center">
+                                        @if (hms_can('printout') && isset($bill->id))
+                                            <a href="{{ route('admin_print_invoice', $bill->id) }}" target="_blank"
+                                                class="btn btn-outline-info btn-rounded" title="Print A4 invoice"><i
+                                                    class="fas fa-print"></i></a>
+                                        @endif
                                         <button wire:click="edit({{ $bill->id }})"
                                             class="btn btn-outline-info btn-rounded"><i class="fas fa-pen"></i></button>
                                         <button wire:click="delete({{ $bill->id }})"

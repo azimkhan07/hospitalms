@@ -31,7 +31,7 @@ return [
                 'attendance', 'calendar', 'calendar.manage',
 'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
 'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
-'reports', 'deliveries', 'deliveries.manage', 'schemes',
+'reports', 'deliveries', 'deliveries.manage', 'schemes', 'printout',
             ],
         ],
         'hospital' => [
@@ -83,7 +83,7 @@ return [
             // Angio (cath lab) machines and Government schemes (yojna): the
             // admin reads and manages patients/appointments; the Dean owns the
             // angio machine master and the accountant books scheme money.
-            'angio', 'schemes',
+            'angio', 'schemes', 'printout',
         ],
     ],
     'moderator' => [
@@ -109,7 +109,7 @@ return [
         'modules' => [
 'dashboard', 'patients', 'operations', 'births', 'attendance',
         'appointments', 'prescriptions', 'history', 'meetings', 'calendar', 'leave',
-        'bedreports',
+        'bedreports', 'printout',
         ],
     ],
 'nurse' => [
@@ -118,7 +118,7 @@ return [
         'modules' => [
 'dashboard', 'patients', 'beds', 'beds.status', 'rooms', 'nurses',
         'attendance', 'history', 'meetings', 'calendar', 'leave',
-        'machines', 'bedreports',
+        'machines', 'bedreports', 'printout',
         ],
     ],
     'receptionist' => [
@@ -129,14 +129,14 @@ return [
             'meetings', 'calendar', 'deliveries', 'leave',
             // The bed map is read-only here; allocation itself is allowed so
             // the counter can hand a free bed to a patient (PLAN.md section 9b).
-            'rooms', 'beds', 'beds.allocate',
+            'rooms', 'beds', 'beds.allocate', 'printout',
         ],
     ],
     'pharmacist' => [
         'label' => 'Pharmacist',
         'icon' => 'fa-pills',
         'modules' => [
-            'dashboard', 'medicines', 'expiry', 'prescriptions', 'attendance', 'meetings', 'calendar', 'leave',
+            'dashboard', 'medicines', 'expiry', 'prescriptions', 'attendance', 'meetings', 'calendar', 'leave', 'printout',
         ],
     ],
     'laboratorist' => [
@@ -152,7 +152,7 @@ return [
         'modules' => [
             'dashboard', 'bills', 'accounting', 'patients', 'staff',
             'attendance', 'meetings', 'calendar', 'leave', 'reports',
-            'schemes', 'schemes.manage',
+            'schemes', 'schemes.manage', 'printout',
         ],
     ],
     'storekeeper' => [
@@ -160,7 +160,7 @@ return [
         'icon' => 'fa-boxes-stacked',
         'modules' => [
             'dashboard', 'medicines', 'medicines.manage', 'expiry', 'blocks',
-            'deliveries', 'deliveries.manage', 'attendance', 'meetings', 'calendar', 'leave',
+            'deliveries', 'deliveries.manage', 'attendance', 'meetings', 'calendar', 'leave', 'printout',
         ],
     ],
     'hr' => [
