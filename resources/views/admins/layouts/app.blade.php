@@ -150,6 +150,9 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="nav navbar-nav ml-auto">
                         @auth
+                            @if (hms_can('meetings'))
+                                <livewire:admins.meeting-bell />
+                            @endif
                             <livewire:admins.notification-bell />
                         @endauth
                         <li class="nav-item dropdown">
@@ -186,7 +189,7 @@
 
             <div class="content">
                 <div class="container">
-                    {{ $slot }}
+                    @isset($slot){{ $slot }}@endisset
                     @yield('admin_content')
                 </div>
             </div>

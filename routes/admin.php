@@ -24,6 +24,10 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/meetings', App\Http\Livewire\Admins\MeetingCalendar::class)->name('admin_meetings');
 
+    Route::get('/meetings/{meeting}/room', [App\Http\Controllers\Admin\MeetingRoomController::class, 'show'])->name('admin_meeting_room');
+
+    Route::post('/meetings/{meeting}/recording', [App\Http\Controllers\Admin\MeetingRoomController::class, 'recording'])->name('admin_meeting_recording');
+
     Route::get('/calendar', App\Http\Livewire\Admins\Events::class)->name('admin_calendar');
 
     Route::get('/deliveries', App\Http\Livewire\Admins\Deliveries::class)->name('admin_deliveries');

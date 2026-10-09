@@ -40,7 +40,7 @@
                             @foreach ($dayMeetings as $m)
                                 <div class="hms-chip {{ $m->status }}"
                                     title="{{ $m->title }} &middot; {{ $m->scheduled_at->format('h:i A') }}"
-                                    @if ($m->status === 'scheduled') wire:click="openMeeting({{ $m->id }})" @endif>
+                                    @if (in_array($m->status, ['scheduled', 'live'], true)) wire:click="openMeeting({{ $m->id }})" @endif>
                                     <span class="hms-chip-time">{{ $m->scheduled_at->format('h:i A') }}</span>
                                     <span class="hms-chip-title">{{ $m->title }}</span>
                                 </div>
@@ -52,6 +52,7 @@
                 @if (count($byDate))
                     <div class="hms-legend">
                         <span><i class="dot scheduled"></i> Scheduled</span>
+                        <span><i class="dot live"></i> Live</span>
                         <span><i class="dot completed"></i> Completed</span>
                         <span><i class="dot cancelled"></i> Cancelled</span>
                     </div>
@@ -115,7 +116,7 @@
                                 placeholder="Optional agenda" wire:model="agenda"></textarea>
                         </div>
                         <div class="form-group mb-1">
-                            <label>Participants <span class="text-danger">*</span></label>
+                            <label>Participants</label>
                             <input type="search" class="form-control form-control-sm mb-1"
                                 placeholder="Search staff..." wire:model.live="participantSearch">
                             <div class="hms-participants">
@@ -130,9 +131,29 @@
                                     </button>
                                 @endforeach
                             </div>
+                        </div>
+                        <div class="form-group mb-1">
+                            <label>Or everyone in a role</label>
+                            <div class="hms-participants">
+                                @foreach ($roles as $r)
+                                    @php $on = in_array($r->slug, $targetRoles, true); @endphp
+                                    <button type="button"
+                                        class="hms-pill {{ $on ? 'on' : '' }}"
+                                        wire:click="toggleRole('{{ $r->slug }}')">
+                                        <i class="fas fa-users"></i> {{ $r->name }}
+                                    </button>
+                                @endforeach
+                            </div>
+                            @error('targetRoles') <span class="text-danger" style="font-size:11px">{{ $message }}</span> @enderror
                             @error('participantIds')
-                                <span class="text-danger" style="font-size:11px">Pick at least one participant.</span>
+                                <span class="text-danger" style="font-size:11px">Pick at least one participant or role.</span>
                             @enderror
+                        </div>
+                        <div class="form-group form-check mb-2">
+                            <input type="checkbox" class="form-check-input" id="meetingVideo" wire:model="withVideo">
+                            <label class="form-check-label" for="meetingVideo" style="font-size:11.5px">
+                                <i class="fas fa-video text-info"></i> Add a video room (Jitsi)
+                            </label>
                         </div>
                         <button type="submit" class="btn btn-sm btn-primary w-100">
                             <i class="fas fa-paper-plane"></i> Schedule &amp; Notify
@@ -174,6 +195,16 @@
                         <div class="text-muted" style="font-size:11px">
                             {{ $m->users->where('id', '!=', auth()->id())->pluck('name')->join(', ') ?: 'Only you' }}
                         </div>
+                        @if ($m->canJoin(auth()->user()))
+                            <a href="{{ $m->roomPath() }}" class="btn btn-xs btn-success mt-1">
+                                <i class="fas fa-video"></i> Join now
+                            </a>
+                        @elseif ($m->isHost(auth()->user()) && ! $m->hasStarted() && $m->status === 'scheduled')
+                            <button type="button" class="btn btn-xs btn-outline-primary mt-1"
+                                wire:click="startMeeting({{ $m->id }})">
+                                <i class="fas fa-play"></i> Start
+                            </button>
+                        @endif
                         @if ($awaiting)
                             <div class="mt-1 d-flex">
                                 <button type="button" class="btn btn-xs btn-outline-success mr-1"
@@ -241,9 +272,35 @@
                     @if ($meetingAgenda)
                         <div class="mt-2 p-2 bg-light rounded">{{ $meetingAgenda }}</div>
                     @endif
+                    @if (count($meetingTargetRoles))
+                        <div class="mt-2" style="font-size:11px">
+                            <i class="fas fa-users text-info mr-1"></i>
+                            Roles: {{ implode(', ', $meetingTargetRoles) }}
+                        </div>
+                    @endif
+
+                    @if ($meetingExternalUrl)
+                        <div class="mt-3">
+                            @if ($meetingJoinable)
+                                <a href="{{ $meetingRoomPath }}" class="btn btn-sm btn-success w-100">
+                                    <i class="fas fa-video"></i> Join video meeting
+                                </a>
+                            @elseif ($meetingIsHost)
+                                <button type="button" class="btn btn-sm btn-primary w-100"
+                                    wire:click="startMeeting({{ $meetingId }})">
+                                    <i class="fas fa-play"></i> Start &amp; join
+                                </button>
+                            @else
+                                <button type="button" class="btn btn-sm btn-outline-secondary w-100" disabled>
+                                    <i class="fas fa-video"></i> Not started yet
+                                </button>
+                            @endif
+                        </div>
+                    @endif
+
                     <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="badge {{ $meetingStatus === 'scheduled' ? 'badge-info' : ($meetingStatus === 'completed' ? 'badge-success' : 'badge-secondary') }}">
-                            {{ ucfirst($meetingStatus) }}
+                        <span class="badge {{ $meetingStatus === 'live' ? 'badge-success' : ($meetingStatus === 'scheduled' ? 'badge-info' : ($meetingStatus === 'completed' ? 'badge-success' : 'badge-secondary')) }}">
+                            {{ $meetingStatus === 'live' ? 'Live' : ucfirst($meetingStatus) }}
                         </span>
                         @if (hms_can('meetings.manage') && $meetingStatus === 'scheduled')
                             <button type="button" class="btn btn-xs btn-outline-danger"

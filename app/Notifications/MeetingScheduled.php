@@ -22,14 +22,19 @@ class MeetingScheduled extends Notification
 
     public function toArray(object $notifiable): array
     {
+        $video = (bool) $this->meeting->externalUrl();
+
         return [
+            'kind' => 'meeting',
             'meeting_id' => $this->meeting->id,
             'title' => $this->meeting->title,
             'scheduled_at' => $this->meeting->scheduled_at->toDateTimeString(),
             'location' => $this->meeting->location,
-            'message' => 'A meeting has been scheduled by '
+            'video' => $video,
+            'message' => ($video ? 'Video meeting "' : 'Meeting "').$this->meeting->title.'" by '
                 .optional($this->meeting->creator)->name
-                .' on '.$this->meeting->scheduled_at->format('d M Y, h:i A'),
+                .' on '.$this->meeting->scheduled_at->format('d M Y, h:i A')
+                .($video ? ' — open the meetings icon to join.' : '.'),
         ];
     }
 }

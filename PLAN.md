@@ -843,10 +843,58 @@ soft deletes across clinical + billing tables).
 on-duty doctor list, 3-day auto-terminate, follow-up auto-booking, ICD-10,
 per-medicine dose/frequency/days + quantity auto-calc, lab sample/barcode + file
 upload + critical alerts, nurse drug chart / shift handover / doctor alert,
-discharge final-bill, billing line items, duty roster, Jitsi in-system meetings
-(user: "later").
+discharge final-bill, billing line items, duty roster, notification scheduler.
 
 ---
 
-_Next action: §9c.4 admin/Dean CRUD for ticked roles, then close the remaining
-Phase 3 reception gaps (queue/token, on-duty list) and Phase 6 meds chart._
+## 18g. In-system video meetings (Jitsi) + newsletters + tenant web address — done 2026-10-09
+
+Meetings became a first-class thing inside the hospital instead of a link pasted
+into a chat. A header meet icon opens a dropdown of the day's meetings with a
+countdown and a Join button that only lights up once the host starts the call.
+New migration `2026_10_09_000100_jitsi_meetings_newsletter.php` (`meetings`
+gains `room_id`/`provider`/`link_url`/`host_id`/`target_roles`/`started_at`/
+`recording_enabled`/`calendar_event_id` and a widened status enum;
+`calendar_events.meeting_id`; new `newsletters` table).
+
+- [x] **Meeting model** — `App\Models\Meeting`: room name/path/external URL,
+      host helpers, `isJoinable()` (time window) and `canJoin(?User)` so a
+      non-host may only enter after the host has started; `targetRoleSlugs()`,
+      `scopeVisibleTo`, `start()`, `makeRoomId()`.
+- [x] **Newsletter model** — `App\Models\Newsletter` (tenant-scoped, role
+      targeted, optional meeting/event link, `icon()`); meeting announcements are
+      written here and pushed to recipients.
+- [x] **Scheduler service** — `App\Services\MeetingScheduler::create()` builds
+      the room, host and participants in one transaction; `announce()` writes the
+      newsletter and notifies participants + everyone in the selected roles
+      (tenant-scoped, minus the host).
+- [x] **Header meet bell** — `Admins\MeetingBell` (`livewire:admins.meeting-bell`),
+      `wire:poll.30s`, live-count badge, Alpine countdown, Join / Start.
+- [x] **Room + recording** — `Admin\MeetingRoomController` + `admin/meeting-room`
+      view: Jitsi `external_api` embed (`meet.jit.si/{roomName}`), host-only
+      `startRecording`/`stopRecording`, state persisted via
+      `POST admin_meeting_recording`.
+- [x] **Calendar → meeting** — `Admins\MeetingCalendar` gained a role picker
+      ("Or everyone in a role"), an "Add a video room (Jitsi)" toggle and a
+      Start action; `Admins\Events` can spawn a meeting straight from an event.
+- [x] **Dashboard widget** — the newsletter feed with countdown/Join.
+- [x] **API mirrors** — `GET /api/v1/admin/meetings`,
+      `POST /api/v1/admin/meetings/{id}/join`, `GET /api/v1/admin/newsletters`.
+- [x] **Tenant web address** — the onboarding form now asks how the facility's
+      address is provisioned: **auto** (`{slug}.{hms.base_domain}`, e.g.
+      `sunrise.hms.local`) or **custom** (a domain the facility already owns,
+      scheme/path-normalised, uniqueness checked). `ResolveTenant` matches the
+      request host against `tenants.domain` OR `tenants.subdomain`.
+- [x] Tests: `tests/Feature/MeetingVideoTest.php` (7) + 6 new domain cases in
+      `TenantClinicTypeTest.php` (18 total). Full suite **166 tests / 577
+      assertions green**; `audit.js` **34/34**, `jitsi-smoke.js` clean, 0 console
+      errors.
+
+**Still deferred (honest list):** meeting reminder scheduler, per-tenant Jitsi
+(JaaS) provisioning, recording storage/download, calendar↔external (Google)
+sync, wizard step-3 summary UI.
+
+---
+
+_Next action: close the remaining Phase 3 reception gaps (queue/token, on-duty
+list) and Phase 6 meds chart, then the deferred billing line items._

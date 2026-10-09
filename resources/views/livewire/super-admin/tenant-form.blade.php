@@ -97,22 +97,42 @@
                     </div>
 
                     <div class="col-md-6 form-group">
+                        <label style="font-size:13px">Website address</label>
+                        <div class="d-flex" style="gap:.9rem">
+                            <label class="mb-0" style="font-weight:400;font-size:12.5px">
+                                <input type="radio" value="auto" wire:model.live="domain_mode"> Auto
+                            </label>
+                            <label class="mb-0" style="font-weight:400;font-size:12.5px">
+                                <input type="radio" value="custom" wire:model.live="domain_mode"> Own domain
+                            </label>
+                        </div>
+                        @if ($domain_mode === 'custom')
+                            <input type="text" class="form-control form-control-sm mt-1" wire:model="custom_domain"
+                                placeholder="hms.apollohospital.com">
+                            <small class="text-muted">The domain the facility already owns / purchased.</small>
+                            @error('custom_domain') <small class="text-danger d-block">{{ $message }}</small> @enderror
+                        @else
+                            <input type="text" class="form-control form-control-sm mt-1 bg-light"
+                                value="{{ $autoSubdomain }}" disabled>
+                            <small class="text-muted">
+                                Auto-created from the name. Set
+                                <code>HMS_BASE_DOMAIN</code> to change the base.
+                            </small>
+                        @endif
+                    </div>
+                    <div class="col-md-6 form-group">
                         <label style="font-size:13px">Working hours</label>
-                        <input type="text" class="form-control" wire:model="working_hours"
+                        <input type="text" class="form-control form-control-sm" wire:model="working_hours"
                             placeholder="OPD 8:00 AM - 8:00 PM">
                     </div>
-                    <div class="col-md-3 form-group">
-                        <label style="font-size:13px">Domain (optional)</label>
-                        <input type="text" class="form-control" wire:model="domain"
-                            placeholder="hospital.example.com">
-                        @error('domain') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
-                    <div class="col-md-3 form-group">
-                        <label style="font-size:13px">Subdomain (optional)</label>
-                        <input type="text" class="form-control" wire:model="subdomain"
-                            placeholder="sunrise">
-                        @error('subdomain') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
+                    @if ($domain_mode === 'auto')
+                        <div class="col-md-6 form-group">
+                            <label style="font-size:13px">Subdomain label (optional)</label>
+                            <input type="text" class="form-control form-control-sm" wire:model="subdomain"
+                                placeholder="defaults to the slug">
+                            @error('subdomain') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    @endif
 
                     <div class="col-md-6 form-group">
                         <label style="font-size:13px">Logo</label>

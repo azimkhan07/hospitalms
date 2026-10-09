@@ -15,6 +15,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Base domain for auto-generated facility addresses
+    |--------------------------------------------------------------------------
+    | When a new facility is onboarded without its own domain, the platform
+    | offers it a subdomain under this base: {slug}.{base_domain}. Override with
+    | HMS_BASE_DOMAIN in .env.
+    */
+    'base_domain' => env('HMS_BASE_DOMAIN', 'hms.local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Institution modes
     |--------------------------------------------------------------------------
     | A super admin can run the system either as a small clinic or a full

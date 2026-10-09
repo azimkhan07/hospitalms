@@ -4,6 +4,8 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\CalendarEvent;
 use App\Models\Meeting;
+use App\Models\Role;
+use App\Services\MeetingScheduler;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -28,6 +30,10 @@ class Events extends Component
     public ?string $endsAt = null;
 
     public string $description = '';
+
+    public bool $withMeeting = false;
+
+    public array $meetingRoles = [];
 
     public ?int $editingId = null;
 
@@ -68,6 +74,9 @@ class Events extends Component
             'meetingsByDate' => $meetings->groupBy(fn ($m) => $m->scheduled_at->format('Y-m-d')),
             'upcoming' => $upcoming,
             'canManage' => hms_can('calendar.manage'),
+            'roles' => hms_can('calendar.manage')
+                ? Role::where('slug', '!=', 'super_admin')->orderBy('name')->get(['id', 'name', 'slug'])
+                : collect(),
         ]);
     }
 
@@ -80,6 +89,9 @@ class Events extends Component
             'startsAt' => 'required|date_format:H:i',
             'endsOn' => 'nullable|date|after_or_equal:startsOn',
             'description' => 'nullable|max:255',
+            'withMeeting' => 'boolean',
+            'meetingRoles' => 'array',
+            'meetingRoles.*' => 'exists:roles,slug',
         ];
     }
 
@@ -116,6 +128,19 @@ class Events extends Component
         $this->endsOn = $event->ends_at?->toDateString();
         $this->endsAt = $event->ends_at?->format('H:i');
         $this->description = (string) $event->description;
+        $this->withMeeting = (bool) $event->meeting_id;
+        $this->meetingRoles = $event->meeting?->targetRoleSlugs() ?? [];
+    }
+
+    public function toggleMeetingRole(string $slug): void
+    {
+        if (! hms_can('calendar.manage')) {
+            abort(403);
+        }
+
+        $this->meetingRoles = in_array($slug, $this->meetingRoles, true)
+            ? array_values(array_diff($this->meetingRoles, [$slug]))
+            : [...$this->meetingRoles, $slug];
     }
 
     public function resetForm(): void
@@ -128,6 +153,8 @@ class Events extends Component
         $this->endsOn = null;
         $this->endsAt = null;
         $this->description = '';
+        $this->withMeeting = false;
+        $this->meetingRoles = [];
     }
 
     public function save(): void
@@ -156,8 +183,25 @@ class Events extends Component
             session()->flash('message', 'Event updated.');
         } else {
             $data['created_by'] = auth()->id();
-            CalendarEvent::create($data);
-            session()->flash('message', 'Event scheduled.');
+            $event = CalendarEvent::create($data);
+
+            if ($this->withMeeting) {
+                $duration = $endsAt ? max(15, (int) $startsAt->diffInMinutes($endsAt)) : 60;
+
+                $meeting = MeetingScheduler::create([
+                    'title' => $this->title.' — online',
+                    'agenda' => $this->description ?: null,
+                    'location' => 'Online',
+                    'scheduled_at' => $startsAt,
+                    'duration_minutes' => min(120, $duration),
+                    'target_roles' => $this->meetingRoles,
+                    'calendar_event_id' => $event->id,
+                ], auth()->user());
+
+                $event->update(['meeting_id' => $meeting->id]);
+            }
+
+            session()->flash('message', $this->withMeeting ? 'Event + video meeting scheduled.' : 'Event scheduled.');
         }
 
         $this->monthCursor = Carbon::parse($startsAt)->startOfMonth()->toDateString();

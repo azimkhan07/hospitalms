@@ -4,10 +4,10 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\Meeting;
 use App\Models\MeetingParticipant;
+use App\Models\Role;
 use App\Models\User;
-use App\Notifications\MeetingScheduled;
+use App\Services\MeetingScheduler;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -29,6 +29,10 @@ class MeetingCalendar extends Component
     public string $time = '10:00';
 
     public array $participantIds = [];
+
+    public array $targetRoles = [];
+
+    public bool $withVideo = true;
 
     public string $participantSearch = '';
 
@@ -52,6 +56,18 @@ class MeetingCalendar extends Component
 
     public bool $meetingIsOrganiser = false;
 
+    public bool $meetingIsHost = false;
+
+    public bool $meetingJoinable = false;
+
+    public bool $meetingLive = false;
+
+    public ?string $meetingRoomPath = null;
+
+    public ?string $meetingExternalUrl = null;
+
+    public array $meetingTargetRoles = [];
+
     public array $meetingParticipants = [];
 
     public function render()
@@ -71,11 +87,14 @@ class MeetingCalendar extends Component
 
         $query = Meeting::with(['users:id,name', 'creator:id,name']);
 
-        // A plain participant only ever sees meetings they created or were invited to.
+        // A plain participant only ever sees meetings they created, were invited
+        // to, or that were aimed at their role.
         if (! $canManage) {
             $query->where(function ($q) {
                 $q->where('created_by', auth()->id())
-                    ->orWhereHas('participants', fn ($p) => $p->where('user_id', auth()->id()));
+                    ->orWhere('host_id', auth()->id())
+                    ->orWhereHas('participants', fn ($p) => $p->where('user_id', auth()->id()))
+                    ->orWhereJsonContains('target_roles', auth()->user()->roleSlug());
             });
         }
 
@@ -89,7 +108,9 @@ class MeetingCalendar extends Component
         if (! $canManage) {
             $mineQuery->where(function ($q) {
                 $q->where('created_by', auth()->id())
-                    ->orWhereHas('participants', fn ($p) => $p->where('user_id', auth()->id()));
+                    ->orWhere('host_id', auth()->id())
+                    ->orWhereHas('participants', fn ($p) => $p->where('user_id', auth()->id()))
+                    ->orWhereJsonContains('target_roles', auth()->user()->roleSlug());
             });
         }
 
@@ -100,8 +121,16 @@ class MeetingCalendar extends Component
             'byDate' => $meetings->groupBy(fn ($m) => $m->scheduled_at->format('Y-m-d')),
             'mine' => $mineQuery->limit(8)->get(),
             'users' => $canManage ? $this->staffList() : collect(),
+            'roles' => $canManage ? $this->roleList() : collect(),
             'canManage' => $canManage,
         ]);
+    }
+
+    private function roleList()
+    {
+        return Role::where('slug', '!=', 'super_admin')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
     }
 
     private function staffList()
@@ -162,38 +191,47 @@ class MeetingCalendar extends Component
             'location' => 'required|max:120',
             'time' => 'required|date_format:H:i',
             'duration' => 'required|in:15,30,45,60,90,120',
-            'participantIds' => 'required|array|min:1',
+            'participantIds' => 'array',
             'participantIds.*' => 'exists:users,id',
+            'targetRoles' => 'array',
+            'targetRoles.*' => 'exists:roles,slug',
         ]);
 
-        $meeting = DB::transaction(function () {
-            $meeting = Meeting::create([
-                'title' => $this->title,
-                'agenda' => $this->agenda ?: null,
-                'location' => $this->location,
-                'scheduled_at' => Carbon::parse($this->selectedDate)->setTimeFromTimeString($this->time),
-                'duration_minutes' => (int) $this->duration,
-                'created_by' => auth()->id(),
-            ]);
+        if (! $this->participantIds && ! $this->targetRoles) {
+            $this->addError('participantIds', 'Pick at least one participant or role.');
 
-            $meeting->users()->syncWithoutDetaching($this->participantIds);
+            return;
+        }
 
-            return $meeting;
-        });
-
-        $meeting->load('users:id,name')
-            ->users
-            ->where('id', '!=', auth()->id())
-            ->each(fn ($u) => $u->notify(new MeetingScheduled($meeting)));
+        $meeting = MeetingScheduler::create([
+            'title' => $this->title,
+            'agenda' => $this->agenda ?: null,
+            'location' => $this->location,
+            'scheduled_at' => Carbon::parse($this->selectedDate)->setTimeFromTimeString($this->time),
+            'duration_minutes' => (int) $this->duration,
+            'target_roles' => $this->targetRoles,
+            'provider' => $this->withVideo ? 'jitsi' : 'jitsi',
+        ], auth()->user(), array_map('intval', $this->participantIds));
 
         $this->monthCursor = Carbon::parse($this->selectedDate)->startOfMonth()->toDateString();
-        $this->reset(['title', 'agenda', 'duration', 'time', 'participantIds', 'participantSearch']);
+        $this->reset(['title', 'agenda', 'duration', 'time', 'participantIds', 'targetRoles', 'participantSearch']);
         $this->time = '10:00';
         $this->location = 'Dean Office';
 
         $this->dispatch('meeting-created', id: $meeting->id);
 
-        session()->flash('success', 'Meeting scheduled and invitations sent.');
+        session()->flash('success', 'Meeting scheduled — the newsletter and invitations were sent.');
+    }
+
+    public function toggleRole(string $slug): void
+    {
+        if (! hms_can('meetings.manage')) {
+            abort(403);
+        }
+
+        $this->targetRoles = in_array($slug, $this->targetRoles, true)
+            ? array_values(array_diff($this->targetRoles, [$slug]))
+            : [...$this->targetRoles, $slug];
     }
 
     public function toggleParticipant(int $id): void
@@ -209,12 +247,14 @@ class MeetingCalendar extends Component
 
     public function openMeeting(int $id): void
     {
-        $query = Meeting::with(['users:id,name', 'creator:id,name']);
+        $query = Meeting::with(['users:id,name', 'creator:id,name', 'host:id,name']);
 
         if (! hms_can('meetings.manage')) {
             $query->where(function ($q) {
                 $q->where('created_by', auth()->id())
-                    ->orWhereHas('participants', fn ($p) => $p->where('user_id', auth()->id()));
+                    ->orWhere('host_id', auth()->id())
+                    ->orWhereHas('participants', fn ($p) => $p->where('user_id', auth()->id()))
+                    ->orWhereJsonContains('target_roles', auth()->user()->roleSlug());
             });
         }
 
@@ -228,10 +268,27 @@ class MeetingCalendar extends Component
         $this->meetingStatus = $meeting->status;
         $this->meetingAgenda = $meeting->agenda;
         $this->meetingParticipants = $meeting->users->pluck('name')->all();
+        $this->meetingTargetRoles = $meeting->targetRoleSlugs();
         $this->meetingIsOrganiser = $meeting->created_by === auth()->id();
+        $this->meetingIsHost = $meeting->isHost(auth()->user());
+        $this->meetingJoinable = $meeting->canJoin(auth()->user());
+        $this->meetingLive = $meeting->hasStarted();
+        $this->meetingRoomPath = $meeting->roomPath();
+        $this->meetingExternalUrl = $meeting->externalUrl();
         $this->meetingMyResponse = $this->meetingIsOrganiser
             ? null
             : ($meeting->users->firstWhere('id', auth()->id())?->pivot?->response ?? 'pending');
+    }
+
+    public function startMeeting(int $id): void
+    {
+        $meeting = Meeting::findOrFail($id);
+
+        abort_unless($meeting->isHost(auth()->user()), 403, 'Only the organiser can start this meeting.');
+
+        $meeting->start(auth()->user());
+
+        $this->redirect($meeting->roomPath());
     }
 
     public function closeMeeting(): void

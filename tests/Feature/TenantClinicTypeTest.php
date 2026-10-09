@@ -297,4 +297,125 @@ class TenantClinicTypeTest extends TestCase
             ->assertSet('step', 2)
             ->assertHasNoErrors();
     }
+
+    public function test_auto_mode_generates_a_subdomain_under_the_base_domain(): void
+    {
+        config(['hms.base_domain' => 'hms.test']);
+        $this->actingAs($this->platform());
+
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'Auto Address Clinic')
+            ->set('slug', 'auto-address-clinic')
+            ->set('domain_mode', 'auto')
+            ->set('custom_domain', '')
+            ->set('mode', 'clinic')
+            ->set('clinic_type_id', ClinicType::where('slug', 'dental')->value('id'))
+            ->set('requiredRoles', ['admin', 'doctor'])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $tenant = Tenant::where('slug', 'auto-address-clinic')->firstOrFail();
+
+        // The platform owns the address: {slug}.{base_domain}, never a typed one.
+        $this->assertSame('auto-address-clinic.hms.test', $tenant->subdomain);
+        $this->assertNull($tenant->domain);
+    }
+
+    public function test_auto_subdomain_is_previewed_from_the_slug(): void
+    {
+        config(['hms.base_domain' => 'hms.test']);
+        $this->actingAs($this->platform());
+
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'Preview Clinic')
+            ->set('slug', 'preview-clinic')
+            ->assertViewHas('autoSubdomain', fn ($value) => $value === 'preview-clinic.hms.test');
+    }
+
+    public function test_custom_mode_stores_the_typed_domain_and_no_subdomain(): void
+    {
+        $this->actingAs($this->platform());
+
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'Own Domain Clinic')
+            ->set('slug', 'own-domain-clinic')
+            ->set('domain_mode', 'custom')
+            ->set('custom_domain', 'Clinic.Example.com')
+            ->set('mode', 'clinic')
+            ->set('clinic_type_id', ClinicType::where('slug', 'dental')->value('id'))
+            ->set('requiredRoles', ['admin', 'doctor'])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $tenant = Tenant::where('slug', 'own-domain-clinic')->firstOrFail();
+
+        $this->assertSame('clinic.example.com', $tenant->domain);
+        $this->assertNull($tenant->subdomain);
+    }
+
+    public function test_custom_mode_demands_a_domain(): void
+    {
+        $this->actingAs($this->platform());
+
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'No Domain Clinic')
+            ->set('slug', 'no-domain-clinic')
+            ->set('domain_mode', 'custom')
+            ->set('custom_domain', '')
+            ->set('mode', 'clinic')
+            ->set('clinic_type_id', ClinicType::where('slug', 'dental')->value('id'))
+            ->set('requiredRoles', ['admin', 'doctor'])
+            ->call('save')
+            ->assertHasErrors('custom_domain');
+
+        $this->assertNull(Tenant::where('slug', 'no-domain-clinic')->first());
+    }
+
+    public function test_a_custom_domain_cannot_be_claimed_twice(): void
+    {
+        $this->actingAs($this->platform());
+
+        Tenant::create([
+            'name' => 'First Owner', 'slug' => 'first-owner', 'mode' => 'clinic',
+            'status' => 'active', 'domain' => 'taken.example.com',
+        ]);
+
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->set('create_admin', false)
+            ->set('name', 'Second Owner')
+            ->set('slug', 'second-owner')
+            ->set('domain_mode', 'custom')
+            ->set('custom_domain', 'taken.example.com')
+            ->set('mode', 'clinic')
+            ->set('clinic_type_id', ClinicType::where('slug', 'dental')->value('id'))
+            ->set('requiredRoles', ['admin', 'doctor'])
+            ->call('save')
+            ->assertHasErrors('custom_domain');
+
+        $this->assertNull(Tenant::where('slug', 'second-owner')->first());
+    }
+
+    public function test_editing_a_custom_domain_tenant_reopens_in_custom_mode(): void
+    {
+        $this->actingAs($this->platform());
+
+        $tenant = Tenant::create([
+            'name' => 'Load Domain', 'slug' => 'load-domain', 'mode' => 'clinic',
+            'status' => 'active', 'domain' => 'load.example.com',
+        ]);
+
+        Livewire::test(TenantForm::class)
+            ->call('open', $tenant->id)
+            ->assertSet('domain_mode', 'custom')
+            ->assertSet('custom_domain', 'load.example.com');
+    }
 }

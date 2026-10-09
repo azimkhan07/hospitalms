@@ -48,6 +48,15 @@ class TenantForm extends Component
 
     public string $subdomain = '';
 
+    /**
+     * How the facility's web address is provisioned (PLAN.md 9a):
+     *  - "auto"   → the platform generates {slug}.{base_domain}
+     *  - "custom" → the facility already owns a domain and it is typed in
+     */
+    public string $domain_mode = 'auto';
+
+    public string $custom_domain = '';
+
     public bool $create_admin = false;
 
     public string $admin_name = '';
@@ -267,6 +276,8 @@ class TenantForm extends Component
         $this->working_hours = (string) $tenant->working_hours;
         $this->domain = (string) $tenant->domain;
         $this->subdomain = (string) $tenant->subdomain;
+        $this->domain_mode = $tenant->domain ? 'custom' : 'auto';
+        $this->custom_domain = (string) $tenant->domain;
         $this->existingLogo = $tenant->logo;
         $this->existingHero = $tenant->hero_image;
         $this->latitude = $tenant->latitude;
@@ -297,6 +308,7 @@ class TenantForm extends Component
         $this->reset([
         'step', 'tenantId', 'name', 'slug', 'phone', 'email', 'address',
         'city', 'state', 'country', 'working_hours', 'domain', 'subdomain',
+            'custom_domain',
             'admin_name', 'admin_email', 'admin_password', 'logo', 'hero_image',
             'existingLogo', 'existingHero', 'beds', 'staff', 'floors',
             'departments', 'services', 'has_lab', 'has_ot', 'has_ambulance',
@@ -305,6 +317,7 @@ class TenantForm extends Component
         ]);
 
         $this->mode = 'hospital';
+        $this->domain_mode = 'auto';
         $this->status = 'active';
         $this->create_admin = true;
         $this->step = 1;
@@ -364,6 +377,12 @@ class TenantForm extends Component
             'working_hours' => ['nullable', 'string', 'max:150'],
             'domain' => ['nullable', 'string', 'max:150', Rule::unique('tenants', 'domain')->ignore($this->tenantId)],
             'subdomain' => ['nullable', 'string', 'max:150', Rule::unique('tenants', 'subdomain')->ignore($this->tenantId)],
+            'domain_mode' => ['required', Rule::in(['auto', 'custom'])],
+            'custom_domain' => [
+                'nullable', 'string', 'max:180',
+                'regex:/^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/i',
+                Rule::unique('tenants', 'domain')->ignore($this->tenantId),
+            ],
             'beds' => ['nullable', 'integer', 'min:0'],
             'staff' => ['nullable', 'integer', 'min:0'],
             'floors' => ['nullable', 'integer', 'min:0'],
@@ -402,6 +421,10 @@ class TenantForm extends Component
             $rules['admin_password'] = ['required', 'string', 'min:6'];
         }
 
+        if ($this->domain_mode === 'custom') {
+            $rules['custom_domain'][] = 'required';
+        }
+
         return $rules;
     }
 
@@ -420,8 +443,8 @@ class TenantForm extends Component
             'city' => $this->city ?: null,
             'country' => $this->country ?: null,
             'working_hours' => $this->working_hours ?: null,
-            'domain' => $this->domain ?: null,
-            'subdomain' => $this->subdomain ?: null,
+            'domain' => $this->domain_mode === 'custom' ? $this->normalizeDomain($this->custom_domain) : null,
+            'subdomain' => $this->domain_mode === 'auto' ? $this->autoSubdomain() : null,
             'facilities' => $this->facilitiesPayload(),
             'latitude' => $this->latitude !== '' && $this->latitude !== null ? (float) $this->latitude : null,
             'longitude' => $this->longitude !== '' && $this->longitude !== null ? (float) $this->longitude : null,
@@ -457,8 +480,6 @@ class TenantForm extends Component
             $tenant = $service->create($data, $admin);
             $message = 'Tenant created successfully.';
         }
-
-        $this->seedDefaultSettings($tenant);
 
         // The ticked role list is the facility's staffing plan and is the only
         // thing that drives its sidebar, its staff form and its Dean's
@@ -499,9 +520,31 @@ class TenantForm extends Component
             ->all();
     }
 
-    protected function seedDefaultSettings(Tenant $tenant): void
+    /**
+     * Generate the facility's web address from its slug under the configured
+     * base domain (PLAN.md 9a). Falls back to the bare slug on single-host
+     * installs, where ResolveTenant matches it as a host alias.
+     */
+    protected function autoSubdomain(): ?string
     {
-        // Placeholder for per-tenant settings provisioning (Phase 11).
+        $label = Str::slug($this->subdomain ?: $this->slug);
+
+        if ($label === '') {
+            return null;
+        }
+
+        $base = trim((string) config('hms.base_domain', ''), '.');
+
+        return $base !== '' ? $label.'.'.$base : $label;
+    }
+
+    protected function normalizeDomain(string $domain): ?string
+    {
+        $domain = strtolower(trim($domain));
+        $domain = preg_replace('#^https?://#', '', $domain);
+        $domain = rtrim((string) $domain, '/');
+
+        return $domain !== '' ? $domain : null;
     }
 
     public function render()
@@ -517,6 +560,7 @@ class TenantForm extends Component
             'clinicTypes' => $this->availableTypes(),
             'modeRoleSlugs' => $this->modeRoleSlugs(),
             'roleLabels' => $roleLabels,
+            'autoSubdomain' => $this->autoSubdomain(),
         ]);
     }
 }

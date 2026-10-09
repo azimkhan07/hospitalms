@@ -135,6 +135,30 @@
                         <textarea id="eventDesc" rows="2" class="form-control form-control-sm"
                             placeholder="Optional details" wire:model="description"></textarea>
                     </div>
+                    @unless ($editingId)
+                        <div class="form-group form-check mb-1">
+                            <input type="checkbox" class="form-check-input" id="eventVideo"
+                                wire:model.live="withMeeting">
+                            <label class="form-check-label" for="eventVideo" style="font-size:11.5px">
+                                <i class="fas fa-video text-info"></i> Create a video meeting for this event
+                            </label>
+                        </div>
+                        @if ($withMeeting)
+                            <div class="form-group mb-1">
+                                <label>Invite roles</label>
+                                <div class="hms-participants">
+                                    @foreach ($roles as $r)
+                                        @php $on = in_array($r->slug, $meetingRoles, true); @endphp
+                                        <button type="button" class="hms-pill {{ $on ? 'on' : '' }}"
+                                            wire:click="toggleMeetingRole('{{ $r->slug }}')">
+                                            <i class="fas fa-users"></i> {{ $r->name }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                                <small class="text-muted">Everyone in these roles gets a newsletter + notification.</small>
+                            </div>
+                        @endif
+                    @endunless
                     @if ($editingId)
                         <div class="d-flex">
                             <button type="submit" class="btn btn-sm btn-primary mr-1 flex-fill">

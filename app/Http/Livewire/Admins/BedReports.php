@@ -70,11 +70,6 @@ class BedReports extends Component
         $this->reportUnits = $this->reportUnitsForTest();
     }
 
-    public function updatedReportMachineId(): void
-    {
-        //
-    }
-
     public function pickBed(string $id): void
     {
         $this->bedId = $id;

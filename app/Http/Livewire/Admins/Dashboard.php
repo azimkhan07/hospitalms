@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\LeaveRequest;
 use App\Models\Meeting;
+use App\Models\Newsletter;
 use App\Services\DashboardKpis;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -29,6 +30,11 @@ class Dashboard extends Component
             'pendingLeave' => LeaveRequest::where('status', 'pending')->count(),
             'myApprovedLeave' => LeaveRequest::where('user_id', auth()->id())->where('status', 'approved')->count(),
             'myMeetings' => $myMeetings,
+            'newsletters' => Newsletter::with('meeting')
+                ->visibleTo(auth()->user())
+                ->latest()
+                ->limit(6)
+                ->get(),
         ]);
     }
 }

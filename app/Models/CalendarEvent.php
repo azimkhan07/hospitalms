@@ -18,7 +18,7 @@ class CalendarEvent extends Model
     public const GENERAL = 'general';
 
     protected $fillable = [
-        'title', 'type', 'starts_at', 'ends_at', 'color', 'description', 'created_by',
+        'title', 'type', 'starts_at', 'ends_at', 'color', 'description', 'created_by', 'meeting_id',
     ];
 
     protected $casts = [
@@ -29,6 +29,11 @@ class CalendarEvent extends Model
     public function auditName(): string
     {
         return (string) ($this->title ?? '#'.$this->getKey());
+    }
+
+    public function meeting()
+    {
+        return $this->belongsTo(Meeting::class);
     }
 
     public function creator()

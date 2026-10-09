@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Admin\DeliveriesController;
 use App\Http\Controllers\Api\V1\Admin\FacilitiesController;
 use App\Http\Controllers\Api\V1\Admin\InvestigationsController;
 use App\Http\Controllers\Api\V1\Admin\MachinesController;
+use App\Http\Controllers\Api\V1\Admin\MeetingsController;
 use App\Http\Controllers\Api\V1\Admin\PrintController;
 use App\Http\Controllers\Api\V1\Admin\ReportsController;
 use App\Http\Controllers\Api\V1\Admin\ResourceController;
@@ -30,6 +31,11 @@ Route::prefix('admin')
         Route::get('/angio-machines', [AngioMachinesController::class, 'index'])->name('angio-machines');
         Route::get('/schemes', [SchemesController::class, 'index'])->name('schemes');
         Route::get('/calendar-events', [CalendarEventsController::class, 'index'])->name('calendar-events');
+
+        // Video meetings + dashboard newsletter (PLAN.md 18g).
+        Route::get('/meetings', [MeetingsController::class, 'index'])->name('meetings');
+        Route::post('/meetings/{meetingId}/join', [MeetingsController::class, 'join'])->name('meetings.join');
+        Route::get('/newsletters', [MeetingsController::class, 'newsletters'])->name('newsletters');
         Route::get('/deliveries', [DeliveriesController::class, 'index'])->name('deliveries');
         Route::post('/deliveries', [DeliveriesController::class, 'store'])->name('deliveries.create');
         Route::get('/print-center', [PrintController::class, 'index'])->name('print-center');
