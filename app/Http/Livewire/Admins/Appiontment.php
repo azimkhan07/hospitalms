@@ -147,8 +147,29 @@ class Appiontment extends Component
             return;
         }
 
-        $appointment->update(['status' => 'waiting']);
-        session()->flash('message', 'Patient marked as waiting.');
+        $appointment->update([
+            'status' => 'waiting',
+            'token' => $appointment->token ?? appointment::whereDate('intime', today())
+                ->whereNull('deleted_at')
+                ->max('token') + 1,
+        ]);
+
+        session()->flash('message', 'Patient marked as waiting. Token #'.$appointment->refresh()->token.'.');
+    }
+
+    /** The doctor called; reception sends the patient in and the consult starts. */
+    public function sendIn(int $id): void
+    {
+        $appointment = $this->scoped()->findOrFail($id);
+
+        if ($appointment->status !== 'called') {
+            session()->flash('error', 'Only a called patient can be sent in.');
+
+            return;
+        }
+
+        $appointment->update(['status' => 'in_consult']);
+        session()->flash('message', 'Patient sent in to the doctor.');
     }
 
     public function goVitals(int $id): void
@@ -200,12 +221,19 @@ class Appiontment extends Component
 
         $isDoctor = auth()->user()?->hasRole('doctor');
 
+        $waitingQueue = appointment::with(['patient:id,name', 'doctor.employ:id,name'])
+            ->whereDate('intime', today())
+            ->whereIn('status', ['waiting', 'called', 'in_consult'])
+            ->orderBy('token')
+            ->get();
+
         return view('livewire.admins.appiontment', [
             'patients' => patient::orderBy('name')->limit(300)->get(),
-            'doctors' => doctor::with('employ:id,name')->get(),
+            'doctors' => doctor::with('employ:id,name')->orderByDesc('on_duty')->orderBy('id')->get(),
             'angioMachines' => \App\Models\AngioMachine::orderBy('name')->get(['id', 'name']),
             'schemes' => \App\Models\Scheme::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'appointments' => $appointments,
+            'waitingQueue' => $waitingQueue,
             'statusFlow' => appointment::STATUSES,
             'showCreateForm' => ! $isDoctor,
         ]);

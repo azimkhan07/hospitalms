@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\Concerns\RecordsActivity;
 
+use App\Notifications\AppointmentCalled;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Notification;
 
 class appointment extends Model
 {
@@ -22,6 +24,8 @@ class appointment extends Model
         'intime',
         'outtime',
         'status',
+        'token',
+        'called_at',
         'notes',
         'description',
         'prescription',
@@ -32,14 +36,15 @@ class appointment extends Model
 
     /** The OPD flow a receptionist and a doctor walk an appointment through. */
     public const STATUSES = [
-        'pending', 'confirmed', 'waiting', 'in_consult',
-        'completed', 'cancelled', 'terminated',
+        'pending', 'confirmed', 'waiting', 'called',
+        'in_consult', 'completed', 'cancelled', 'terminated',
     ];
 
     protected $casts = [
         'intime' => 'datetime',
         'outtime' => 'datetime',
         'follow_up_at' => 'date',
+        'called_at' => 'datetime',
     ];
 
     /**
@@ -103,5 +108,19 @@ class appointment extends Model
             'doctor',
             fn (Builder $d) => $d->where('user_id', $userId)
         );
+    }
+
+    /**
+     * Alerts every front-desk user (and admins) that this patient was called,
+     * so the reception queue board pulses while they walk the patient in.
+     */
+    public function notifyReceptionCall(): void
+    {
+        $recipients = User::where('tenant_id', $this->tenant_id)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($r) => $r->whereIn('slug', ['receptionist', 'admin', 'moderator']))
+            ->get();
+
+        Notification::send($recipients, new AppointmentCalled($this));
     }
 }

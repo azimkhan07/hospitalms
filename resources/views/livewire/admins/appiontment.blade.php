@@ -49,7 +49,9 @@
                                 <select class="form-control form-control-sm" wire:model="doctor">
                                     <option value="">Choose doctor</option>
                                     @foreach ($doctors as $d)
-                                        <option value="{{ $d->id }}">{{ $d->employ?->name ?? 'Doctor #'.$d->id }}</option>
+                                        <option value="{{ $d->id }}">{{ $d->employ?->name ?? 'Doctor #'.$d->id }}
+                                            {{ $d->on_duty ? ' (on duty)' : ' (off duty)' }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 @error('doctor')
@@ -137,6 +139,36 @@
             @endif
 
             <div class="col-lg-{{ $showCreateForm ? 8 : 12 }}">
+                <style>.hms-blink{animation:hmsBlink 1.1s linear infinite}@keyframes hmsBlink{50%{opacity:.35}}</style>
+                @unless ($waitingQueue->isEmpty() && auth()->user()?->hasRole('doctor'))
+                <div class="box box-warning mb-2" wire:poll.10s>
+                    <div class="box-header d-flex align-items-center justify-content-between py-2">
+                        <h3 class="box-title" style="font-size:13px">
+                            <i class="fas fa-user-clock text-warning mr-1"></i> Today's queue
+                        </h3>
+                        <span class="text-muted" style="font-size:11.5px">{{ $waitingQueue->count() }} waiting / in room</span>
+                    </div>
+                    <div class="box-body py-1">
+                        <div class="d-flex flex-wrap">
+                            @forelse ($waitingQueue as $row)
+                                <span class="mr-2 mb-1 px-2 py-1 rounded {{ $row->status === 'called' ? 'hms-blink' : '' }}"
+                                    style="font-size:12px; background:#fff7e6;">
+                                    <b>#{{ $row->token ?? '-' }}</b>
+                                    <b>{{ $row->doctor?->employ?->name ?? '-' }}</b> &rarr; {{ $row->patient?->name ?? '-' }}
+                                    @if ($row->status === 'called')
+                                        <i class="fas fa-bell text-danger" title="Called — send this patient in"></i>
+                                    @elseif ($row->status === 'in_consult')
+                                        <i class="fas fa-stethoscope text-primary" title="In consultation"></i>
+                                    @endif
+                                </span>
+                            @empty
+                                <span class="text-muted" style="font-size:12px">Queue is clear.</span>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+                @endunless
+
                 <div class="box box-primary">
                     <div class="box-header d-flex align-items-center justify-content-between flex-wrap">
                         <h3 class="box-title"><i class="fas fa-list text-info mr-1"></i> All Appointments</h3>
@@ -184,6 +216,7 @@
                                                 @elseif (in_array($item->status, ['cancelled', 'terminated'])) badge-danger
                                                 @elseif ($item->status === 'confirmed') badge-info
                                                 @elseif ($item->status === 'waiting') badge-warning
+                                                @elseif ($item->status === 'called') badge-danger
                                                 @elseif ($item->status === 'in_consult') badge-primary
                                                 @else badge-secondary @endif">
                                                 {{ ucwords(str_replace('_', ' ', $item->status ?? 'pending')) }}
@@ -195,6 +228,10 @@
                                             @if (in_array($item->status, ['pending', 'confirmed'], true))
                                                 <button wire:click="markWaiting({{ $item->id }})" class="btn btn-xs btn-outline-warning"
                                                     title="Patient arrived"><i class="fas fa-user-check"></i></button>
+                                            @endif
+                                            @if (! auth()->user()?->hasRole('doctor') && $item->status === 'called')
+                                                <button wire:click="sendIn({{ $item->id }})" class="btn btn-xs btn-success"
+                                                    title="Send patient in"><i class="fas fa-door-open"></i></button>
                                             @endif
                                             <button wire:click="edit({{ $item->id }})" class="btn btn-xs btn-outline-info"
                                                 title="Edit"><i class="fas fa-pen"></i></button>

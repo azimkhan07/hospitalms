@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Admins;
 
+use App\Notifications\AppointmentCalled;
 use App\Notifications\LeaveRequestStatus;
 use App\Notifications\LeaveRequested;
 use App\Notifications\MeetingScheduled;
@@ -30,11 +31,13 @@ class NotificationBell extends Component
                 'id' => $n->id,
                 'icon' => match ($n->type) {
                     MeetingScheduled::class => 'fa-calendar-alt',
+                    AppointmentCalled::class => 'fa-bell',
                     LeaveRequested::class, LeaveRequestStatus::class => 'fa-plane-departure',
                     default => 'fa-bell',
                 },
                 'colour' => match ($n->type) {
                     MeetingScheduled::class => 'text-info',
+                    AppointmentCalled::class => 'text-danger',
                     LeaveRequested::class => 'text-warning',
                     LeaveRequestStatus::class => $n->data['status'] === 'approved' ? 'text-success' : 'text-danger',
                     default => 'text-muted',

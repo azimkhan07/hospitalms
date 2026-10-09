@@ -2,10 +2,51 @@
     <div class="container">
         <div class="page-title d-flex align-items-center justify-content-between flex-wrap">
             <h3 class="text-info"><i class="fas fa-stethoscope mr-1"></i> Consultations (OPD)</h3>
-            <div class="text-muted" style="font-size:12.5px">
-                Today {{ $todayCount ?? 0 }} &middot; Waiting {{ $waitingCount ?? 0 }} &middot; Treated {{ $treatedToday ?? 0 }}
+            <div class="d-flex align-items-center flex-wrap">
+                <span class="text-muted" style="font-size:12.5px">
+                    Today {{ $todayCount ?? 0 }} &middot; Waiting {{ $waitingCount ?? 0 }} &middot; Treated {{ $treatedToday ?? 0 }}
+                </span>
+                @if ($doctorProfile)
+                    <span class="badge badge-{{ $doctorProfile->on_duty ? 'success' : 'secondary' }} ml-2"
+                        title="{{ $doctorProfile->on_duty ? 'You are accepting patients' : 'You are off duty' }}">
+                        {{ $doctorProfile->on_duty ? 'On duty' : 'Off duty' }}
+                    </span>
+                    <button class="btn btn-sm btn-outline-secondary ml-1" wire:click="toggleDuty" title="Flip your availability">
+                        <i class="fas fa-user-md"></i> Toggle
+                    </button>
+                    <button class="btn btn-sm btn-success ml-1" wire:click="callNext"
+                        {{ ($waitingCount ?? 0) === 0 ? 'disabled' : '' }}>
+                        <i class="fas fa-bell"></i> Call next
+                    </button>
+                @endif
             </div>
         </div>
+
+        @if (($waitingQueue ?? collect())->isNotEmpty() && ! $open)
+            <div class="box box-warning mb-2" wire:poll.10s>
+                <div class="box-header d-flex align-items-center justify-content-between py-2">
+                    <h3 class="box-title" style="font-size:13px">
+                        <i class="fas fa-user-clock text-warning mr-1"></i> My queue today
+                    </h3>
+                    <span class="text-muted" style="font-size:11.5px">{{ $waitingQueue->count() }} waiting</span>
+                </div>
+                <div class="box-body py-1">
+                    <div class="d-flex flex-wrap">
+                        @foreach ($waitingQueue as $row)
+                            <span class="mr-2 mb-1 px-2 py-1 rounded"
+                                style="font-size:12px; background:#fff7e6;
+                                {{ $row->status === 'called' ? 'outline:2px solid #dd4b39;' : '' }}">
+                                <b>#{{ $row->token ?? '-' }}</b>
+                                {{ $row->patient?->name ?? '-' }}
+                                @if ($row->status === 'called')
+                                    <i class="fas fa-bell text-danger" title="Called — waiting to enter"></i>
+                                @endif
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
 
         @if (session()->has('message'))
             <div class="alert alert-success py-1 px-2">{{ session('message') }}</div>
@@ -75,7 +116,7 @@
                             </form>
 
                             <div class="d-flex flex-wrap">
-                                @if (in_array($open->status, ['pending', 'confirmed', 'waiting'], true))
+                                @if (in_array($open->status, ['pending', 'confirmed', 'waiting', 'called'], true))
                                     <button class="btn btn-sm btn-outline-success mr-1 mb-1" wire:click="start({{ $open->id }})">
                                         <i class="fas fa-play"></i> Start consult
                                     </button>
@@ -197,7 +238,7 @@
                                     </td>
                                     <td>
                                         @php
-                                            $badge = ['waiting' => 'warning', 'in_consult' => 'primary', 'completed' => 'success'][$appt->status] ?? 'secondary';
+                                            $badge = ['waiting' => 'warning', 'called' => 'danger', 'in_consult' => 'primary', 'completed' => 'success'][$appt->status] ?? 'secondary';
                                         @endphp
                                         <span class="badge badge-{{ $badge }}">{{ str_replace('_', ' ', ucfirst($appt->status)) }}</span>
                                     </td>
@@ -205,7 +246,7 @@
                                         <button class="btn btn-xs btn-outline-primary" wire:click="open({{ $appt->id }})" title="Open chart">
                                             <i class="fas fa-folder-open"></i>
                                         </button>
-                                        @if (in_array($appt->status, ['pending', 'confirmed', 'waiting'], true))
+                                        @if (in_array($appt->status, ['pending', 'confirmed', 'waiting', 'called'], true))
                                             <button class="btn btn-xs btn-outline-success" wire:click="start({{ $appt->id }})" title="Start consult">
                                                 <i class="fas fa-play"></i>
                                             </button>

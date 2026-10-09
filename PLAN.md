@@ -839,11 +839,11 @@ soft deletes across clinical + billing tables).
       Full suite **153 tests / 524 assertions green**; browser smoke 4/4 new
       pages, 0 console errors.
 
-**Still deferred (honest list):** OPD queue/token + "call next" bell, reception
-on-duty doctor list, 3-day auto-terminate, follow-up auto-booking, ICD-10,
-per-medicine dose/frequency/days + quantity auto-calc, lab sample/barcode + file
-upload + critical alerts, nurse drug chart / shift handover / doctor alert,
-discharge final-bill, billing line items, duty roster, notification scheduler.
+**Still deferred (honest list):** ICD-10, med quantity auto-calc on dispense,
+lab sample/barcode + file upload + critical alerts, nurse drug chart / shift
+handover / doctor alert, discharge final-bill, billing line items, duty roster,
+notification scheduler. (The queue/token + call-next bell, on-duty list,
+3-day auto-terminate and follow-up auto-booking were shipped in §18i.)
 
 ---
 
@@ -923,5 +923,44 @@ server, issue certificates, and set `HMS_PLATFORM_HOSTS`. See the README
 
 ---
 
-_Next action: close the remaining Phase 3 reception gaps (queue/token, on-duty
-list) and Phase 6 meds chart, then the deferred billing line items._
+## 18i. OPD queue, duty, follow-up + hygiene sweep — done 2026-10-09
+
+The front desk → doctor handoff is now a real queue instead of status re-taps:
+
+- **Tokens at check-in** — reception's "Patient arrived" stamps the next daily
+  token on the appointment; today's board lists `waiting / called / in_consult`
+  in token order (`wire:poll.10s`).
+- **Call-next bell** — the doctor's Consultations header has Call next (disabled
+  when nobody waits): the oldest waiting patient becomes `called`
+  (`appointments.status` widened to add `called`, `called_at` stamped) and every
+  reception/admin user gets an `AppointmentCalled` notification. Reception
+  (web + API) then **sends the patient in** (`called → in_consult`).
+- **On-duty doctors** — `doctors.on_duty` (default on). Doctors flip it
+  themselves on the Consultations header; reception's doctor picker shows
+  `(on duty)/(off duty)` and orders on-duty first.
+- **Follow-up auto-booking** — saving a follow-up date on a consult creates a
+  confirmed appointment that same patient/doctor on that date (de-duplicated, so
+  re-saving never double-books).
+- **3-day auto-terminate** — `hms:purge-stale-appointments` (scheduled 02:30)
+  rolls pending/confirmed visits whose slot passed 3+ days ago into
+  `terminated`, keeping queues honest.
+- **API mirrors** — `GET /api/v1/admin/queue`,
+  `POST /api/v1/admin/queue/call-next`,
+  `POST /api/v1/admin/appointments/{id}/send-in`,
+  `PATCH /api/v1/admin/doctors/on-duty`.
+- Migrations `2026_10_09_000200_queue_opd_duty_followup.php` +
+  `2026_10_09_000300_widen_appointment_status_called.php`.
+- Tests: `tests/Feature/QueueOpdTest.php` (7 tests). Full suite **180 tests /
+  631 assertions green**; `audit.js` 34/34, 0 console errors.
+
+**Still deferred (honest list):** reception queue on a dedicated countdown
+display/queue monitor, ICD-10, med quantity auto-calc on dispense, lab
+sample/barcode + file upload + critical alerts, nurse drug chart / shift
+handover / doctor alert, discharge final-bill, billing line items, duty roster,
+attendance-based on-duty, notification scheduler.
+
+---
+
+_Next action: Phase 6 nurse meds/drug chart, then the deferred billing line
+items (invoice per stay, advance adjustment, discounts). Branch clean ahead of
+the Jitsi + host-lock + queue milestones._

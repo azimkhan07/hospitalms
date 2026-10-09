@@ -24,3 +24,8 @@ Artisan::command('inspire', function () {
 Schedule::command('hms:backup')
     ->dailyAt('01:30')
     ->withoutOverlapping();
+
+// OPD hygiene: auto-terminate appointments nobody started after 3 days.
+Schedule::command('hms:purge-stale-appointments')
+    ->dailyAt('02:30')
+    ->withoutOverlapping();

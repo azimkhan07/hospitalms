@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Admin\InvestigationsController;
 use App\Http\Controllers\Api\V1\Admin\MachinesController;
 use App\Http\Controllers\Api\V1\Admin\MeetingsController;
 use App\Http\Controllers\Api\V1\Admin\PrintController;
+use App\Http\Controllers\Api\V1\Admin\QueueController;
 use App\Http\Controllers\Api\V1\Admin\ReportsController;
 use App\Http\Controllers\Api\V1\Admin\ResourceController;
 use App\Http\Controllers\Api\V1\Admin\SchemesController;
@@ -52,4 +53,10 @@ Route::prefix('admin')
         Route::get('/lab-orders', [ClinicalController::class, 'labIndex'])->name('lab-orders');
         Route::post('/lab-orders/{reportId}/report', [ClinicalController::class, 'labReport'])->name('lab-orders.report');
         Route::patch('/appointments/{appointmentId}/status', [ClinicalController::class, 'appointmentStatus'])->name('appointments.status');
+
+        // OPD queue (PLAN.md 18i): tokens, call-next bell, send-in, duty.
+        Route::get('/queue', [QueueController::class, 'index'])->name('queue');
+        Route::post('/queue/call-next', [QueueController::class, 'callNext'])->name('queue.call-next');
+        Route::post('/appointments/{appointmentId}/send-in', [QueueController::class, 'sendIn'])->name('appointments.send-in');
+        Route::patch('/doctors/on-duty', [QueueController::class, 'toggleDuty'])->name('doctors.on-duty');
     });

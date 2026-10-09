@@ -58,7 +58,7 @@ class Consultations extends Component
     {
         $appt = $this->myAppointments()->findOrFail($id);
 
-        if (! in_array($appt->status, ['pending', 'confirmed', 'waiting'], true)) {
+        if (! in_array($appt->status, ['pending', 'confirmed', 'waiting', 'called'], true)) {
             session()->flash('error', 'That appointment is not waiting.');
 
             return;
@@ -67,6 +67,46 @@ class Consultations extends Component
         $appt->update(['status' => 'in_consult']);
 
         session()->flash('message', 'Consultation started for '.$appt->patient?->name.'.');
+    }
+
+    /**
+     * Ring the bell: the longest-waiting patient becomes "called", every front
+     * desk user gets a pulse notification to send the patient in.
+     */
+    public function callNext(): void
+    {
+        $appt = $this->myAppointments()
+            ->where('status', 'waiting')
+            ->whereDate('intime', today())
+            ->orderBy('token')
+            ->orderBy('intime')
+            ->first();
+
+        if (! $appt) {
+            session()->flash('error', 'No patients waiting right now.');
+
+            return;
+        }
+
+        $appt->update(['status' => 'called', 'called_at' => now()]);
+        $appt->notifyReceptionCall();
+
+        session()->flash('message', 'Called token #'.($appt->token ?? '-').' — '.$appt->patient?->name.'.');
+    }
+
+    /** Doctors flip their own availability so reception can route accurately. */
+    public function toggleDuty(): void
+    {
+        $doctor = $this->myDoctor();
+
+        if (! $doctor) {
+            session()->flash('error', 'Your login is not linked to a doctor profile.');
+
+            return;
+        }
+
+        $doctor->update(['on_duty' => ! $doctor->on_duty]);
+        session()->flash('message', $doctor->on_duty ? 'You are now on duty.' : 'You are now off duty.');
     }
 
     public function complete(int $id): void
@@ -116,11 +156,44 @@ class Consultations extends Component
         ]);
 
         // Opening the chart starts the consult if it was not started already.
-        if (in_array($appt->status, ['pending', 'confirmed', 'waiting'], true)) {
+        if (in_array($appt->status, ['pending', 'confirmed', 'waiting', 'called'], true)) {
             $appt->update(['status' => 'in_consult']);
         }
 
+        $this->scheduleFollowUp($appt);
+
         session()->flash('message', 'Consultation saved.');
+    }
+
+    /**
+     * The follow-up date becomes a real confirmed appointment on the doctor's
+     * desk, so it cannot be lost (PLAN.md section 6/18i). Re-saving the same
+     * consult never double-books the date.
+     */
+    private function scheduleFollowUp(appointment $appt): void
+    {
+        if (blank($this->followUpAt)) {
+            return;
+        }
+
+        $duplicate = appointment::where('patient_id', $appt->patient_id)
+            ->where('doctor_id', $appt->doctor_id)
+            ->whereDate('intime', $this->followUpAt)
+            ->whereIn('status', ['pending', 'confirmed', 'waiting'])
+            ->exists();
+
+        if ($duplicate) {
+            return;
+        }
+
+        appointment::create([
+            'patient_id' => $appt->patient_id,
+            'doctor_id' => $appt->doctor_id,
+            'intime' => \Carbon\Carbon::parse($this->followUpAt)->hour(9)->minute(0)->second(0),
+            'status' => 'confirmed',
+            'notes' => 'Auto follow-up of visit #'.$appt->id,
+            'chief_complaint' => $appt->chief_complaint,
+        ]);
     }
 
     public function orderInvestigations(): void
@@ -245,11 +318,18 @@ class Consultations extends Component
             'latestVital' => $latestVital,
             'appointmentReports' => $appointmentReports,
             'availableTests' => InvestigationTest::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'waitingQueue' => $this->myAppointments()
+                ->with(['patient:id,name,age,gender'])
+                ->whereDate('intime', today())
+                ->whereIn('status', ['waiting', 'called'])
+                ->orderBy('token')
+                ->orderBy('intime')
+                ->get(),
             'todayCount' => $this->myAppointments()
                 ->whereDate('intime', today())
                 ->whereNotIn('status', ['cancelled', 'terminated', 'completed'])
                 ->count(),
-            'waitingCount' => $this->myAppointments()->whereIn('status', ['waiting', 'in_consult'])->count(),
+            'waitingCount' => $this->myAppointments()->whereIn('status', ['waiting', 'called'])->count(),
             'treatedToday' => $this->myAppointments()
                 ->where('status', 'completed')
                 ->whereDate('outtime', today())
