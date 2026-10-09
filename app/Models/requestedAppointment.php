@@ -19,10 +19,23 @@ class requestedAppointment extends Model
         'message',
         'address',
         'stime',
+        'status',
+        'patient_id',
+        'appointment_id',
     ];
 
     public function doctor()
     {
         return $this->belongsTo(doctor::class);
+    }
+
+    public function patient()
+    {
+        return $this->belongsTo(patient::class);
+    }
+
+    public function appointment()
+    {
+        return $this->belongsTo(appointment::class);
     }
 }

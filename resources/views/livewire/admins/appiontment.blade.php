@@ -12,8 +12,12 @@
                 </button>
             </div>
         @endif
+        @if (session()->has('error'))
+            <div class="alert alert-danger py-1 px-2">{{ session('error') }}</div>
+        @endif
 
         <div class="row">
+            @if ($showCreateForm)
             <div class="col-lg-4">
                 <div class="box box-primary">
                     <div class="box-header">
@@ -105,8 +109,8 @@
                             <div class="form-group">
                                 <label>Status</label>
                                 <select class="form-control form-control-sm" wire:model="status">
-                                    @foreach (['pending', 'confirmed', 'completed', 'cancelled'] as $s)
-                                        <option value="{{ $s }}">{{ ucfirst($s) }}</option>
+                                    @foreach ($statusFlow as $s)
+                                        <option value="{{ $s }}">{{ ucwords(str_replace('_', ' ', $s)) }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -130,8 +134,9 @@
                     </div>
                 </div>
             </div>
+            @endif
 
-            <div class="col-lg-8">
+            <div class="col-lg-{{ $showCreateForm ? 8 : 12 }}">
                 <div class="box box-primary">
                     <div class="box-header d-flex align-items-center justify-content-between flex-wrap">
                         <h3 class="box-title"><i class="fas fa-list text-info mr-1"></i> All Appointments</h3>
@@ -151,7 +156,7 @@
                                 <th>Start</th>
                                 <th>End</th>
                                 <th>Status</th>
-                                <th style="width:90px">Actions</th>
+                                <th style="width:130px">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,13 +181,21 @@
                                         <td>
                                             <span class="badge badge-sm
                                                 @if ($item->status === 'completed') badge-success
-                                                @elseif ($item->status === 'cancelled') badge-danger
+                                                @elseif (in_array($item->status, ['cancelled', 'terminated'])) badge-danger
                                                 @elseif ($item->status === 'confirmed') badge-info
-                                                @else badge-warning @endif">
-                                                {{ ucfirst($item->status ?? 'pending') }}
+                                                @elseif ($item->status === 'waiting') badge-warning
+                                                @elseif ($item->status === 'in_consult') badge-primary
+                                                @else badge-secondary @endif">
+                                                {{ ucwords(str_replace('_', ' ', $item->status ?? 'pending')) }}
                                             </span>
                                         </td>
                                         <td class="text-right">
+                                            <button wire:click="goVitals({{ $item->id }})" class="btn btn-xs btn-outline-secondary"
+                                                title="Vitals"><i class="fas fa-heartbeat"></i></button>
+                                            @if (in_array($item->status, ['pending', 'confirmed'], true))
+                                                <button wire:click="markWaiting({{ $item->id }})" class="btn btn-xs btn-outline-warning"
+                                                    title="Patient arrived"><i class="fas fa-user-check"></i></button>
+                                            @endif
                                             <button wire:click="edit({{ $item->id }})" class="btn btn-xs btn-outline-info"
                                                 title="Edit"><i class="fas fa-pen"></i></button>
                                             <button wire:click="delete({{ $item->id }})"

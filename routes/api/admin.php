@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AccountingController;
 use App\Http\Controllers\Api\V1\Admin\AngioMachinesController;
 use App\Http\Controllers\Api\V1\Admin\CalendarEventsController;
+use App\Http\Controllers\Api\V1\Admin\ClinicalController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\DeliveriesController;
 use App\Http\Controllers\Api\V1\Admin\FacilitiesController;
@@ -35,4 +36,14 @@ Route::prefix('admin')
         Route::get('/facilities', [FacilitiesController::class, 'index'])->name('facilities');
         Route::get('/machines', [MachinesController::class, 'index'])->name('machines');
         Route::get('/investigations', [InvestigationsController::class, 'index'])->name('investigations');
+
+        // Clinical workflow: vitals, IPD ward, lab queue, OPD status moves.
+        Route::get('/vitals', [ClinicalController::class, 'vitalsIndex'])->name('vitals');
+        Route::post('/vitals', [ClinicalController::class, 'vitalsStore'])->name('vitals.create');
+        Route::get('/stays', [ClinicalController::class, 'staysIndex'])->name('stays');
+        Route::post('/stays/admit', [ClinicalController::class, 'admit'])->name('stays.admit');
+        Route::post('/stays/{stayId}/discharge', [ClinicalController::class, 'discharge'])->name('stays.discharge');
+        Route::get('/lab-orders', [ClinicalController::class, 'labIndex'])->name('lab-orders');
+        Route::post('/lab-orders/{reportId}/report', [ClinicalController::class, 'labReport'])->name('lab-orders.report');
+        Route::patch('/appointments/{appointmentId}/status', [ClinicalController::class, 'appointmentStatus'])->name('appointments.status');
     });

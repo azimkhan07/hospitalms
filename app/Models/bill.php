@@ -7,10 +7,11 @@ use App\Models\Concerns\RecordsActivity;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class bill extends Model
 {
-    use BelongsToTenant, HasFactory, RecordsActivity;
+    use BelongsToTenant, HasFactory, RecordsActivity, SoftDeletes;
     protected $fillable=[
         'patients_id',
         'status',

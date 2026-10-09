@@ -6,11 +6,12 @@ use App\Models\Concerns\BelongsToTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class stay extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'patient_id',
@@ -22,6 +23,21 @@ class stay extends Model
         'amount',
         'discount',
         'total',
+        'discharged_at',
+        'discharge_note',
+        'discharge_type',
+        'discharged_by',
+    ];
+
+    /** PLAN.md section 7: how the stay ended. 'normal' is the legacy word for recovered. */
+    public const DISCHARGE_TYPES = [
+        'recovered' => 'Recovered / Improved',
+        'referred' => 'Referred',
+        'expired' => 'Expired',
+        'lama' => 'Taken away (LAMA / DAMA)',
+        'transferred' => 'Transferred',
+        'normal' => 'Recovered (legacy)',
+        'absconded' => 'Absconded (legacy)',
     ];
 
     protected $casts = [
@@ -67,6 +83,22 @@ class stay extends Model
     public function room()
     {
         return $this->belongsTo(rooms::class);
+    }
+
+    public function dischargedBy()
+    {
+        return $this->belongsTo(User::class, 'discharged_by');
+    }
+
+    public function vitals()
+    {
+        return $this->hasMany(Vital::class);
+    }
+
+    /** Most recent observation set for the ward list. */
+    public function latestVital()
+    {
+        return $this->hasOne(Vital::class)->latestOfMany('taken_at');
     }
 
     /**

@@ -81,12 +81,16 @@
                         </td>
                         <td>{{ $s->room?->department?->name ?? 'Room #'.($s->room_id ?? '-') }}</td>
                         <td>
-                            <span class="badge badge-sm
-                                @if ($s->discharge_type === 'normal') badge-success
-                                @elseif ($s->discharge_type === 'referred') badge-info
-                                @else badge-danger @endif">
-                                {{ ucfirst($s->discharge_type ?? 'n/a') }}
-                            </span>
+                            @php
+                                $typeLabel = \App\Models\stay::DISCHARGE_TYPES[$s->discharge_type] ?? ucfirst($s->discharge_type ?? 'n/a');
+                                $typeBadge = match ($s->discharge_type) {
+                                    'normal', 'recovered' => 'success',
+                                    'referred' => 'info',
+                                    'transferred', 'lama' => 'warning',
+                                    default => 'danger',
+                                };
+                            @endphp
+                            <span class="badge badge-sm badge-{{ $typeBadge }}">{{ $typeLabel }}</span>
                         </td>
                         <td>{{ $s->amount ?? '-' }}</td>
                         <td>{{ $s->discount ?? '-' }}</td>

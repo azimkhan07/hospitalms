@@ -204,8 +204,41 @@ class StaffDirectory extends Component
             session()->flash('message', 'Staff account updated for '.$user->email.'.');
         }
 
+        $this->syncDoctorProfile($user);
+
         $this->cancelForm();
         $this->role = '';
+    }
+
+    /**
+     * A doctor login must point at a doctors row - that link is what scopes
+     * "my appointments" and the consultation desk. Everyone else has no
+     * business holding one.
+     */
+    protected function syncDoctorProfile(User $user): void
+    {
+        if ($this->newRole !== 'doctor') {
+            \App\Models\doctor::where('user_id', $user->id)->update(['user_id' => null]);
+
+            return;
+        }
+
+        $employee = \App\Models\employee::where('email', $user->email)->first()
+            ?? \App\Models\employee::create([
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?: ($this->phone ?: 'N/A'),
+                'position' => 'doctor',
+                'status' => 'active',
+            ]);
+
+        $profile = \App\Models\doctor::where('user_id', $user->id)->first()
+            ?? \App\Models\doctor::where('employee_id', $employee->id)->whereNull('user_id')->first()
+            ?? \App\Models\doctor::create(['employee_id' => $employee->id]);
+
+        if ((int) $profile->user_id !== (int) $user->id) {
+            $profile->update(['user_id' => $user->id]);
+        }
     }
 
     public function deleteStaff(int $id): void

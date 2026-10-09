@@ -6,6 +6,7 @@ use App\Models\Tenant;
 use App\Models\beds as ModelsBeds;
 use App\Models\patient;
 use App\Models\rooms;
+use App\Models\stay;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -201,6 +202,30 @@ class Beds extends Component
             'discharge_time' => null,
         ]);
 
+        // Allocation opens the stay the ward screen and discharge history
+        // read - without it an admitted patient leaves no IPD record at all.
+        $openStay = stay::where('bed_id', $bed->id)->where('status', 'active')->first()
+            ?? stay::where('patient_id', $patientId)->where('status', 'active')->first();
+
+        if (! $openStay) {
+            stay::create([
+                'patient_id' => $patientId,
+                'room_id' => $bed->room_id,
+                'bed_id' => $bed->id,
+                'start_time' => now()->timestamp,
+                'status' => 'active',
+                'amount' => 0,
+                'discount' => 0,
+                'total' => 0,
+            ]);
+        } else {
+            $openStay->update([
+                'patient_id' => $patientId,
+                'room_id' => $bed->room_id,
+                'bed_id' => $bed->id,
+            ]);
+        }
+
         unset($this->allocatePatient[$bedId]);
 
         session()->flash('message', 'Bed '.$bed->label().' allocated.');
@@ -215,11 +240,28 @@ class Beds extends Component
         $this->authorizeAction('beds.allocate');
 
         $bed = ModelsBeds::findOrFail($bedId);
+
+        // Close the open stay first, while the bed still remembers its patient.
+        $openStay = stay::where('bed_id', $bed->id)->where('status', 'active')->first()
+            ?? ($bed->patient_id
+                ? stay::where('patient_id', $bed->patient_id)->where('status', 'active')->first()
+                : null);
+
         $bed->update([
             'patient_id' => null,
             'status' => 'cleaning',
             'discharge_time' => now(),
         ]);
+
+        if ($openStay) {
+            $openStay->update([
+                'status' => 'completed',
+                'end_time' => now()->timestamp,
+                'discharged_at' => now(),
+                'discharge_type' => $openStay->discharge_type ?: 'normal',
+                'discharged_by' => auth()->id(),
+            ]);
+        }
 
         session()->flash('message', 'Bed '.$bed->label().' released, pending cleaning.');
     }

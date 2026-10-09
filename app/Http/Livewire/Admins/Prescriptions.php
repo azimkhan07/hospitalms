@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Admins;
 
+use App\Models\appointment;
 use App\Models\medicine;
 use App\Models\patient;
 use App\Models\Prescription;
@@ -9,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -25,6 +27,10 @@ class Prescriptions extends Component
 
     public ?int $patientId = null;
 
+    /** The OPD visit this script belongs to, handed over from Consultations. */
+    #[Url]
+    public string $appointment = '';
+
     public string $notes = '';
 
     public array $items = [];
@@ -32,6 +38,15 @@ class Prescriptions extends Component
     public function mount(): void
     {
         $this->items = [$this->blankItem()];
+
+        if ($this->appointment !== '') {
+            $appt = appointment::find((int) $this->appointment);
+
+            if ($appt) {
+                $this->patientId = $appt->patient_id;
+                $this->showForm = true;
+            }
+        }
     }
 
     private function blankItem(): array
@@ -60,10 +75,27 @@ class Prescriptions extends Component
         return view('livewire.admins.prescriptions', [
             'prescriptions' => $prescriptions,
             'patients' => patient::orderBy('name')->limit(300)->get(),
+            // The picker is stock-aware: only usable lines are selectable,
+            // expired / out-of-stock lines show in red but cannot be chosen.
             'medicines' => medicine::usable()->orderBy('name')->limit(300)->get(),
+            'unavailableMedicines' => medicine::whereNull('deleted_at')
+                ->whereNotNull('name')
+                ->where(function ($q) {
+                    $q->where(function ($q) {
+                        $q->whereNotNull('expiry_date')->whereDate('expiry_date', '<', today());
+                    })->orWhere(function ($q) {
+                        $q->whereNotNull('stock')->where('stock', '<=', 0);
+                    });
+                })
+                ->orderBy('name')
+                ->limit(200)
+                ->get(),
             'doctors' => User::whereHas('role', fn ($r) => $r->whereIn('slug', ['doctor', 'admin']))
                 ->orderBy('name')
                 ->get(),
+            'linkedAppointment' => $this->appointment !== ''
+                ? appointment::with('patient:id,name')->find((int) $this->appointment)
+                : null,
         ]);
     }
 
@@ -97,10 +129,20 @@ class Prescriptions extends Component
             'items.*.medicine.required' => 'Medicine name is required on every row.',
         ]);
 
-        DB::transaction(function () {
+        $linkedAppointment = $this->appointment !== ''
+            ? appointment::find((int) $this->appointment)
+            : null;
+
+        if ($linkedAppointment && (int) $linkedAppointment->patient_id !== (int) $this->patientId) {
+            $linkedAppointment = null;
+            $this->appointment = '';
+        }
+
+        DB::transaction(function () use ($linkedAppointment) {
             $prescription = Prescription::create([
                 'patient_id' => $this->patientId,
                 'doctor_id' => auth()->id(),
+                'appointment_id' => $linkedAppointment?->id,
                 'notes' => $this->notes ?: null,
                 'status' => 'issued',
                 'issued_at' => Carbon::now(),

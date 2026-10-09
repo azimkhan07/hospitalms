@@ -6,10 +6,11 @@ use App\Models\Concerns\BelongsToTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class payment extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, SoftDeletes;
     protected $fillable = [
         'patient_id',
         'bill_id',

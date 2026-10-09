@@ -14,6 +14,7 @@ class doctor extends Model
     use BelongsToTenant, HasFactory, SoftDeletes;
     protected $fillable = [
         'employee_id',
+        'user_id',
     ];
 
     /**
@@ -24,5 +25,11 @@ class doctor extends Model
     public function employ(): BelongsTo
     {
         return $this->belongsTo(employee::class,'employee_id','id');
+    }
+
+    /** The staff login that acts as this doctor (for scoping "my patients"). */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

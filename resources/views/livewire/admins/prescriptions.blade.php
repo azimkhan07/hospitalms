@@ -23,6 +23,14 @@
 
                 @if ($showForm)
                     <form wire:submit.prevent="save" class="border rounded p-2 mb-2">
+                        @if ($linkedAppointment)
+                            <div class="mb-2">
+                                <span class="badge badge-info">
+                                    OPD visit #{{ $linkedAppointment->id }}
+                                    {{ $linkedAppointment->patient?->name }}
+                                </span>
+                            </div>
+                        @endif
                         <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label>Patient</label>
@@ -63,13 +71,25 @@
                                 @foreach ($items as $i => $item)
                                     <tr>
                                         <td>
-                                            <input list="hms-medicines" type="text"
-                                                class="form-control form-control-sm" wire:model="items.{{ $i }}.medicine">
-                                            <datalist id="hms-medicines">
+                                            <select class="form-control form-control-sm"
+                                                wire:model="items.{{ $i }}.medicine">
+                                                <option value="">Choose medicine</option>
                                                 @foreach ($medicines as $m)
-                                                    <option value="{{ $m->name }}"></option>
+                                                    <option value="{{ $m->name }}">
+                                                        {{ $m->name }}{{ $m->stock !== null ? ' (stock '.$m->stock.')' : '' }}
+                                                    </option>
                                                 @endforeach
-                                            </datalist>
+                                                @if ($unavailableMedicines->isNotEmpty())
+                                                    <optgroup label="Not available (expired / out of stock)">
+                                                        @foreach ($unavailableMedicines as $m)
+                                                            <option value="{{ $m->name }}" disabled
+                                                                style="color:#dc3545">
+                                                                {{ $m->name }} (unavailable)
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
+                                            </select>
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm"

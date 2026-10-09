@@ -80,6 +80,14 @@ Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function 
 
     Route::get('/appointment', App\Http\Livewire\Admins\Appiontment::class)->name('appointment');
 
+    Route::get('/consultations', App\Http\Livewire\Admins\Consultations::class)->name('admin_consultations');
+
+    Route::get('/vitals', App\Http\Livewire\Admins\Vitals::class)->name('admin_vitals');
+
+    Route::get('/ward', App\Http\Livewire\Admins\Ward::class)->name('admin_ward');
+
+    Route::get('/lab', App\Http\Livewire\Admins\LabOrders::class)->name('admin_lab_orders');
+
     Route::get('/blocks', App\Http\Livewire\Admins\Blocks::class)->name('blocks');
 
     Route::get('/hods', App\Http\Livewire\Admins\Hods::class)->name('hods');

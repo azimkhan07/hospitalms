@@ -603,6 +603,11 @@ if (! function_exists('hms_sidebar_tree')) {
                 'icon' => 'fa-stethoscope',
                 'children' => [
                     ['label' => 'Appointments', 'route' => 'appointment', 'module' => 'appointments'],
+                    ['label' => 'Consultations (OPD)', 'route' => 'admin_consultations', 'module' => 'appointments',
+                        // The consult screen is the doctor's desk: it only ever
+                        // lists the appointments owned by the signed-in doctor.
+                        'enabledWhen' => fn () => auth()->user()?->hasRole('doctor')],
+                    ['label' => 'Vitals', 'route' => 'admin_vitals', 'module' => 'vitals'],
                     ['label' => 'Prescriptions', 'route' => 'admin_prescriptions', 'module' => 'prescriptions'],
                     ['label' => 'Patient History', 'route' => 'admin_history', 'module' => 'history'],
                     ['label' => 'Discharge History', 'route' => 'admin_discharges', 'module' => 'discharges'],
@@ -625,6 +630,7 @@ if (! function_exists('hms_sidebar_tree')) {
                 'children' => [
                     ['label' => 'Rooms', 'route' => 'rooms', 'module' => 'rooms'],
                     ['label' => 'Beds', 'route' => 'patients_beds', 'module' => 'beds'],
+                    ['label' => 'Ward (IPD)', 'route' => 'admin_ward', 'module' => 'ward'],
                     ['label' => 'Blocks', 'route' => 'blocks', 'module' => 'blocks'],
                     ['label' => 'Departments', 'route' => 'departments', 'module' => 'departments'],
                 ],
@@ -636,6 +642,7 @@ if (! function_exists('hms_sidebar_tree')) {
                     ['label' => 'Machines', 'route' => 'admin_machines', 'module' => 'machines'],
                     ['label' => 'Angio / Cath Lab', 'route' => 'admin_angio_machines', 'module' => 'angio'],
                     ['label' => 'Rate Card', 'route' => 'admin_investigations', 'module' => 'investigations'],
+                    ['label' => 'Lab Orders', 'route' => 'admin_lab_orders', 'module' => 'lab'],
                     ['label' => 'Bed Reports', 'route' => 'admin_bed_reports', 'module' => 'bedreports'],
                 ],
             ],

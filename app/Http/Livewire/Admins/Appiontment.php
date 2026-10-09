@@ -52,7 +52,7 @@ class Appiontment extends Component
             'doctor' => 'required|exists:doctors,id',
             'start_timeee' => 'required|date',
             'endtime' => 'nullable|date|after_or_equal:start_timeee',
-            'status' => 'required|in:pending,confirmed,completed,cancelled',
+            'status' => 'required|in:'.implode(',', appointment::STATUSES),
             'notes' => 'nullable|max:500',
             'angioMachineId' => 'nullable|exists:angio_machines,id',
             'schemeId' => 'nullable|exists:schemes,id',
@@ -82,7 +82,7 @@ class Appiontment extends Component
 
     public function edit($id): void
     {
-        $appointment = appointment::findOrFail($id);
+        $appointment = $this->scoped()->findOrFail($id);
 
         $this->edit_appointment_id = $id;
         $this->patient = $appointment->patient_id;
@@ -104,13 +104,13 @@ class Appiontment extends Component
             'doctor' => 'required|exists:doctors,id',
             'start_timeee' => 'required|date',
             'endtime' => 'nullable|date|after_or_equal:start_timeee',
-            'status' => 'required|in:pending,confirmed,completed,cancelled',
+            'status' => 'required|in:'.implode(',', appointment::STATUSES),
             'notes' => 'nullable|max:500',
             'angioMachineId' => 'nullable|exists:angio_machines,id',
             'schemeId' => 'nullable|exists:schemes,id',
         ]);
 
-        $appointment = appointment::findOrFail($id);
+        $appointment = $this->scoped()->findOrFail($id);
         $appointment->update([
             'patient_id' => $this->patient,
             'doctor_id' => $this->doctor,
@@ -131,9 +131,44 @@ class Appiontment extends Component
 
     public function delete($id): void
     {
-        appointment::findOrFail($id)->delete();
+        $this->scoped()->findOrFail($id)->delete();
 
         session()->flash('message', 'Appointment deleted successfully.');
+    }
+
+    /** Reception check-in: the patient has arrived and is waiting. */
+    public function markWaiting(int $id): void
+    {
+        $appointment = $this->scoped()->findOrFail($id);
+
+        if (! in_array($appointment->status, ['pending', 'confirmed'], true)) {
+            session()->flash('error', 'Only a pending or confirmed appointment can arrive.');
+
+            return;
+        }
+
+        $appointment->update(['status' => 'waiting']);
+        session()->flash('message', 'Patient marked as waiting.');
+    }
+
+    public function goVitals(int $id): void
+    {
+        $this->redirect(route('admin_vitals', ['appointment' => $id]));
+    }
+
+    /**
+     * A doctor logging in only ever touches their own rows; everyone else
+     * (reception, admin) sees the whole board.
+     */
+    private function scoped()
+    {
+        $query = appointment::query();
+
+        if (auth()->user()?->hasRole('doctor')) {
+            $query->ownedBy((int) auth()->id());
+        }
+
+        return $query;
     }
 
     public function cancelEdit(): void
@@ -154,7 +189,8 @@ class Appiontment extends Component
             abort(403);
         }
 
-        $appointments = appointment::with(['patient:id,name', 'doctor.employ:id,name', 'angioMachine:id,name', 'scheme:id,name'])
+        $appointments = $this->scoped()
+            ->with(['patient:id,name', 'doctor.employ:id,name', 'angioMachine:id,name', 'scheme:id,name'])
             ->when($this->search !== '', function ($q) {
                 $term = '%'.mb_strtolower($this->search).'%';
                 $q->whereHas('patient', fn ($p) => $p->whereRaw('LOWER(name) LIKE ?', [$term]));
@@ -162,12 +198,16 @@ class Appiontment extends Component
             ->orderByDesc('intime')
             ->paginate(15);
 
+        $isDoctor = auth()->user()?->hasRole('doctor');
+
         return view('livewire.admins.appiontment', [
             'patients' => patient::orderBy('name')->limit(300)->get(),
             'doctors' => doctor::with('employ:id,name')->get(),
             'angioMachines' => \App\Models\AngioMachine::orderBy('name')->get(['id', 'name']),
             'schemes' => \App\Models\Scheme::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'appointments' => $appointments,
+            'statusFlow' => appointment::STATUSES,
+            'showCreateForm' => ! $isDoctor,
         ]);
     }
 }

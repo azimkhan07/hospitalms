@@ -11,20 +11,20 @@ Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
 ## 0. Progress Overview
 
 ```
-Overall              [######...]  ~48%   (foundation + mode + landing + booking + super admin core + API v1 auth + angio/schemes + dashboard KPIs done)
+Overall              [######...]  ~53%   (foundation + mode + landing + booking + super admin core + API v1 auth + angio/schemes + dashboard KPIs + OPD/IPD workflow done)
 
 Phase 1 Super Admin  [######....]   65%   (auth, panel, tenant CRUD, error monitor built + smoke-tested)
 Phase 2 Admin        [######....]   56%   (settings + mode + staff + angio machines + govt schemes + patient filters + facilities tab)
-Phase 3 Reception    [#.........]   10%   (appointment module exists; angio/scheme on appointment added)
-Phase 4 Doctor       [##........]   20%   (prescriptions/history exist)
-Phase 5 Lab          [..........]    0%
-Phase 6 Nurse (IPD)  [..........]    0%
+Phase 3 Reception    [###.......]   35%   (appointment module + website-request approval + reception vitals + bed admission; queue/token + on-duty list pending)
+Phase 4 Doctor       [#####.....]   55%   (own appointments + consult screen + vitals + lab order/report + stock-aware Rx; ICD-10 + auto follow-up pending)
+Phase 5 Lab          [####......]   40%   (pending/in-progress/reported queue + result entry + publish to doctor; sample/barcode + file upload pending)
+Phase 6 Nurse (IPD)  [###.......]   30%   (ward vitals + discharge with reason → bed cleaning; meds chart + shifts pending)
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
 Phase 8 Accountant   [#######...]   50%   (GST-ready invoices, ledger + income/expense vouchers, salary run, scheme/angio income ledger)
 Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
 Phase 10 Reports/Notify [##########] 100%  (reports hub + CSV + API mirror + per-role dashboard KPIs + SMS/WhatsApp + print-out done)
 Phase 11 Platform/Multi-tenant [#######...] 75%   (host→tenant middleware, cross-tenant snapshot, audit trail, backup cmd; per-tenant DB = shared-schema by design)
-API v1 (mobile)      [##........]   20%   (Sanctum auth + site/appointments/admin/superadmin endpoints live; angio/schemes mirrored)
+API v1 (mobile)      [###.......]   35%   (Sanctum auth + site/appointments/admin/superadmin endpoints live; angio/schemes + clinical vitals/stays/lab mirrored)
 ```
 
 Legend: `[#]` done · `[.]` pending. Recalculate `done / total` per phase when updating.
@@ -211,17 +211,17 @@ Goal: patient walks in → registered → queued → sent to doctor; hospital ad
 
 - [x] Public + admin appointment table, status, edit/cancel, search.
 - [x] Public website booking (`appointmentform`) → `requested_appointments`.
-- [ ] Admin approves a website request → creates a real patient + appointment (with doctor).
+- [x] Admin approves a website request → creates a real patient + appointment (with doctor).
 - [ ] **Patient registration**: name, age/DOB, gender, phone, address, emergency contact, photo, UHID (unique patient id).
 - [ ] Search existing patient before creating a new one (avoid duplicates).
 - [ ] **Queue / token**: assign token number; list of waiting patients.
 - [ ] **Bell to call patient:** doctor presses "Call next" → receptionist screen highlights "send [patient] in". (Livewire event/poll.)
-- [ ] Vitals capture at reception: BP, pulse, temperature, SpO2, weight, height (feeds doctor screen).
-- [ ] **Clinic OPD:** register → vitals → queue → doctor.
+- [x] Vitals capture at reception: BP, pulse, temperature, SpO2, weight, height (feeds doctor screen).
+- [x] **Clinic OPD:** register → vitals → queue → doctor.
 - [ ] **Hospital OPD:** + write **disease/chief complaint**, mark **OPD or IPD**.
-- [ ] **IPD admission:** choose ward/bed from **available** beds → set bed `reserved` → assign doctor.
+- [x] **IPD admission:** choose ward/bed from **available** beds → set bed `reserved` → assign doctor.
 - [ ] **Assign doctor:** show doctors on duty/available; see recommendation in §9.
-- [ ] Appointment states (see §8): `requested → scheduled → waiting → in_consult → treated/done → (pending) → terminated`.
+- [x] Appointment states (see §8): `requested → scheduled → waiting → in_consult → treated/done → (pending) → terminated`.
 - [ ] "Today" list: only today's + upcoming; completed move to Treated list and disappear from Today.
 - [ ] **3-day rule:** an appointment not completed within 3 days auto-moves to `pending`, then `terminated` (configurable).
 - [ ] Follow-up appointment auto-created when doctor sets a follow-up date.
@@ -236,18 +236,18 @@ Goal: patient walks in → registered → queued → sent to doctor; hospital ad
 Goal: see patients (clinic common tasks) and manage clinical records.
 
 - [x] Prescription model + list + history foundations.
-- [ ] Doctor sees only **their own** appointments (assigned to them).
-- [ ] Patient check screen: complaint, history, allergies, previous visits, current vitals.
-- [ ] Update vitals (can edit what reception/nurse captured).
+- [x] Doctor sees only **their own** appointments (assigned to them).
+- [x] Patient check screen: complaint, history, allergies, previous visits, current vitals.
+- [x] Update vitals (can edit what reception/nurse captured).
 - [ ] Diagnosis (with ICD-10 code list), notes.
 - [ ] **E-prescription:**
-  - [ ] Medicine picker shows **only available stock** (batch + qty).
-  - [ ] Expired / out-of-stock shown in **red and not selectable**.
+  - [x] Medicine picker shows **only available stock** (batch + qty).
+  - [x] Expired / out-of-stock shown in **red and not selectable**.
   - [ ] Per medicine: dosage, **timing/frequency**, **number of days**.
   - [ ] **Quantity auto-calculated** = dose × frequency × days.
-  - [ ] Save → appears on pharmacist screen (and IPD drug chart).
-- [ ] **Order investigations:** tick lab/radiology tests → lab receives order.
-- [ ] **View lab report** when patient returns; adjust or continue medicine.
+  - [x] Save → appears on pharmacist screen (and IPD drug chart).
+- [x] **Order investigations:** tick lab/radiology tests → lab receives order.
+- [x] **View lab report** when patient returns; adjust or continue medicine.
 - [ ] **Follow-up date** → auto-create next appointment.
 - [ ] Referral to another doctor/department (optional).
 - [ ] IPD: daily rounds notes, change orders, discharge order + discharge summary.
@@ -261,15 +261,15 @@ Goal: see patients (clinic common tasks) and manage clinical records.
 
 Goal: perform ordered tests and publish reports online to the doctor + patient portal.
 
-- [ ] Lab dashboard: pending orders, in-progress, completed.
-- [ ] Doctor order creates a lab request (patient, tests, priority: routine/STAT).
+- [x] Lab dashboard: pending orders, in-progress, completed.
+- [x] Doctor order creates a lab request (patient, tests, priority: routine/STAT).
 - [ ] **Call the patient** (status + contact shown) → schedule collection.
 - [ ] Sample collection + barcode/label, sample status.
-- [ ] Result entry (manual now; analyzer interface later).
+- [x] Result entry (manual now; analyzer interface later).
 - [ ] Attach / upload report file + structured values.
-- [ ] Report auto-**published to doctor** and to patient record (view-only).
+- [x] Report auto-**published to doctor** and to patient record (view-only).
 - [ ] Critical value alert to doctor (optional).
-- [ ] Test master (name, price, reference range) + packages.
+- [x] Test master (name, price, reference range) + packages.
 - [ ] Lab billing line added to invoice.
 - [ ] (Optional) Radiology tie-in: X-ray/USG/CT order → report upload.
 
@@ -286,11 +286,11 @@ Goal: execute doctor's orders round the clock and log everything via the system.
 - [ ] **Step-by-step condition notes** (timeline) until discharge.
 - [ ] Drug administration record (what/when/given by).
 - [ ] Alert doctor (in-app) if critical.
-- [ ] **Discharge handling** — reason captured:
-  - [ ] Recovered / improved
-  - [ ] Expired
-  - [ ] Taken away by family (LAMA / DAMA)
-  - [ ] Transferred
+- [x] **Discharge handling** — reason captured:
+  - [x] Recovered / improved
+  - [x] Expired
+  - [x] Taken away by family (LAMA / DAMA)
+  - [x] Transferred
 - [ ] On discharge → bed goes `cleaning` → `available`; final bill prepared.
 - [ ] Handover notes between shifts (optional).
 
@@ -792,3 +792,61 @@ _Document created for the HMS build. Next action: Phase 1 done; Phase 2 in
 progress — §9c.1/§9c.2 (clinic type + required roles), §9c.3 (facilities tab),
 §9c.5 (global export) and §9d API mirrors are shipped; next up is §9c.4 (admin +
 Dean CRUD for each ticked role), then Phase 3 (receptionist + appointments)._
+
+---
+
+## 18f. Clinical OPD + IPD workflow — done 2026-10-08
+
+The clinical layer that made the app a real hospital system: reception →
+doctor → lab runs as one chain, and ward admission → vitals → discharge runs
+as the other. New migration `2026_10_08_000100_clinical_opd_ipd_workflow.php`
+(`vitals` table; appointment `chief_complaint`/`diagnosis`/`follow_up_at` and
+widened status enum; prescription/stay/investigation-report/request links;
+soft deletes across clinical + billing tables).
+
+- [x] **OPD check-in** — `Vitals` Livewire (`admin_vitals`): BP/pulse/temp/SpO2/
+      weight/height, range-validated, "at least one reading" rule, one encounter
+      at a time; advancing a `confirmed` visit to `waiting`.
+- [x] **Consultations (OPD)** — doctor-only `Consultations` (`admin_consultations`)
+      with today/treated/all tabs; complaint + diagnosis + follow-up; complete;
+      order investigations (routine/STAT, creates the lab request); inline vitals
+      and per-visit lab results; prescriptions hand-off.
+- [x] **Doctor scoping** — `appointment::scopeOwnedBy()` + `doctors.user_id` link;
+      the appointment list/board and the API status endpoint only expose the
+      signed-in doctor's own visits (other doctors' ids answer `404`).
+- [x] **IPD ward** — `Ward` (`admin_ward`): admit from `available` beds (bed →
+      `alloted`, opens a `stay`), discharge with a reason → stay `completed`,
+      bed → `cleaning`; `DischargeHistory` now labels the full outcome list.
+- [x] **Lab queue** — `LabOrders` (`admin_lab_orders`): pending / in-progress /
+      reported tabs, urgent-first, start → report (findings or result required)
+      → `reported` with `reported_by`/`reported_at`, cancel.
+- [x] **Stock-aware prescribing** — `Prescriptions` links to the OPD visit and
+      offers only live stock; expired / zero-stock medicines are shown red and
+      unselectable (FR-08).
+- [x] **Website-request approval** — `RequestedAppointments::approve()` matches or
+      creates the patient, books the appointment (`confirmed`) and links both.
+- [x] **Staff ↔ doctor profile** — `StaffDirectory::syncDoctorProfile()` creates
+      the `employees` (`position=doctor`) + `doctors` rows and links `user_id`
+      when a doctor login is created (receptionist/nurse logins get no profile).
+- [x] **API mirrors** — `Api/V1/Admin/ClinicalController` (`POST /admin/vitals`,
+      `GET /admin/vitals`, `GET /admin/stays`, `POST /admin/stays/admit`,
+      `POST /admin/stays/{id}/discharge`, `GET /admin/lab-orders`,
+      `POST /admin/lab-orders/{id}/report`, `PATCH /admin/appointments/{id}/status`);
+      `ResourceController` now `hms_can`-gated with tenant scoping on staff.
+- [x] **Ops** — nightly `hms:backup` schedule + retention prune (`hms.backup_keep_days`).
+- [x] Tests: `tests/Feature/ClinicalWorkflowTest.php` + `ClinicalApiTest.php`
+      (16 tests: role matrix, tenant isolation, module 403s, OPD/IPD chains).
+      Full suite **153 tests / 524 assertions green**; browser smoke 4/4 new
+      pages, 0 console errors.
+
+**Still deferred (honest list):** OPD queue/token + "call next" bell, reception
+on-duty doctor list, 3-day auto-terminate, follow-up auto-booking, ICD-10,
+per-medicine dose/frequency/days + quantity auto-calc, lab sample/barcode + file
+upload + critical alerts, nurse drug chart / shift handover / doctor alert,
+discharge final-bill, billing line items, duty roster, Jitsi in-system meetings
+(user: "later").
+
+---
+
+_Next action: §9c.4 admin/Dean CRUD for ticked roles, then close the remaining
+Phase 3 reception gaps (queue/token, on-duty list) and Phase 6 meds chart._

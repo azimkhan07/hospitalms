@@ -4,6 +4,14 @@
             <div class="row page-title row">
                 <div class="col">
                     <h3 class="text-info">Website Appointment Requests</h3>
+                    <div class="mt-1">
+                        @foreach (['pending' => 'Pending', 'approved' => 'Approved', 'cancelled' => 'Declined', 'all' => 'All'] as $key => $label)
+                            <button class="btn btn-sm {{ $statusFilter === $key ? 'btn-info' : 'btn-outline-info' }} mr-1"
+                                wire:click="$set('statusFilter', '{{ $key }}')">
+                                {{ $label }} @if ($key !== 'all')<span class="badge badge-light">{{ $counts[$key] ?? 0 }}</span>@endif
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-sm btn-primary" wire:click="show_create_form">Add New</button>
@@ -17,6 +25,9 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+                @endif
+                @if (session()->has('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
             </div>
             <div class="box box-primary">
@@ -50,6 +61,18 @@
                                     <td>{{ \Illuminate\Support\Str::limit($request->message, 40) }}</td>
                                     <td>{{ $request->stime ? \Illuminate\Support\Carbon::parse($request->stime)->format('d M Y, h:i A') : '-' }}</td>
                                     <td class="text-right">
+
+                                        @if ($request->status === 'pending')
+                                            <button wire:click="approve({{ $request->id }})"
+                                                title="Accept: register patient + book appointment"
+                                                class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></button>
+                                            <button wire:click="cancelRequest({{ $request->id }})"
+                                                title="Decline request" class="btn btn-sm btn-outline-secondary"><i class="fas fa-ban"></i></button>
+                                        @else
+                                            <span class="badge {{ $request->status === 'approved' ? 'badge-success' : 'badge-secondary' }}">
+                                                {{ ucfirst($request->status) }}
+                                            </span>
+                                        @endif
 
                                         @if (
                                             !App\Models\patient::where([

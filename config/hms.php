@@ -29,9 +29,11 @@ return [
 'modules' => [
                 'dashboard', 'meetings', 'meetings.manage', 'leave', 'leave.review',
                 'attendance', 'calendar', 'calendar.manage',
-'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
-'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
-'reports', 'deliveries', 'deliveries.manage', 'schemes', 'printout', 'facilities',
+                'staff', 'appointments', 'prescriptions', 'history', 'medicines', 'medicines.manage',
+                'expiry', 'patients', 'bills', 'accounting', 'subscribers', 'messages', 'settings',
+                'reports', 'deliveries', 'deliveries.manage', 'schemes', 'printout', 'facilities',
+                // OPD/IPD clinical workflow (PLAN.md section 6/7).
+                'vitals', 'ward', 'ward.discharge', 'lab',
             ],
         ],
         'hospital' => [
@@ -81,9 +83,12 @@ return [
             // the machines and the prices (PLAN.md 9d.4).
             'machines', 'investigations', 'bedreports',
             // Angio (cath lab) machines and Government schemes (yojna): the
-            // admin reads and manages patients/appointments; the Dean owns the
-            // angio machine master and the accountant books scheme money.
+            // admin can see the rate card and the ICU reports, the Dean owns
+            // the angio machine master and the accountant books scheme money.
             'angio', 'schemes', 'printout', 'facilities',
+            // Clinical workflow: the admin reviews but does not discharge a
+            // patient (same read-only pattern as rooms/beds).
+            'vitals', 'ward', 'lab',
         ],
     ],
     'moderator' => [
@@ -101,6 +106,7 @@ return [
             'prescriptions', 'history', 'discharges', 'meetings', 'meetings.manage',
             'attendance', 'leave', 'leave.review', 'subscribers', 'messages',
             'calendar', 'calendar.manage', 'deliveries', 'deliveries.manage',
+            'vitals', 'ward', 'ward.discharge', 'lab',
         ],
     ],
 'doctor' => [
@@ -110,6 +116,8 @@ return [
 'dashboard', 'patients', 'operations', 'births', 'attendance',
         'appointments', 'prescriptions', 'history', 'meetings', 'calendar', 'leave',
         'bedreports', 'printout',
+        // OPD consult + IPD rounds: own appointments, vitals, ward + discharge.
+        'vitals', 'ward', 'ward.discharge',
         ],
     ],
 'nurse' => [
@@ -119,6 +127,8 @@ return [
 'dashboard', 'patients', 'beds', 'beds.status', 'rooms', 'nurses',
         'attendance', 'history', 'meetings', 'calendar', 'leave',
         'machines', 'bedreports', 'printout',
+        // Ward management: admitted list, vitals, discharge, discharge history.
+        'ward', 'ward.discharge', 'vitals', 'discharges',
         ],
     ],
     'receptionist' => [
@@ -130,6 +140,8 @@ return [
             // The bed map is read-only here; allocation itself is allowed so
             // the counter can hand a free bed to a patient (PLAN.md section 9b).
             'rooms', 'beds', 'beds.allocate', 'printout',
+            // OPD check-in: capture vitals when the patient arrives.
+            'vitals',
         ],
     ],
     'pharmacist' => [
@@ -144,6 +156,9 @@ return [
         'icon' => 'fa-flask',
         'modules' => [
             'dashboard', 'patients', 'history', 'attendance', 'meetings', 'calendar', 'leave',
+            // The lab queue: pending orders -> result entry, plus the ICU
+            // studies recorded from the ward (PLAN.md 9d).
+            'lab', 'bedreports',
         ],
     ],
 'accountant' => [

@@ -61,7 +61,33 @@ class BackupDatabase extends Command
 
         $this->info('Backup manifest written to '.$path);
 
+        $this->pruneOldBackups($dir);
+
         return self::SUCCESS;
+    }
+
+    /**
+     * Retention: keep the newest two weeks of snapshots, drop the rest.
+     */
+    private function pruneOldBackups(string $dir): int
+    {
+        $keepDays = max(1, (int) config('hms.backup_keep_days', 14));
+        $cutoff = now()->subDays($keepDays)->getTimestamp();
+        $removed = 0;
+
+        foreach (glob($dir.DIRECTORY_SEPARATOR.'*') ?: [] as $file) {
+            if (is_file($file) && @filemtime($file) < $cutoff) {
+                if (@unlink($file)) {
+                    $removed++;
+                }
+            }
+        }
+
+        if ($removed) {
+            $this->info($removed.' backup file(s) older than '.$keepDays.' days removed.');
+        }
+
+        return $removed;
     }
 
     private function locateMysqldump(): ?string

@@ -37,7 +37,27 @@ class InvestigationReport extends Model
         'reported_at' => 'datetime',
     ];
 
-    public const STATUSES = ['pending', 'reported', 'cancelled'];
+    public const STATUSES = ['pending', 'in_progress', 'reported', 'cancelled'];
+
+    public function patient(): BelongsTo
+    {
+        return $this->belongsTo(patient::class);
+    }
+
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(appointment::class);
+    }
+
+    public function orderedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ordered_by');
+    }
+
+    public function reportedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reported_by');
+    }
 
     public function test(): BelongsTo
     {

@@ -5,12 +5,14 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\Concerns\RecordsActivity;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class appointment extends Model
 {
-    use BelongsToTenant, HasFactory, RecordsActivity;
+    use BelongsToTenant, HasFactory, RecordsActivity, SoftDeletes;
 
     protected $fillable = [
         'patient_id',
@@ -23,11 +25,21 @@ class appointment extends Model
         'notes',
         'description',
         'prescription',
+        'chief_complaint',
+        'diagnosis',
+        'follow_up_at',
+    ];
+
+    /** The OPD flow a receptionist and a doctor walk an appointment through. */
+    public const STATUSES = [
+        'pending', 'confirmed', 'waiting', 'in_consult',
+        'completed', 'cancelled', 'terminated',
     ];
 
     protected $casts = [
         'intime' => 'datetime',
         'outtime' => 'datetime',
+        'follow_up_at' => 'date',
     ];
 
     /**
@@ -69,5 +81,27 @@ class appointment extends Model
     public function checkups()
     {
         return $this->hasMany(patientCheckup::class);
+    }
+
+    public function vitals()
+    {
+        return $this->hasMany(Vital::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
+
+    /**
+     * A doctor only ever reads their own appointments: rows whose doctor
+     * profile is linked to this login (doctors.user_id).
+     */
+    public function scopeOwnedBy(Builder $query, int $userId): Builder
+    {
+        return $query->whereHas(
+            'doctor',
+            fn (Builder $d) => $d->where('user_id', $userId)
+        );
     }
 }

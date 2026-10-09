@@ -6,12 +6,13 @@ use App\Models\Concerns\BelongsToTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Prescription extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
-    protected $fillable = ['patient_id', 'doctor_id', 'notes', 'status', 'issued_at', 'dispensed_at', 'dispensed_by', 'payment_status'];
+    protected $fillable = ['patient_id', 'doctor_id', 'appointment_id', 'notes', 'status', 'issued_at', 'dispensed_at', 'dispensed_by', 'payment_status'];
 
     protected $casts = [
         'issued_at' => 'datetime',
@@ -26,6 +27,11 @@ class Prescription extends Model
     public function doctor()
     {
         return $this->belongsTo(User::class, 'doctor_id');
+    }
+
+    public function appointment()
+    {
+        return $this->belongsTo(appointment::class);
     }
 
     public function items()
