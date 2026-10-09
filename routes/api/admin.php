@@ -59,4 +59,7 @@ Route::prefix('admin')
         Route::post('/queue/call-next', [QueueController::class, 'callNext'])->name('queue.call-next');
         Route::post('/appointments/{appointmentId}/send-in', [QueueController::class, 'sendIn'])->name('appointments.send-in');
         Route::patch('/doctors/on-duty', [QueueController::class, 'toggleDuty'])->name('doctors.on-duty');
+
+        require __DIR__.'/nurse.php';
+        require __DIR__.'/billing.php';
     });

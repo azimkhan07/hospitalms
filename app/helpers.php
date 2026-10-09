@@ -631,6 +631,8 @@ if (! function_exists('hms_sidebar_tree')) {
                     ['label' => 'Rooms', 'route' => 'rooms', 'module' => 'rooms'],
                     ['label' => 'Beds', 'route' => 'patients_beds', 'module' => 'beds'],
                     ['label' => 'Ward (IPD)', 'route' => 'admin_ward', 'module' => 'ward'],
+                    ['label' => 'Drug Chart', 'route' => 'admin_nurse_drug_charts', 'module' => 'ward'],
+                    ['label' => 'Shift Handover', 'route' => 'admin_nurse_handovers', 'module' => 'ward'],
                     ['label' => 'Blocks', 'route' => 'blocks', 'module' => 'blocks'],
                     ['label' => 'Departments', 'route' => 'departments', 'module' => 'departments'],
                 ],
@@ -663,6 +665,7 @@ if (! function_exists('hms_sidebar_tree')) {
                 'children' => [
                     ['label' => 'Accountant Desk', 'route' => 'admin_accounting', 'module' => 'accounting'],
                     ['label' => 'Patient Bills', 'route' => 'patient_bills', 'module' => 'bills'],
+                    ['label' => 'Day Book', 'route' => 'admin_day_book', 'module' => 'accounting'],
                 ],
             ],
             [

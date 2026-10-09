@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Admins;
 
 use App\Notifications\AppointmentCalled;
+use App\Notifications\DoctorAlertRaised;
 use App\Notifications\LeaveRequestStatus;
 use App\Notifications\LeaveRequested;
 use App\Notifications\MeetingScheduled;
@@ -32,12 +33,14 @@ class NotificationBell extends Component
                 'icon' => match ($n->type) {
                     MeetingScheduled::class => 'fa-calendar-alt',
                     AppointmentCalled::class => 'fa-bell',
+                    DoctorAlertRaised::class => 'fa-exclamation-triangle',
                     LeaveRequested::class, LeaveRequestStatus::class => 'fa-plane-departure',
                     default => 'fa-bell',
                 },
                 'colour' => match ($n->type) {
                     MeetingScheduled::class => 'text-info',
                     AppointmentCalled::class => 'text-danger',
+                    DoctorAlertRaised::class => 'text-danger',
                     LeaveRequested::class => 'text-warning',
                     LeaveRequestStatus::class => $n->data['status'] === 'approved' ? 'text-success' : 'text-danger',
                     default => 'text-muted',
@@ -60,6 +63,11 @@ class NotificationBell extends Component
     {
         if ($notification->type === MeetingScheduled::class) {
             return route('admin_meetings');
+        }
+
+        // kind 'doctor-alert': the escalation is answered from the doctor desk.
+        if ($notification->type === DoctorAlertRaised::class) {
+            return route('admin_consultations');
         }
 
         return route('admin_leave');

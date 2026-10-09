@@ -112,4 +112,7 @@ Route::middleware(['tenant.host', 'auth', 'checksuperadmin'])->prefix('admin')->
 
     Route::get('/prints/prescription/{prescription}', [App\Http\Controllers\Admin\PrintController::class, 'prescription'])->name('admin_print_prescription');
 
+    require __DIR__.'/admin/nurse_routes.php';
+    require __DIR__.'/admin/billing_routes.php';
+
 });

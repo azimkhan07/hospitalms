@@ -22,6 +22,35 @@
             </div>
         </div>
 
+        @if ($this->recentAlerts->isNotEmpty())
+            <div class="box box-danger mb-2">
+                <div class="box-header py-2">
+                    <h3 class="box-title" style="font-size:13px">
+                        <i class="fas fa-exclamation-triangle text-danger mr-1"></i> Doctor Alerts
+                        <span class="badge badge-danger">{{ $this->recentAlerts->count() }}</span>
+                    </h3>
+                </div>
+                <div class="box-body py-1">
+                    @foreach ($this->recentAlerts as $alert)
+                        <div class="d-flex justify-content-between align-items-center mb-1" style="font-size:12.5px">
+                            <span>
+                                @if ($alert->is_urgent)
+                                    <span class="badge badge-danger mr-1">URGENT</span>
+                                @endif
+                                <span class="badge badge-secondary mr-1">{{ $alert->category }}</span>
+                                {{ $alert->message }}
+                                <small class="text-muted">&mdash; {{ $alert->patient?->name ?? 'Ward' }}</small>
+                            </span>
+                            <button class="btn btn-xs btn-outline-success ml-2"
+                                wire:click="acknowledgeAlert({{ $alert->id }})">
+                                <i class="fas fa-check"></i> Acknowledge
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @if (($waitingQueue ?? collect())->isNotEmpty() && ! $open)
             <div class="box box-warning mb-2" wire:poll.10s>
                 <div class="box-header d-flex align-items-center justify-content-between py-2">

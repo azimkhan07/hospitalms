@@ -955,12 +955,64 @@ The front desk → doctor handoff is now a real queue instead of status re-taps:
 
 **Still deferred (honest list):** reception queue on a dedicated countdown
 display/queue monitor, ICD-10, med quantity auto-calc on dispense, lab
-sample/barcode + file upload + critical alerts, nurse drug chart / shift
-handover / doctor alert, discharge final-bill, billing line items, duty roster,
+sample/barcode + file upload + critical alerts, duty roster,
 attendance-based on-duty, notification scheduler.
 
 ---
 
-_Next action: Phase 6 nurse meds/drug chart, then the deferred billing line
-items (invoice per stay, advance adjustment, discounts). Branch clean ahead of
-the Jitsi + host-lock + queue milestones._
+## 18j. Phase 6 nurse: drug chart + shift handover + doctor alerts — done 2026-10-09
+
+Parallel-milestone with 18k (two agents in parallel, pre-wired route stubs so the
+shared loaders never conflicted). Nurse clinical desk:
+
+- **Drug chart** (`/admin/nurse/drug-charts`, gate `ward`) — pick an admitted
+  stay (bed label + room), chart a medicine line (dosage/frequency/route/duration,
+  stamped `ordered_by`), mark each administration due/given/skipped/refused with
+  note + timestamp, and complete/cancel a line.
+- **Shift handover** (`/admin/nurse/handovers`) — compact form (`ward`, `to_role`,
+  notes) + latest-30 list.
+- **Doctor alerts** — raise urgent/plain alerts from the drug-chart page; every
+  doctor-role user gets a `DoctorAlertRaised` database notification (new bell
+  branch); the Consultations desk shows the last 5 unresolved alerts
+  (urgent-first) with an Acknowledge button.
+- Tables `drug_charts`, `drug_chart_administrations`, `doctor_alerts`,
+  `handovers` (migration `2026_10_10_000100_nursing_clinical.php`).
+- API mirrors under `/api/v1/admin/nursing/*` + `/api/v1/admin/nursing/alerts*`.
+- Tests: `tests/Feature/NurseDrugChartTest.php` (8 tests).
+
+## 18k. Billing: line items, IPD final bill, day book — done 2026-10-09
+
+Parallel-milestone with 18j. Closure of the deferred billing list:
+
+- **bill_items** table + **BillItem** model (description, category, qty × rate =
+  amount, created_by).
+- `bills` gained `stay_id`, `discount_amount`, `advance_used`, `remarks`. The
+  Bill's stored `amount` is always the pre-discount base (line items + tax, or
+  the legacy typed amount), so `recalculate()` is idempotent — discounts and
+  advances only ever appear in the derived totals
+  (`netAmount()` / `amountDue()`), never folded into the base (this was the one
+  math bug caught by review: net was being stored then discounted again).
+- **Bills page** (gate `bills`): line-items drawer with running totals,
+  discount/advance/remarks fields, Net/Due columns, and a **Finalise from IPD
+  stay** action that charges the accommodation nights (n = admission →
+  discharge/now, room `daily_rate`) and stamps `stay_id`.
+- **Day Book** (`/admin/day-book`, gate `accounting`): date filter merging paid
+  bill receipts + accounting vouchers, with receipts / inflow / outflow / net
+  summary (shared logic with the API).
+- API mirrors under `/api/v1/admin/bills/{id}/items`, `finalise-stay`,
+  `PATCH /bills/{id}` and `GET /day-book`.
+- Tests: `tests/Feature/BillingLineItemsTest.php` (9 tests). Full suite **197
+  tests / 769 assertions green**; `audit.js` 34/34, 0 console errors; new pages
+  smoke-tested in a headless browser (no console errors). Public `docters` page
+  gained a one-line section intro (was 199 chars — a hair under the audit's
+  200-text gate with the demo doctor profile).
+
+**Still deferred (honest list):** reception queue on a dedicated countdown
+display/queue monitor, ICD-10, med quantity auto-calc on dispense, lab
+sample/barcode + file upload + critical alerts, duty roster,
+attendance-based on-duty, notification scheduler.
+
+---
+
+_Next action: whichever deferred item the user picks next — ICD-10 coding, med
+quantity auto-calc on dispense, lab barcode/file upload, or the duty roster._

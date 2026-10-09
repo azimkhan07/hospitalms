@@ -3,10 +3,12 @@
 namespace App\Http\Livewire\Admins;
 
 use App\Models\appointment;
+use App\Models\DoctorAlert;
 use App\Models\InvestigationReport;
 use App\Models\InvestigationTest;
 use App\Models\Vital;
 use App\Models\doctor;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -107,6 +109,29 @@ class Consultations extends Component
 
         $doctor->update(['on_duty' => ! $doctor->on_duty]);
         session()->flash('message', $doctor->on_duty ? 'You are now on duty.' : 'You are now off duty.');
+    }
+
+    /** Escalations the ward raised and nobody has acked yet (Phase 6). */
+    #[Computed]
+    public function recentAlerts()
+    {
+        return DoctorAlert::unresolved()
+            ->with('patient:id,name')
+            ->latest()
+            ->limit(5)
+            ->get();
+    }
+
+    public function acknowledgeAlert(int $id): void
+    {
+        $alert = DoctorAlert::findOrFail($id);
+
+        $alert->update([
+            'resolved_at' => now(),
+            'resolved_by' => auth()->id(),
+        ]);
+
+        session()->flash('message', 'Alert acknowledged.');
     }
 
     public function complete(int $id): void
