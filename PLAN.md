@@ -1039,12 +1039,48 @@ alerts, duty roster, attendance-based on-duty.
 - Tests: `tests/Feature/AppointmentReminderSchedulerTest.php` (6 tests). Full
   suite **209 tests / 836 assertions green**; audit 34/34, 0 console errors.
 
-**Still deferred (honest list):** reception queue on a dedicated countdown
-display/queue monitor, ICD-10, lab sample/barcode + file upload + critical
-alerts, duty roster, attendance-based on-duty.
+**Still deferred (honest list):** ICD-10, lab sample/barcode + file upload +
+critical alerts, duty roster, attendance-based on-duty.
+
+---
+
+## 18n. Staff ID cards (hospital mode only) — done 2026-10-09 (parallel with 18o)
+
+Built for full multi-speciality hospitals; clinics don't get the batch ribbon/
+print workflow.
+
+- Gate: `hms_idcards_enabled()` helper (`hms_institution_mode() === 'hospital'`);
+  the panel, sidebar entry and API all `abort(404)` outside hospital mode, and
+  are additionally staff-module-gated (403).
+- Panel `App\Http\Livewire\Admins\IdCards` at `/admin/id-cards`: role filter
+  (`hms_tenant_required_roles()`) + name/phone search, compact per-staff card
+  previews.
+- Print `/admin/id-cards/print/{user?}` (`IdCardController`): one card or the
+  whole roster (respects the active role/search filter), 85.6×54mm print CSS.
+  Design decided in-repo: navy `#0b3c66` ribbon carrying the hospital name
+  (`hms_tenant_brand()`) in white with a gold `#c9a227` accent line; off-white
+  body; 60px photo (doctor profile → employee → `employee-placeholder.jpg`)
+  with `#0f7fd4` ring; role chip, department + staff code (employee code else
+  `STR-####`), phone/email; a back face with "If found return to".
+- API mirror `GET /api/v1/admin/id-cards` (envelope, staff-module + mode gated).
+- Tests: `tests/Feature/IdCardsTest.php` (7 tests).
+
+## 18o. Reception queue monitor — done 2026-10-09 (parallel with 18n)
+
+- `App\Http\Livewire\Admins\QueueMonitor` at `/admin/queue-monitor`,
+  `wire:poll.5s` + manual refresh; big-screen board in admin layout.
+- Reuses the patient board's truth: same today/status query as `Appiontment`
+  (`waiting`→`called`→`in_consult`, `orderBy token`), so the wall display and
+  the desk board never disagree. Big dark-navy "Up next" card (next 3 waiting
+  tokens) + count strip (Waiting / Called / In-Consult).
+- Front-desk app already polls `GET /api/v1/admin/queue`, so no new API.
+- Tests: `tests/Feature/QueueMonitorTest.php` (6 tests). Full suite **222 tests
+  / 885 assertions green**; audit 34/34, 0 console errors.
+
+**Still deferred (honest list):** ICD-10, lab sample/barcode + file upload +
+critical alerts, duty roster, attendance-based on-duty.
 
 ---
 
 _Next action: whichever deferred item the user picks next — ICD-10 coding, lab
-barcode/file upload, duty roster, attendance-based on-duty, or the reception
-queue monitor._
+barcode/file upload, duty roster, or attendance-based on-duty._

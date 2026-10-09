@@ -118,6 +118,20 @@ if (! function_exists('hms_enabled_roles')) {
     }
 }
 
+if (! function_exists('hms_idcards_enabled')) {
+    /**
+     * Whether staff ID cards are available for this facility.
+     *
+     * ID cards belong to the full multi-speciality hospital experience; small
+     * clinics do not need the batch ribbon/print workflow, so the panel, menu
+     * entry and API endpoints all stay hidden outside hospital mode.
+     */
+    function hms_idcards_enabled(): bool
+    {
+        return hms_institution_mode() === 'hospital';
+    }
+}
+
 if (! function_exists('hms_has_dean')) {
     /**
      * Does this tenant have a Dean (moderator) who can approve leave?
@@ -596,6 +610,9 @@ if (! function_exists('hms_sidebar_tree')) {
                     ['label' => 'Laboratorist', 'route' => 'admin_staff', 'params' => ['role' => 'laboratorist'], 'module' => 'staff'],
                     ['label' => 'Employees', 'route' => 'employees', 'module' => 'employees'],
                     ['label' => 'HOD', 'route' => 'hods', 'module' => 'hods'],
+                    ['label' => 'ID Cards', 'route' => 'admin_id_cards', 'module' => 'staff',
+                        // Only full hospitals run the batch ID-card ribbon/print workflow.
+                        'enabledWhen' => fn () => hms_idcards_enabled()],
                 ],
             ],
             [
@@ -654,6 +671,7 @@ if (! function_exists('hms_sidebar_tree')) {
                 'children' => [
                     ['label' => 'Patients', 'route' => 'admin_patients', 'module' => 'patients'],
                     ['label' => 'Requested Appointments', 'route' => 'requestedAppointment', 'module' => 'appointments'],
+                    ['label' => 'Queue Monitor', 'route' => 'admin_queue_monitor', 'module' => 'appointments'],
                     ['label' => 'Govt Schemes', 'route' => 'admin_schemes', 'module' => 'schemes'],
                     ['label' => 'Subscribers', 'route' => 'subscibers', 'module' => 'subscribers'],
                     ['label' => 'Messages', 'route' => 'contactedus', 'module' => 'messages'],
