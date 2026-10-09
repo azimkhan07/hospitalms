@@ -29,3 +29,8 @@ Schedule::command('hms:backup')
 Schedule::command('hms:purge-stale-appointments')
     ->dailyAt('02:30')
     ->withoutOverlapping();
+
+// Reminder sweep: ping staff (and try the patient) before upcoming slots.
+Schedule::command('hms:send-appointment-reminders')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();

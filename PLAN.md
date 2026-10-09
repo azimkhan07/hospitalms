@@ -1008,11 +1008,43 @@ Parallel-milestone with 18j. Closure of the deferred billing list:
   200-text gate with the demo doctor profile).
 
 **Still deferred (honest list):** reception queue on a dedicated countdown
-display/queue monitor, ICD-10, med quantity auto-calc on dispense, lab
-sample/barcode + file upload + critical alerts, duty roster,
-attendance-based on-duty, notification scheduler.
+display/queue monitor, ICD-10, lab sample/barcode + file upload + critical
+alerts, duty roster, attendance-based on-duty.
 
 ---
 
-_Next action: whichever deferred item the user picks next — ICD-10 coding, med
-quantity auto-calc on dispense, lab barcode/file upload, or the duty roster._
+## 18l. Med quantity auto-calc on dispense — done 2026-10-09 (parallel with 18m)
+
+- `prescription_items.quantity` (nullable smallint) — the doctor's prescription
+  form now records how many units a line needs (narrow Qty column per row).
+- `Pharmacy::dispensePrescription()` replaces the hardcoded 1-unit handover with
+  quantity-aware auto-calc: expected = quantity ?: 1, pre-checked against the
+  usable batches (earliest-expiry-first) via `availability()`/`balance()`; short
+  stock throws and the transaction writes nothing; legacy lines without a
+  quantity still hand over one unit.
+- API mirrors: `POST /api/v1/admin/prescriptions/{id}/dispense`
+  (`RuntimeException` → 422 envelope), `GET /api/v1/admin/pharmacy/rx?filter=`.
+- Tests: `tests/Feature/MedQuantityDispenseTest.php` (6 tests).
+
+## 18m. Appointment reminder scheduler — done 2026-10-09 (parallel with 18l)
+
+- `appointments.reminded_at` (nullable timestamp) is the per-visit dedup gate.
+- `hms:send-appointment-reminders {--minutes=45}` runs on
+  `Schedule::everyFifteenMinutes()`: per tenant, picks pending/confirmed visits
+  whose slot falls inside the window and are not yet reminded, stamps
+  `reminded_at`, sends an `AppointmentReminder` database notification to the
+  tenant's reception/admin/moderator, and best-effort SMS/WhatsApp to the
+  patient's phone via the messaging service — swallowing any messaging error so
+  the sweep never crashes. Cancelled/terminated and past visits are skipped.
+- Tests: `tests/Feature/AppointmentReminderSchedulerTest.php` (6 tests). Full
+  suite **209 tests / 836 assertions green**; audit 34/34, 0 console errors.
+
+**Still deferred (honest list):** reception queue on a dedicated countdown
+display/queue monitor, ICD-10, lab sample/barcode + file upload + critical
+alerts, duty roster, attendance-based on-duty.
+
+---
+
+_Next action: whichever deferred item the user picks next — ICD-10 coding, lab
+barcode/file upload, duty roster, attendance-based on-duty, or the reception
+queue monitor._

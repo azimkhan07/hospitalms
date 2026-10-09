@@ -59,11 +59,12 @@
                         <table class="table table-sm mb-1" style="background:transparent">
                             <thead>
                                 <tr>
-                                    <th style="width:32%">Medicine</th>
-                                    <th style="width:18%">Dosage</th>
-                                    <th style="width:18%">Frequency</th>
-                                    <th style="width:16%">Duration</th>
-                                    <th style="width:14%">Note</th>
+                                    <th style="width:30%">Medicine</th>
+                                    <th style="width:16%">Dosage</th>
+                                    <th style="width:16%">Frequency</th>
+                                    <th style="width:14%">Duration</th>
+                                    <th style="width:7%">Qty</th>
+                                    <th style="width:15%">Note</th>
                                     <th style="width:28px"></th>
                                 </tr>
                             </thead>
@@ -102,6 +103,11 @@
                                         <td>
                                             <input type="text" class="form-control form-control-sm"
                                                 placeholder="5 days" wire:model="items.{{ $i }}.duration">
+                                        </td>
+                                        <td>
+                                            <input type="number" min="1" max="9999"
+                                                class="form-control form-control-sm text-center"
+                                                placeholder="1" wire:model="items.{{ $i }}.quantity">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm"

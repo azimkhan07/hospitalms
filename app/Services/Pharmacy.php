@@ -148,13 +148,22 @@ class Pharmacy
                     throw new \RuntimeException($item->medicine.' is no longer in the master.');
                 }
 
-                // The form has no quantity yet; a line is one course, so one
-                // unit of stock is handed over unless more is expected.
-                $qty = 1;
+                // How many units this line asks for: the doctor's quantity
+                // when one was written, one course otherwise (legacy lines).
+                $expected = $item->quantity ? max(1, (int) $item->quantity) : 1;
 
-                $this->dispense($medicine, $qty, $by, $reference ?: 'RX #'.$prescription->id);
+                $available = $this->balance($this->availability($medicine));
 
-                $item->dispensed_qty = $qty;
+                if ($available < $expected) {
+                    throw new \RuntimeException(
+                        'Only '.$available.' unit(s) of '.$medicine->name.' in stock; the prescription needs '.$expected
+                        .' — restock or edit the quantity.'
+                    );
+                }
+
+                $this->dispense($medicine, $expected, $by, $reference ?: 'RX #'.$prescription->id);
+
+                $item->dispensed_qty = $expected;
                 $item->dispensed_at = now();
                 $item->dispensed_by = $by?->id;
                 $item->save();

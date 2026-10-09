@@ -51,7 +51,7 @@ class Prescriptions extends Component
 
     private function blankItem(): array
     {
-        return ['medicine' => '', 'dosage' => '', 'frequency' => '', 'duration' => '', 'note' => ''];
+        return ['medicine' => '', 'dosage' => '', 'frequency' => '', 'duration' => '', 'quantity' => '', 'note' => ''];
     }
 
     public function render()
@@ -119,6 +119,7 @@ class Prescriptions extends Component
             'items.*.dosage' => 'nullable|max:120',
             'items.*.frequency' => 'nullable|max:120',
             'items.*.duration' => 'nullable|max:120',
+            'items.*.quantity' => 'nullable|integer|min:1|max:9999',
             'items.*.note' => 'nullable|max:255',
             'notes' => 'nullable|max:1000',
         ], [
@@ -161,6 +162,8 @@ class Prescriptions extends Component
                     'dosage' => $item['dosage'] ?: null,
                     'frequency' => $item['frequency'] ?: null,
                     'duration' => $item['duration'] ?: null,
+                    // Blank means one course, the hand-over default.
+                    'quantity' => $item['quantity'] ?: null,
                     'note' => $item['note'] ?: null,
                 ]);
             }

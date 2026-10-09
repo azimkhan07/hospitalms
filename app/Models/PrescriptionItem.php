@@ -13,11 +13,12 @@ class PrescriptionItem extends Model
 
     protected $fillable = [
         'prescription_id', 'medicine', 'medicine_id', 'dosage',
-        'frequency', 'duration', 'note',
+        'frequency', 'duration', 'quantity', 'note',
     ];
 
     protected $casts = [
         'medicine_id' => 'integer',
+        'quantity' => 'integer',
         'dispensed_qty' => 'integer',
         'dispensed_at' => 'datetime',
     ];
