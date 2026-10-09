@@ -610,6 +610,7 @@ if (! function_exists('hms_sidebar_tree')) {
                     ['label' => 'Laboratorist', 'route' => 'admin_staff', 'params' => ['role' => 'laboratorist'], 'module' => 'staff'],
                     ['label' => 'Employees', 'route' => 'employees', 'module' => 'employees'],
                     ['label' => 'HOD', 'route' => 'hods', 'module' => 'hods'],
+                    ['label' => 'Duty Roster', 'route' => 'admin_duty_roster', 'module' => 'attendance'],
                     ['label' => 'ID Cards', 'route' => 'admin_id_cards', 'module' => 'staff',
                         // Only full hospitals run the batch ID-card ribbon/print workflow.
                         'enabledWhen' => fn () => hms_idcards_enabled()],

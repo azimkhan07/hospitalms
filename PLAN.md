@@ -1077,10 +1077,41 @@ print workflow.
 - Tests: `tests/Feature/QueueMonitorTest.php` (6 tests). Full suite **222 tests
   / 885 assertions green**; audit 34/34, 0 console errors.
 
-**Still deferred (honest list):** ICD-10, lab sample/barcode + file upload +
-critical alerts, duty roster, attendance-based on-duty.
+**Still deferred (honest list):** ICD-10, lab sample/barcode + file upload
++ critical alerts.
 
 ---
 
-_Next action: whichever deferred item the user picks next — ICD-10 coding, lab
-barcode/file upload, duty roster, or attendance-based on-duty._
+## 18p. Duty roster — done 2026-10-09 (parallel with 18q)
+
+- `duty_rosters` table (tenant_id, doctor_id nullable, department nullable,
+  shift morning/evening/night/off, duty_date, start/end time, note, created_by;
+  unique per doctor+date).
+- `App\Http\Livewire\Admins\DutyRoster` at `/admin/duty-roster`: week board
+  (Monday-anchored, prev/next/this-week), doctor x 7-day grid of shift chips,
+  upsert-on-save form (shift, date, optional times/note), per-cell remove.
+- API mirror `GET|POST /api/v1/admin/duty-rosters`, `DELETE /{id}` (envelope,
+  404 for foreign rows, 422 validation).
+- Tests: `tests/Feature/DutyRosterTest.php` (7 tests).
+
+## 18q. Attendance-based on-duty — done 2026-10-09 (parallel with 18p)
+
+- On-duty now follows attendance: `AttendanceRecorder::checkIn()` flips the
+  linked doctor's `doctors.on_duty` to true, `checkOut()` flips it off — every
+  web and API punch goes through that single service, so no manual toggle chase.
+- `doctor::onAttendanceToday()` (any today check-in on the linked user) is
+  exposed per doctor in the `GET /api/v1/admin/queue` payload as
+  `attendance_today` (additive).
+- `hms:sync-on-duty {--date=}` aligns everyone in every tenant with today's
+  attendance (only writes when the value differs); Laravel auto-discovers it.
+- Tests: `tests/Feature/AttendanceBasedOnDutyTest.php` (6 tests). Full suite
+  **235 tests / 931 assertions green**; audit 34/34; duty-roster page smoke
+  clean (0 console errors).
+
+**Still deferred (honest list):** ICD-10, lab sample/barcode + file upload +
+critical alerts.
+
+---
+
+_Next action: whichever deferred item the user picks next — ICD-10 coding, or
+the lab sample/barcode + file upload + critical alerts bundle._

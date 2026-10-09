@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Attendance;
+use App\Models\doctor;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
@@ -20,7 +21,7 @@ class AttendanceRecorder
 
         $tenant = $user->tenant;
 
-        return Attendance::create([
+        $attendance = Attendance::create([
             'tenant_id' => $user->tenant_id,
             'user_id' => $user->id,
             'work_date' => Carbon::today()->toDateString(),
@@ -31,6 +32,15 @@ class AttendanceRecorder
             'check_in_distance_meters' => $this->distance($tenant, $lat, $lng),
             'source' => $source,
         ]);
+
+        // Attendance drives duty: checking in puts a linked doctor on duty.
+        if ($profile = doctor::where('user_id', $user->id)->first()) {
+            if (! $profile->on_duty) {
+                $profile->update(['on_duty' => true]);
+            }
+        }
+
+        return $attendance;
     }
 
     /**
@@ -51,6 +61,13 @@ class AttendanceRecorder
             'check_out_ip' => $ip,
             'check_out_distance_meters' => $this->distance($user->tenant, $lat, $lng),
         ]);
+
+        // Attendance drives duty: signing out takes a linked doctor off duty.
+        if ($profile = doctor::where('user_id', $user->id)->first()) {
+            if ($profile->on_duty) {
+                $profile->update(['on_duty' => false]);
+            }
+        }
 
         return $open->fresh();
     }

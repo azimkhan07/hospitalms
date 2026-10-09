@@ -28,9 +28,19 @@ class QueueController extends Controller
             $query->ownedBy((int) $request->user()->id);
         }
 
+        $queue = $query->get();
+
+        // Additive: each doctor entry also reports attendance for the day so
+        // the app can show duty status alongside the queue.
+        $queue->each(function (appointment $appt) {
+            if ($appt->doctor) {
+                $appt->doctor->setAttribute('attendance_today', (bool) $appt->doctor->onAttendanceToday());
+            }
+        });
+
         return response()->json([
             'success' => true,
-            'data' => $query->get(),
+            'data' => $queue,
         ]);
     }
 

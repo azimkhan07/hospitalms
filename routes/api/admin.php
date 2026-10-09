@@ -64,4 +64,5 @@ Route::prefix('admin')
         require __DIR__.'/billing.php';
         require __DIR__.'/pharmacy.php';
         require __DIR__.'/idcards.php';
+        require __DIR__.'/dutyroster.php';
     });
