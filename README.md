@@ -4,6 +4,9 @@ A compact, role-based Hospital / Clinic management system built with **Laravel 1
 It ships with a dynamic public website, online appointment booking, meeting & calendar management,
 a leave approval workflow, notifications, and clinical modules — all driven by a super-admin panel.
 
+> **Repository description (copy/paste into GitHub → About):**
+> Laravel 12 + Livewire 3 Hospital / Clinic Management System — dynamic public website, online appointments, clinical OPD/IPD, pharmacy, billing, in-system video meetings (Jitsi), and a multi-tenant super-admin panel with per-facility subdomains or custom domains.
+
 ![Front End](FrontEnd.png)
 ![Back End](admin-screenshot.png)
 
@@ -18,8 +21,15 @@ a leave approval workflow, notifications, and clinical modules — all driven by
   hours and social links are all editable from the admin panel (no code changes needed).
 - **Online appointment booking** — patients request an appointment from the landing page; the front
   desk reviews and converts requests into patients/appointments in the admin panel.
-- **Meetings & calendar** — create meetings, invite participants, accept/decline responses, with
-  automatic notifications.
+- **Meetings & calendar** — schedule meetings, invite participants, pick whole
+  roles, accept/decline responses, with automatic notifications and a dashboard
+  newsletter feed.
+- **In-system video meetings (Jitsi)** — a header meet icon shows the day's calls
+  with a countdown; the host starts the room and controls recording, guests can
+  join once the host has started.
+- **Multi-tenant facility domains** — each facility is served from its own
+  `{slug}.{base_domain}` subdomain or a domain it purchased, while the super-admin
+  panel stays on the operator's own host.
 - **Leave workflow** — staff submit leave; moderators/HR review and approve or reject with a note.
 - **Notification bell** — live in-app notifications for meeting invites and leave status changes.
 - **Clinical modules** — appointments, prescriptions, patient history, discharge history, expiry
@@ -131,6 +141,50 @@ Public website: `/` · Admin login: `/admin`
 2. Go to **Settings**.
 3. Choose **Institution Mode** → `Clinic` or `Multi-Speciality Hospital`.
 4. Save. Logins, sidebar entries and module access update immediately.
+
+---
+
+## Domains & platform host
+
+The app is multi-tenant: one install serves many facilities (hospitals/clinics)
+and the super-admin panel that owns them. The host of the request decides which
+facility is loaded (`ResolveTenant` matches `tenants.domain` **or**
+`tenants.subdomain`).
+
+**Two ways a facility gets its address** (chosen during onboarding):
+
+- **Auto** — the platform gives it `{slug}.{HMS_BASE_DOMAIN}`, e.g.
+  `sunrise.hms.local`. Stored in `tenants.subdomain`.
+- **Custom** — the facility already owns a domain and it is typed in, e.g.
+  `care.sunriselocalhospital.com`. Stored in `tenants.domain` (scheme/path are
+  normalised, uniqueness is enforced).
+
+**Keeping the super admin with the operator:** set `HMS_PLATFORM_HOSTS` to the
+operator's own host(s) in `.env`:
+
+```env
+HMS_BASE_DOMAIN=hms.yourclinic.com
+HMS_PLATFORM_HOSTS=hms.yourclinic.com
+```
+
+With this set:
+
+- `/admin` (super-admin login) and `/superadmin/*` are served **only** from
+  `HMS_PLATFORM_HOSTS`. Any other host is redirected to the platform login.
+- The facility panel (`/admin/*`) and staff `/login` are **not** served from the
+  platform host (404).
+- A facility that has a custom domain is **301-redirected** from its old
+  `{slug}.{base_domain}` address to that domain, so each facility has one
+  canonical address.
+
+Leave `HMS_PLATFORM_HOSTS` **empty** for single-host installs and local
+development — the lock is then disabled and every host works as before.
+
+> DNS/TLS are deployment steps: point `*.{HMS_BASE_DOMAIN}` (wildcard) and each
+> custom domain at the server, and issue certificates (e.g. Caddy / Let's
+> Encrypt) for them. Set `SESSION_DOMAIN` if you want one session across hosts.
+
+Verified by `tests/Feature/HostRoutingTest.php`.
 
 ---
 

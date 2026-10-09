@@ -896,5 +896,32 @@ sync, wizard step-3 summary UI.
 
 ---
 
+## 18h. Host routing lock (super admin on the operator's domain) — done 2026-10-09
+
+The multi-tenant model is now enforceable at the host level, not just in the
+data:
+
+- **`HMS_PLATFORM_HOSTS`** (`config/hms.php::platform_hosts`, comma-separated)
+  names the operator's own host(s). Super admin login (`/admin`) and the
+  `/superadmin/*` panel are served **only** from those hosts — any facility host
+  is redirected to the platform login (`EnsurePlatformHost`).
+- The facility panel (`/admin/*`) and staff `/login` are **not** served from the
+  platform host (404, `EnsureTenantHost`).
+- A facility that owns a custom domain is **301-redirected** from its generated
+  `{slug}.{base_domain}` address to that domain (`RedirectToCustomDomain`),
+  keeping one canonical address per facility.
+- Both host locks are registered ahead of the auth middleware in the priority
+  map (via `AuthenticatesRequests`), so the login redirect can never beat them.
+- Lock disabled when `HMS_PLATFORM_HOSTS` is empty — local dev and single-host
+  installs are untouched (verified by the browser audit).
+- Tests: `tests/Feature/HostRoutingTest.php` (7 tests). Full suite **173 tests /
+  591 assertions green**; `audit.js` 34/34, 0 console errors.
+
+**Deployment notes:** point `*.{HMS_BASE_DOMAIN}` and each custom domain at the
+server, issue certificates, and set `HMS_PLATFORM_HOSTS`. See the README
+"Domains & platform host" section.
+
+---
+
 _Next action: close the remaining Phase 3 reception gaps (queue/token, on-duty
 list) and Phase 6 meds chart, then the deferred billing line items._

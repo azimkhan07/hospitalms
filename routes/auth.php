@@ -15,6 +15,6 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 
-Route::get('/login', [AdminController::class, 'index'])->name('admin_login_form');
+Route::get('/login', [AdminController::class, 'index'])->middleware('tenant.host')->name('admin_login_form');
 
-Route::post('/login', [AdminController::class, 'authenticate_admin'])->name('admin_login');
+Route::post('/login', [AdminController::class, 'authenticate_admin'])->middleware('tenant.host')->name('admin_login');

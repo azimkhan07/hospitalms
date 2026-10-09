@@ -25,6 +25,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Operator (platform) hosts — where the super admin panel lives
+    |--------------------------------------------------------------------------
+    | Comma-separated list of hosts that may serve the super admin panel and the
+    | staff-login-free /admin login. Facilities get their own subdomain/custom
+    | domain and never see this panel. Leave empty to disable the lock, which is
+    | what single-host installs and local development rely on. Set it in .env:
+    |   HMS_PLATFORM_HOSTS=hms.yourclinic.com,www.yourclinic.com
+    */
+    'platform_hosts' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('HMS_PLATFORM_HOSTS', ''))
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Institution modes
     |--------------------------------------------------------------------------
     | A super admin can run the system either as a small clinic or a full

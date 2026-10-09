@@ -10,7 +10,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'checksuperadmin'])->prefix('admin')->group(function () {
+Route::middleware(['tenant.host', 'auth', 'checksuperadmin'])->prefix('admin')->group(function () {
 
     Route::get('/dashboard', App\Http\Livewire\Admins\Dashboard::class)->name('admin_dashboard');
 

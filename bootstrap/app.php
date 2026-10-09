@@ -3,8 +3,11 @@
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsureApiStaff;
 use App\Http\Middleware\EnsureApiSuperAdmin;
+use App\Http\Middleware\EnsurePlatformHost;
 use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Middleware\EnsureTenantHost;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\RedirectToCustomDomain;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\checksuperadmin;
 use App\Services\ErrorLogger;
@@ -34,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             AuthenticateSession::class,
             ResolveTenant::class,
+            RedirectToCustomDomain::class,
         ]);
 
         $middleware->alias([
@@ -46,8 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'checksuperadmin' => checksuperadmin::class,
             'guest' => RedirectIfAuthenticated::class,
             'password.confirm' => RequirePassword::class,
+            'platform.host' => EnsurePlatformHost::class,
             'signed' => ValidateSignature::class,
             'superadmin' => EnsureSuperAdmin::class,
+            'tenant.host' => EnsureTenantHost::class,
             'throttle' => ThrottleRequests::class,
             'verified' => EnsureEmailIsVerified::class,
         ]);
@@ -57,6 +63,19 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->trustProxies(at: '*');
+
+        // The host locks must run before any Auth:: middleware: Laravel's default
+        // priority map sorts every AuthenticatesRequests implementation ahead of
+        // the rest of the stack (via that interface), so a redirect to /login
+        // would otherwise win over our 404/redirect on the wrong host.
+        $middleware->prependToPriorityList(
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \App\Http\Middleware\EnsurePlatformHost::class
+        );
+        $middleware->prependToPriorityList(
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \App\Http\Middleware\EnsureTenantHost::class
+        );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->report(function (Throwable $e) {

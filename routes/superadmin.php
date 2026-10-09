@@ -14,17 +14,17 @@ use Illuminate\Support\Facades\Route;
 Route::name('superadmin.')->group(function () {
 
     Route::get('/admin', [SuperAdminController::class, 'showLogin'])
-        ->middleware('guest')->name('login');
+        ->middleware(['platform.host', 'guest'])->name('login');
 
     Route::post('/admin/login', [SuperAdminController::class, 'login'])
-        ->middleware('guest')->name('login.attempt');
+        ->middleware(['platform.host', 'guest'])->name('login.attempt');
 
     Route::post('/admin/logout', [SuperAdminController::class, 'logout'])
-        ->middleware('auth')->name('logout');
+        ->middleware(['platform.host', 'auth'])->name('logout');
 
 });
 
-Route::prefix('superadmin')->name('superadmin.')->middleware('superadmin')->group(function () {
+Route::prefix('superadmin')->name('superadmin.')->middleware(['platform.host', 'superadmin'])->group(function () {
 
     Route::get('/', fn () => redirect()->route('superadmin.dashboard'));
 
