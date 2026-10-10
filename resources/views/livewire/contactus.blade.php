@@ -1,8 +1,8 @@
 <div id="getintouch" class="section wb wow fadeIn" style="padding-bottom:0;">
     <div class="container">
         <div class="heading">
-            <span class="icon-logo"><img src="{{ asset('images/icon-logo.png') }}" alt="#"></span>
-            <h2>Get in Touch</h2>
+            <span class="icon-logo"><img src="{{ \App\Models\SiteContent::get()['icon'] ? storage_url(\App\Models\SiteContent::get()['icon']) : asset('images/icon-logo.png') }}" alt="#"></span>
+            <h2>{{ \App\Models\SiteContent::get()['contact_heading'] }}</h2>
         </div>
     </div>
     <div class="contact-section">

@@ -9,8 +9,8 @@
                     <h1>{{ $site['hero_title'] ?: ('Welcome to ' . $site['name']) }}</h1>
                     <p>{{ $site['hero_subtitle'] ?: ($site['tagline'] . ' — compassionate care, advanced medicine.') }}</p>
                     <div class="hms-hero-actions">
-                        <a href="#service" data-scroll class="hms-btn hms-btn-primary">Book Appointment</a>
-                        <a href="{{ url('/docters') }}" class="hms-btn hms-btn-ghost">Our Doctors</a>
+                        <a href="#service" data-scroll class="hms-btn hms-btn-primary">{{ $site['hero_btn1'] }}</a>
+                        <a href="{{ url('/docters') }}" class="hms-btn hms-btn-ghost">{{ $site['hero_btn2'] }}</a>
                     </div>
                 </div>
             </div>
@@ -32,7 +32,7 @@
                         <div class="hms-fact">
                             <span class="hms-fact-icon"><i class="fa fa-clock-o"></i></span>
                             <div>
-                                <h4>Working Hours</h4>
+                                <h4>{{ $site['fact_working_title'] }}</h4>
                                 <p>{{ $site['working_hours'] }}</p>
                             </div>
                         </div>
@@ -41,7 +41,7 @@
                         <div class="hms-fact">
                             <span class="hms-fact-icon"><i class="fa fa-hospital-o"></i></span>
                             <div>
-                                <h4>Departments</h4>
+                                <h4>{{ $site['fact_departments_title'] }}</h4>
                                 <p>{{ $departments->count() ? $departments->take(3)->pluck('name')->join(', ') : 'General Medicine, Diagnostics, Pharmacy' }}{{ $departments->count() > 3 ? ' +' . ($departments->count() - 3) . ' more' : '' }}</p>
                             </div>
                         </div>
@@ -60,7 +60,7 @@
                         <div class="message-box">
                             <h4>{{ $site['mode_label'] }}</h4>
                             <p class="lead">{{ $site['about'] }}</p>
-                            <a href="#service" data-scroll class="hms-btn hms-btn-primary">Our Services</a>
+                            <a href="#service" data-scroll class="hms-btn hms-btn-primary">{{ $site['about_btn'] }}</a>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -92,7 +92,7 @@
         <div id="service" class="hms-section hms-services wow fadeIn">
             <div class="container">
                 <div class="heading">
-                    <h2>Services &amp; Appointment</h2>
+                    <h2>{{ $site['services_heading'] }}</h2>
                 </div>
                 <div class="row">
                     <div class="col-lg-8 col-md-7 col-sm-12 col-xs-12">
@@ -129,7 +129,7 @@
         <div id="doctors" class="hms-section db">
             <div class="container">
                 <div class="heading">
-                    <h2>Our Doctors</h2>
+                    <h2>{{ $site['doctors_heading'] }}</h2>
                 </div>
                 <div class="row dev-list text-center">
                     @forelse ($doctors->take(3) as $doctor)
@@ -171,24 +171,26 @@
         <div id="testimonials" class="hms-section wb wow fadeIn">
             <div class="container">
                 <div class="heading">
-                    <h2>What Our Patients Say</h2>
+                    <h2>{{ $site['testimonials_heading'] }}</h2>
                 </div>
                 <div class="row">
-                    @foreach ($doctors->take(2) as $doctor)
+                    @forelse (\App\Models\SiteContent::testimonials() as $testimonial)
                         <div class="col-md-6 col-sm-12 wow fadeIn">
                             <div class="testimonial clearfix">
                                 <div class="desc">
-                                    <h3><i class="fa fa-quote-left"></i> Trusted care</h3>
-                                    <p class="lead">"Coordinated diagnosis, careful treatment and clear follow-up."</p>
+                                    <h3><i class="fa fa-quote-left"></i> {{ $testimonial->name }}</h3>
+                                    <p class="lead">"{{ $testimonial->quote }}"</p>
                                 </div>
                                 <div class="testi-meta">
-                                    <img src="{{ storage_url($doctor->image ?? null, 'employee-placeholder.jpg') }}"
-                                        alt="{{ $doctor->name }}" class="img-responsive alignleft">
-                                    <h4>{{ $doctor->name }} <small>- {{ $doctor->qualification ?: 'Consultant' }}</small></h4>
+                                    <img src="{{ storage_url($testimonial->photo ?? null, 'employee-placeholder.jpg') }}"
+                                        alt="{{ $testimonial->name }}" class="img-responsive alignleft">
+                                    <h4>{{ $testimonial->name }} <small>- {{ $testimonial->role ?: 'Patient' }}</small></h4>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <p class="text-muted">Patient testimonials will appear here once added in the admin panel.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -196,20 +198,20 @@
         <div id="reach-us" class="hms-section wow fadeIn">
             <div class="container">
                 <div class="heading">
-                    <h2>Get in Touch</h2>
+                    <h2>{{ $site['contact_heading'] }}</h2>
                 </div>
                 <div class="hms-contact">
                     <div class="hms-contact-card">
-                        <h4><i class="fa fa-map-marker"></i>Visit Us</h4>
+                        <h4><i class="fa fa-map-marker"></i>{{ $site['contact_card1_title'] }}</h4>
                         <p>{{ $site['address'] }}</p>
                     </div>
                     <div class="hms-contact-card">
-                        <h4><i class="fa fa-phone"></i>Call / Email</h4>
+                        <h4><i class="fa fa-phone"></i>{{ $site['contact_card2_title'] }}</h4>
                         <p><a href="tel:{{ $site['phone'] }}">{{ $site['phone'] }}</a><br>
                             <a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a></p>
                     </div>
                     <div class="hms-contact-card">
-                        <h4><i class="fa fa-clock-o"></i>Working Hours</h4>
+                        <h4><i class="fa fa-clock-o"></i>{{ $site['contact_card3_title'] }}</h4>
                         <p>{{ $site['working_hours'] }}</p>
                     </div>
                 </div>

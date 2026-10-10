@@ -22,6 +22,10 @@ Route::middleware(['tenant.host', 'auth', 'checksuperadmin'])->prefix('admin')->
 
     Route::get('/settings', App\Http\Livewire\Admins\Settings::class)->name('admin_settings');
 
+    Route::get('/features', App\Http\Livewire\Admins\Features::class)->name('admin_features');
+
+    Route::get('/testimonials', App\Http\Livewire\Admins\Testimonials::class)->name('admin_testimonials');
+
     Route::get('/meetings', App\Http\Livewire\Admins\MeetingCalendar::class)->name('admin_meetings');
 
     Route::get('/meetings/{meeting}/room', [App\Http\Controllers\Admin\MeetingRoomController::class, 'show'])->name('admin_meeting_room');

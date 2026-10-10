@@ -55,7 +55,7 @@
                     <h5 class="text-info border-bottom pb-1 mb-2 mt-2">Landing Page Content</h5>
                     <div class="row">
                         <div class="col-lg-6">
-                            @foreach (['hero_title', 'hero_subtitle', 'about_title', 'emergency_title', 'emergency_text', 'description'] as $key)
+                            @foreach (['hero_title', 'hero_subtitle', 'about_title', 'emergency_title', 'emergency_text', 'description', 'doctors_subtitle'] as $key)
                                 @if (array_key_exists($key, $settings))
                                     <div class="form-group mb-2">
                                         <label class="mb-1" style="font-size:11px">{{ ucfirst(str_replace('_', ' ', $key)) }}</label>
@@ -91,6 +91,23 @@
                             @endforeach
                         </div>
                     </div>
+
+                    <h5 class="text-info border-bottom pb-1 mb-2 mt-2">Section Headings &amp; Labels</h5>
+                    <div class="row">
+                        @foreach (['fact_working_title', 'fact_departments_title', 'services_heading', 'services_page_heading', 'doctors_heading', 'testimonials_heading', 'contact_heading', 'contact_card1_title', 'contact_card2_title', 'contact_card3_title', 'about_heading', 'about_sub_heading', 'about_intro', 'hero_btn1', 'hero_btn2', 'about_btn', 'footer_contact_title', 'copyright_text'] as $key)
+                            @if (array_key_exists($key, $settings))
+                                <div class="col-lg-4">
+                                    <div class="form-group mb-2">
+                                        <label class="mb-1" style="font-size:11px">{{ ucfirst(str_replace('_', ' ', $key)) }}</label>
+                                        <input type="text" wire:model="settings.{{ $key }}" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                    <p class="text-muted" style="font-size:10.5px">
+                        Feature cards and patient testimonials (quotes, names, photos) are managed from the Features and Testimonials pages.
+                    </p>
 
                     <h5 class="text-info border-bottom pb-1 mb-2 mt-2">Social Links</h5>
                     <div class="row">

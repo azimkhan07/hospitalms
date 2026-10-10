@@ -17,6 +17,8 @@ class SiteController extends Controller
                 'departments' => SiteContent::departments(),
                 'doctors' => SiteContent::doctors(),
                 'medicines' => SiteContent::medicines()->take(12)->values(),
+                'features' => SiteContent::features(),
+                'testimonials' => SiteContent::testimonials(),
             ],
         ]);
     }

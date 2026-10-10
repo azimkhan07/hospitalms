@@ -5,9 +5,11 @@
     <div class="container">
 
         <div class="heading">
-            <span class="icon-logo"><img src="{{ asset('images/icon-logo.png') }}" alt="#"></span>
-            <h2>Our Specialists</h2>
-            <p class="lead">Meet the consultants looking after you — each specialist is attached to a department so your records, prescriptions and follow-ups stay on one file.</p>
+            <span class="icon-logo"><img src="{{ $site['icon'] ? storage_url($site['icon']) : asset('images/icon-logo.png') }}" alt="#"></span>
+            <h2>{{ $site['doctors_heading'] }}</h2>
+            @if ($site['doctors_subtitle'])
+                <p class="lead">{{ $site['doctors_subtitle'] }}</p>
+            @endif
         </div>
 
         <div class="row dev-list text-center">

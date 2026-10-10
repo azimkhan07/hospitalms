@@ -707,10 +707,13 @@ if (! function_exists('hms_sidebar_tree')) {
                 'module' => 'printout',
             ],
             [
-                'label' => 'Settings',
-                'icon' => 'fa-cog',
-                'route' => 'admin_settings',
-                'module' => 'settings',
+                'label' => 'Website Content',
+                'icon' => 'fa-globe',
+                'children' => [
+                    ['label' => 'Site Settings', 'route' => 'admin_settings', 'module' => 'settings'],
+                    ['label' => 'Features', 'route' => 'admin_features', 'module' => 'settings'],
+                    ['label' => 'Testimonials', 'route' => 'admin_testimonials', 'module' => 'settings'],
+                ],
             ],
         ];
 

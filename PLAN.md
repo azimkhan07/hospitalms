@@ -1,4 +1,4 @@
-# HMS — Master Plan & Task Tracker
+﻿# HMS — Master Plan & Task Tracker
 
 > Living document. Update the checkboxes and the progress bars **after every completed task**.
 > If the machine shuts down unexpectedly, this file is the source of truth for what is done and what is next.
@@ -1141,7 +1141,31 @@ out the whole backlog.
 - Tests: `tests/Feature/LabWorkflowTest.php` (8). Full suite **250 tests /
   1002 assertions green**; audit 34/34; icd10 + lab pages smoke clean.
 
+## 18t. Public website fully database-driven — done 2026-10-10
+
+- Every public heading/label/button/paragraph now comes from `settings`
+  (`SiteContent::get()`): `fact_working_title`, `fact_departments_title`,
+  `services_heading`, `services_page_heading`, `doctors_heading`,
+  `doctors_subtitle`, `testimonials_heading`, `contact_heading` +
+  `contact_card{1,2,3}_title`, `about_heading`, `about_sub_heading`,
+  `about_intro`, `hero_btn1/2`, `about_btn`, `footer_contact_title`,
+  `copyright_text`; `about_image` is a new file upload (falls back to the
+  hero image / packaged asset).
+- New `features` table (icon/title/text/sort/active) powers the Services page
+  "why us" tiles — the old hardcoded Premium Facilities/Lorem Ipsum block and
+  the fake booking form are gone (real `@livewire('appointmentform')` instead).
+- New `testimonials` table (name/role/quote/photo/sort/active) powers the
+  homepage "What Our Patients Say" cards — quotes are no longer hardcoded.
+- Admin: Website Content sidebar group (Site Settings / Features /
+  Testimonials), gated behind the `settings` module permission.
+- API: `GET /api/v1/site` now mirrors `features` + `testimonials`.
+- Tests: `tests/Feature/PublicSiteContentTest.php` (8) +
+  `tests/Feature/WebsiteContentAdminTest.php` (6). Full suite **264 tests /
+  1070 assertions green**; audit 34/34; mobile hOver 0 on all public + new
+  admin pages; `SiteContentSeeder` is idempotent.
+
 ---
 
 _Backlog is empty. Next phase: public website finishing touches (the user's
 announced polish pass)._
+

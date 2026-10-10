@@ -130,7 +130,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="footer-info padding">
-                        <h3>CONTACT US</h3>
+                        <h3>{{ $site['footer_contact_title'] }}</h3>
                         <p><i class="fa fa-map-marker"
                                 aria-hidden="true"></i>{{ $site['address'] ?? 'Hospital address' }}
                         </p>
@@ -150,8 +150,8 @@
             <div class="row">
                 <div class="col-md-8">
                     <div class="footer-text">
-                        <p>&copy; {{ date('Y') }} <a id="tw" href="{{ url('/') }}"
-                                target="_blank">{{ $site['name'] }}</a>. All rights reserved.</p>
+<p>&copy; {{ date('Y') }} <a id="tw" href="{{ url('/') }}"
+                                    target="_blank">{{ $site['name'] }}</a>. {{ $site['copyright_text'] }}</p>
                     </div>
                 </div>
                 <div class="col-md-4">
