@@ -123,6 +123,25 @@
                                     <textarea rows="3" class="form-control form-control-sm" wire:model="diagnosis"
                                         placeholder="Assessment after examination..."></textarea>
                                 </div>
+                                <div class="form-group">
+                                    <label class="d-flex align-items-center">
+                                        ICD-10 code
+                                        @if ($open->icd10)
+                                            <span class="badge badge-info ml-2">
+                                                {{ $open->icd10->code }} &mdash; {{ $open->icd10->description }}
+                                            </span>
+                                        @endif
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" list="icd10-options"
+                                        wire:model="icd" maxlength="10" placeholder="Type or pick a code, e.g. J06.9">
+                                    <datalist id="icd10-options">
+                                        @foreach ($icdCodes as $row)
+                                            <option value="{{ $row['code'] }}">{{ $row['code'] }} &mdash; {{ $row['description'] }}</option>
+                                        @endforeach
+                                    </datalist>
+                                    @error('icd') <span class="text-danger" style="font-size:10.5px">{{ $message }}</span> @enderror
+                                    <small class="text-muted d-block" style="font-size:11px">Pick a suggestion to store the exact code.</small>
+                                </div>
                                 <div class="form-row">
                                     <div class="form-group col-4">
                                         <label>Follow-up date</label>

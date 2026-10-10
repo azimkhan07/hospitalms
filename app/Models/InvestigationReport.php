@@ -35,6 +35,8 @@ class InvestigationReport extends Model
         'charge' => 'decimal:2',
         'result' => 'array',
         'reported_at' => 'datetime',
+        'sample_collected_at' => 'datetime',
+        'is_critical' => 'boolean',
     ];
 
     public const STATUSES = ['pending', 'in_progress', 'reported', 'cancelled'];
@@ -57,6 +59,40 @@ class InvestigationReport extends Model
     public function reportedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reported_by');
+    }
+
+    public function collector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sample_collected_by');
+    }
+
+    /**
+     * Next free sample label for a facility, formatted LAB-{tenant}-{Ymd}-{seq}.
+     *
+     * The daily sequence is read across every facility row so the label stays
+     * globally unique for the unique index; callers still retry because two
+     * collectors can read the same "next" number before either writes.
+     */
+    public static function generateBarcode(int $tenantId): string
+    {
+        $prefix = 'LAB-'.$tenantId.'-'.now()->format('Ymd').'-';
+
+        $seq = 1;
+
+        static::acrossTenants()
+            ->where('barcode', 'like', $prefix.'%')
+            ->pluck('barcode')
+            ->each(function ($code) use ($prefix, &$seq) {
+                $seq = max($seq, (int) substr((string) $code, strlen($prefix)) + 1);
+            });
+
+        do {
+            $candidate = $prefix.str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+            $taken = static::acrossTenants()->where('barcode', $candidate)->exists();
+            $seq++;
+        } while ($taken);
+
+        return $candidate;
     }
 
     public function test(): BelongsTo

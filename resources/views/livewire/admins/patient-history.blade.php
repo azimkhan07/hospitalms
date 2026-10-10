@@ -83,6 +83,7 @@
                                         <th>Out</th>
                                         <th>Doctor</th>
                                         <th>Status</th>
+                                        <th>ICD</th>
                                         <th>Notes</th>
                                     </tr>
                                 </thead>
@@ -97,11 +98,18 @@
                                                     {{ ucfirst($a->status ?? 'pending') }}
                                                 </span>
                                             </td>
+                                            <td>
+                                                @if ($a->icd10)
+                                                    <span class="badge badge-info">{{ $a->icd10->code }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
                                             <td>{{ \Illuminate\Support\Str::limit($a->notes ?? $a->description ?? '-', 40) }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted py-2">No appointments.</td>
+                                            <td colspan="6" class="text-center text-muted py-2">No appointments.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

@@ -65,4 +65,6 @@ Route::prefix('admin')
         require __DIR__.'/pharmacy.php';
         require __DIR__.'/idcards.php';
         require __DIR__.'/dutyroster.php';
+        require __DIR__.'/icd10.php';
+        require __DIR__.'/labworkflow.php';
     });

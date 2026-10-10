@@ -18,7 +18,7 @@ class DoctorAlert extends Model
 {
     use BelongsToTenant, HasFactory, SoftDeletes;
 
-    public const CATEGORIES = ['emergency', 'vitals', 'pain', 'meds', 'nursing', 'other'];
+    public const CATEGORIES = ['emergency', 'vitals', 'pain', 'meds', 'nursing', 'lab', 'other'];
 
     protected $fillable = [
         'patient_id',

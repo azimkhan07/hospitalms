@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\appointment;
 use App\Models\DoctorAlert;
+use App\Models\Icd10Code;
 use App\Models\InvestigationReport;
 use App\Models\InvestigationTest;
 use App\Models\Vital;
@@ -39,11 +40,20 @@ class Consultations extends Component
 
     public string $diagnosis = '';
 
+    public string $icd = '';
+
+    public array $icdCodes = [];
+
     public string $followUpAt = '';
 
     public array $orderTests = [];
 
     public string $orderPriority = 'routine';
+
+    public function mount(): void
+    {
+        $this->loadIcdCodes();
+    }
 
     public function updatedSearch(): void
     {
@@ -153,6 +163,7 @@ class Consultations extends Component
         $this->openId = $appt->id;
         $this->chiefComplaint = (string) $appt->chief_complaint;
         $this->diagnosis = (string) $appt->diagnosis;
+        $this->icd = (string) optional($appt->icd10)->code;
         $this->followUpAt = optional($appt->follow_up_at)->format('Y-m-d') ?? '';
         $this->orderTests = [];
         $this->orderPriority = 'routine';
@@ -171,12 +182,21 @@ class Consultations extends Component
         $this->validate([
             'chiefComplaint' => 'nullable|string|max:2000',
             'diagnosis' => 'nullable|string|max:2000',
+            'icd' => 'nullable|string|max:10',
             'followUpAt' => 'nullable|date',
         ]);
+
+        $icdId = null;
+        $icdCode = strtoupper(trim($this->icd));
+
+        if ($icdCode !== '') {
+            $icdId = $this->icdQuery()->where('code', $icdCode)->value('id');
+        }
 
         $appt->update([
             'chief_complaint' => $this->chiefComplaint ?: null,
             'diagnosis' => $this->diagnosis ?: null,
+            'icd10_id' => $icdId,
             'follow_up_at' => $this->followUpAt ?: null,
         ]);
 
@@ -268,6 +288,26 @@ class Consultations extends Component
         $appt = $this->myAppointments()->findOrFail($id);
 
         $this->redirect(route('admin_vitals', ['appointment' => $appt->id]));
+    }
+
+    /** The global ICD-10 baseline plus this facility's own active codes. */
+    private function icdQuery()
+    {
+        return Icd10Code::query()
+            ->active()
+            ->forTenant(auth()->user()?->tenant_id ? (int) auth()->user()->tenant_id : null)
+            ->orderBy('code');
+    }
+
+    private function loadIcdCodes(): void
+    {
+        $this->icdCodes = $this->icdQuery()
+            ->get(['code', 'description'])
+            ->map(fn (Icd10Code $row): array => [
+                'code' => $row->code,
+                'description' => $row->description,
+            ])
+            ->all();
     }
 
     /** Every appointment query in this screen goes through the doctor scope. */

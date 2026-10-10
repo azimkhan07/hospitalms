@@ -31,6 +31,7 @@ class appointment extends Model
         'prescription',
         'chief_complaint',
         'diagnosis',
+        'icd10_id',
         'follow_up_at',
     ];
 
@@ -81,6 +82,11 @@ class appointment extends Model
     public function scheme()
     {
         return $this->belongsTo(Scheme::class, 'scheme_id');
+    }
+
+    public function icd10()
+    {
+        return $this->belongsTo(Icd10Code::class, 'icd10_id');
     }
 
     public function checkups()

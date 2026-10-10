@@ -45,7 +45,7 @@ class PatientHistory extends Component
             : null;
 
         $appointments = $selected
-            ? \App\Models\appointment::with('doctor.employ:id,name')
+            ? \App\Models\appointment::with(['doctor.employ:id,name', 'icd10:id,code'])
                 ->where('patient_id', $selected->id)
                 ->orderByDesc('intime')
                 ->limit(20)

@@ -2,10 +2,14 @@
 
 namespace App\Http\Livewire\Admins;
 
+use App\Models\DoctorAlert;
 use App\Models\InvestigationReport;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 /**
@@ -17,6 +21,7 @@ use Livewire\WithPagination;
 #[Layout('admins.layouts.app')]
 class LabOrders extends Component
 {
+    use WithFileUploads;
     use WithPagination;
 
     protected $paginationTheme = 'bootstrap';
@@ -32,6 +37,12 @@ class LabOrders extends Component
     public string $reportFindings = '';
 
     public string $reportResult = '';
+
+    public $resultFile = null;
+
+    public bool $isCritical = false;
+
+    public string $criticalNote = '';
 
     public function updatedStatusFilter(): void
     {
@@ -57,6 +68,63 @@ class LabOrders extends Component
         session()->flash('message', 'Work started on '.$report->test?->name.'.');
     }
 
+    /**
+     * Collect the physical sample: stamp the row with a facility-scoped
+     * barcode, the collector and the time. Idempotent -- re-collecting an
+     * already-barcoded row keeps the original label.
+     */
+    public function collectSample(int $id): void
+    {
+        $report = $this->queue()->findOrFail($id);
+
+        if ($report->barcode) {
+            session()->flash('message', 'Sample already collected as '.$report->barcode.'.');
+
+            return;
+        }
+
+        $barcode = $this->assignBarcode($report);
+
+        session()->flash('message', 'Sample collected: '.$barcode.'.');
+    }
+
+    /**
+     * Persist a unique barcode on the report. The generator picks the next
+     * free sequence of the day and the unique index is the final guard, so a
+     * concurrent collector can never collide.
+     */
+    private function assignBarcode(InvestigationReport $report): string
+    {
+        $tenantId = (int) (auth()->user()->tenant_id ?? $report->tenant_id);
+
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $barcode = InvestigationReport::generateBarcode($tenantId);
+
+            try {
+                $report->forceFill([
+                    'barcode' => $barcode,
+                    'sample_collected_at' => now(),
+                    'sample_collected_by' => auth()->id(),
+                ])->save();
+
+                return $barcode;
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Unique index hit by a racing collector: try the next sequence.
+                $report->barcode = null;
+            }
+        }
+
+        // Last resort: timestamp entropy still yields a well-formed label.
+        $barcode = 'LAB-'.$tenantId.'-'.now()->format('Ymd').'-'.now()->format('Hisv');
+        $report->forceFill([
+            'barcode' => $barcode,
+            'sample_collected_at' => now(),
+            'sample_collected_by' => auth()->id(),
+        ])->save();
+
+        return $barcode;
+    }
+
     public function openReport(int $id): void
     {
         $report = $this->queue()->findOrFail($id);
@@ -64,6 +132,9 @@ class LabOrders extends Component
         $this->reportId = $report->id;
         $this->reportFindings = (string) $report->findings;
         $this->reportResult = is_string($report->result) ? $report->result : '';
+        $this->isCritical = (bool) $report->is_critical;
+        $this->criticalNote = (string) $report->critical_note;
+        $this->resultFile = null;
         $this->resetValidation();
     }
 
@@ -79,25 +150,50 @@ class LabOrders extends Component
         $this->validate([
             'reportFindings' => 'nullable|string|max:2000',
             'reportResult' => 'nullable|string|max:2000',
+            'resultFile' => 'nullable|file|max:8192|mimes:pdf,jpg,jpeg,png',
+            'isCritical' => 'nullable|boolean',
+            'criticalNote' => 'nullable|string|max:1000',
         ]);
 
-        if (trim($this->reportFindings) === '' && trim($this->reportResult) === '') {
-            $this->addError('reportFindings', 'Enter the findings or the result values.');
+        if (trim($this->reportFindings) === '' && trim($this->reportResult) === '' && ! $this->resultFile) {
+            $this->addError('reportFindings', 'Enter the findings, the result values or attach a file.');
 
             return;
+        }
+
+        $filePath = $report->file_path;
+
+        if ($this->resultFile) {
+            $tenantId = (int) (auth()->user()->tenant_id ?? $report->tenant_id);
+            $ext = strtolower($this->resultFile->getClientOriginalExtension() ?: $this->resultFile->extension());
+            $name = ($report->barcode ?: $report->id).'.'.$ext;
+            $filePath = $this->resultFile->storeAs('lab/'.$tenantId, $name, 'public');
         }
 
         $report->update([
             'findings' => $this->reportFindings ?: null,
             'result' => $this->reportResult ?: null,
+            'file_path' => $filePath,
+            'is_critical' => $this->isCritical,
+            'critical_note' => $this->criticalNote ?: null,
             'status' => 'reported',
             'reported_by' => auth()->id(),
             'reported_at' => now(),
         ]);
 
-        $this->reportId = null;
-        $this->reportFindings = '';
-        $this->reportResult = '';
+        if ($report->is_critical) {
+            $alert = DoctorAlert::create([
+                'patient_id' => $report->patient_id,
+                'raised_by' => auth()->id(),
+                'category' => 'lab',
+                'message' => 'Critical result: '.($report->test?->name ?: 'Lab test').' — '.$this->criticalNote,
+                'is_urgent' => true,
+            ]);
+
+            $alert->notifyDoctors();
+        }
+
+        $this->reset(['reportId', 'reportFindings', 'reportResult', 'resultFile', 'isCritical', 'criticalNote']);
         session()->flash('message', ($report->test?->name ?: 'Test').' reported.');
     }
 
@@ -149,6 +245,7 @@ class LabOrders extends Component
                 'pending' => InvestigationReport::where('status', 'pending')->count(),
                 'in_progress' => InvestigationReport::where('status', 'in_progress')->count(),
                 'reported' => InvestigationReport::where('status', 'reported')->count(),
+                'critical' => InvestigationReport::where('is_critical', true)->count(),
             ],
         ]);
     }

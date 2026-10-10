@@ -117,5 +117,7 @@ Route::middleware(['tenant.host', 'auth', 'checksuperadmin'])->prefix('admin')->
     require __DIR__.'/admin/idcards_routes.php';
     require __DIR__.'/admin/queuemonitor_routes.php';
     require __DIR__.'/admin/dutyroster_routes.php';
+    require __DIR__.'/admin/icd10_routes.php';
+    require __DIR__.'/admin/labworkflow_routes.php';
 
 });

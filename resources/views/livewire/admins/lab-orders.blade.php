@@ -26,6 +26,9 @@
                             @if ($key !== 'all')<span class="badge badge-light">{{ $counts[$key] ?? 0 }}</span>@endif
                         </button>
                     @endforeach
+                    @if (($counts['critical'] ?? 0) > 0)
+                        <span class="badge badge-danger ml-1">{{ $counts['critical'] }} critical</span>
+                    @endif
                 </div>
                 <input type="search" class="form-control form-control-sm" style="max-width:200px"
                     placeholder="Search patient..." wire:model.live.debounce.300ms="search">
@@ -50,6 +53,11 @@
                                 <td>
                                     {{ $report->test?->name ?? 'Test #'.$report->investigation_test_id }}
                                     <small class="text-muted d-block">{{ $report->test?->code }}</small>
+                                    @if ($report->barcode)
+                                        <small class="d-block" style="font-family:monospace;font-size:10.5px">
+                                            {{ $report->barcode }}
+                                        </small>
+                                    @endif
                                 </td>
                                 <td>
                                     {{ $report->patient?->name ?? 'Removed patient' }}
@@ -78,6 +86,9 @@
                                         $badge = ['pending' => 'warning', 'in_progress' => 'primary', 'reported' => 'success'][$report->status] ?? 'secondary';
                                     @endphp
                                     <span class="badge badge-{{ $badge }}">{{ str_replace('_', ' ', ucfirst($report->status)) }}</span>
+                                    @if ($report->is_critical)
+                                        <span class="badge badge-danger d-block mt-1">CRITICAL</span>
+                                    @endif
                                     @if ($report->reported_at)
                                         <small class="text-muted d-block">{{ optional($report->reported_at)->format('d M, h:i A') }}</small>
                                     @endif
@@ -87,6 +98,17 @@
                                         <button class="btn btn-xs btn-outline-primary" wire:click="start({{ $report->id }})" title="Start">
                                             <i class="fas fa-play"></i>
                                         </button>
+                                    @endif
+                                    @if (! $report->barcode && in_array($report->status, ['pending', 'in_progress'], true))
+                                        <button class="btn btn-xs btn-outline-info" wire:click="collectSample({{ $report->id }})" title="Collect sample">
+                                            <i class="fas fa-barcode"></i>
+                                        </button>
+                                    @endif
+                                    @if ($report->barcode)
+                                        <a class="btn btn-xs btn-outline-dark" href="{{ route('admin_lab_barcode_print', ['report' => $report->id]) }}"
+                                            target="_blank" title="Print slip">
+                                            <i class="fas fa-print"></i>
+                                        </a>
                                     @endif
                                     @if (in_array($report->status, ['pending', 'in_progress'], true))
                                         <button class="btn btn-xs btn-outline-success" wire:click="openReport({{ $report->id }})" title="Enter result">
@@ -135,6 +157,27 @@
                                 placeholder="Within normal limits, ..."></textarea>
                             @error('reportFindings') <span class="text-danger" style="font-size:10.5px">{{ $message }}</span> @enderror
                         </div>
+                        <div class="form-group">
+                            <label>Result file <span class="text-muted">(PDF / JPG / PNG, max 8 MB)</span></label>
+                            <input type="file" class="form-control-file form-control-sm" wire:model="resultFile"
+                                accept=".pdf,.jpg,.jpeg,.png">
+                            <div wire:loading wire:target="resultFile" class="text-muted" style="font-size:10.5px">Uploading...</div>
+                            @error('resultFile') <span class="text-danger d-block" style="font-size:10.5px">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="custom-control custom-checkbox mb-1">
+                            <input type="checkbox" class="custom-control-input" id="isCritical" wire:model="isCritical">
+                            <label class="custom-control-label" for="isCritical">
+                                Critical result <span class="text-danger">(alert the doctors)</span>
+                            </label>
+                        </div>
+                        @if ($isCritical)
+                            <div class="form-group mb-0">
+                                <label>Critical note</label>
+                                <textarea rows="2" class="form-control form-control-sm" wire:model="criticalNote"
+                                    placeholder="What the doctor must know..."></textarea>
+                                @error('criticalNote') <span class="text-danger" style="font-size:10.5px">{{ $message }}</span> @enderror
+                            </div>
+                        @endif
                     </div>
                     <div class="modal-footer py-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="closeReport">Cancel</button>

@@ -1108,10 +1108,40 @@ print workflow.
   **235 tests / 931 assertions green**; audit 34/34; duty-roster page smoke
   clean (0 console errors).
 
-**Still deferred (honest list):** ICD-10, lab sample/barcode + file upload +
-critical alerts.
+**Still deferred (honest list):** none — the ICD-10 and lab bundles below close
+out the whole backlog.
 
 ---
 
-_Next action: whichever deferred item the user picks next — ICD-10 coding, or
-the lab sample/barcode + file upload + critical alerts bundle._
+## 18r. ICD-10 diagnosis coding — done 2026-10-10 (parallel with 18s)
+
+- `icd10_codes` (code unique, description, chapter, is_active) with a shared
+  tenant-agnostic baseline (tenant_id NULL) plus per-tenant curation.
+- `Icd10Seeder` — idempotent 100-code baseline (I10, E11, J06.9, A09, U07.1,
+  …). `appointments.icd10_id` FK so a consult can carry one code.
+- Doctor desk (`Consultations`): ICD-10 input with code datalist,
+  `saveConsult()` persists `icd10_id`; patient history shows the code badge.
+- `/admin/icd10` directory (search + CRUD + archive/restore, staff module
+  gate); API `GET|POST /icd10`, `DELETE /{id}` (404 for foreign rows).
+- Tests: `tests/Feature/Icd10Test.php` (7). Seeded into the dev DB.
+
+## 18s. Lab sample/barcode + result files + critical alerts — done 2026-10-10
+(parallel with 18r)
+
+- `investigation_reports` gains `barcode` (unique, `LAB-{tenant}-{Ymd}-{seq}`,
+  retry-guarded), `sample_collected_at/by`, `file_path`, `is_critical`,
+  `critical_note`.
+- Lab queue (`LabOrders`): Collect Sample action (idempotent), mono barcode +
+  printable slip route `/admin/lab/barcode/{report}`, result file upload to the
+  public disk, Critical checkbox/note.
+- A reported critical result raises a `DoctorAlert` (new `lab` category) and
+  rings `DoctorAlertRaised` at every doctor.
+- API: `POST /api/v1/admin/lab/{id}/barcode` + `POST /lab/{id}/critical`
+  (envelope, 404/422).
+- Tests: `tests/Feature/LabWorkflowTest.php` (8). Full suite **250 tests /
+  1002 assertions green**; audit 34/34; icd10 + lab pages smoke clean.
+
+---
+
+_Backlog is empty. Next phase: public website finishing touches (the user's
+announced polish pass)._
