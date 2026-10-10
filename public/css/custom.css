@@ -2090,3 +2090,33 @@ main#main {
     line-height: 30px;
     font-size: 14px;
 }
+
+/* what our patients say — drop the photo background, readable quote cards */
+.hms-landing #testimonials {
+    background-image: none;
+    background: #eef4fa;
+    background-attachment: scroll;
+}
+.hms-landing #testimonials .testimonial {
+    background: #fff;
+    border: 1px solid #e3ebf3;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(11, 60, 102, 0.06);
+}
+.hms-landing #testimonials .testimonial .desc h3,
+.hms-landing #testimonials .testimonial .desc .lead {
+    color: #45566b;
+    background: transparent;
+}
+.hms-landing #testimonials .testimonial .desc .lead {
+    line-height: 1.5;
+    margin: 4px 0 0;
+}
+.hms-landing #testimonials .testimonial .desc h3 {
+    color: #0b3c66;
+}
+.hms-landing #testimonials .testimonial .testi-meta {
+    margin-top: 10px;
+}
