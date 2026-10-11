@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.page-hero', [
+    'title' => $site['services_page_heading'] ?: ($site['services_heading'] ?: 'Our Services'),
+    'subtitle' => $site['services_heading'],
+    'crumb' => 'Services',
+])
 <div id="service" class="hms-inner hms-services wow fadeIn">
     <div class="container">
-        <div class="heading">
-            <span class="icon-logo"><img src="{{ $site['icon'] ? storage_url($site['icon']) : asset('images/icon-logo.png') }}" alt="#"></span>
-            <h2>{{ $site['services_page_heading'] ?: ($site['services_heading'] ?: 'Our Services') }}</h2>
-        </div>
-
         <div class="row">
             <div class="col-lg-8 col-md-7 col-sm-12 col-xs-12">
                 <div class="row hms-service-tiles">
@@ -38,9 +38,7 @@
                     @endforelse
                 </div>
             </div>
-            <div class="col-lg-4 col-md-5 col-sm-12 col-xs-12">
-                @livewire('appointmentform')
-            </div>
+            @livewire('appointmentform')
         </div>
 
         @if ($departments->count())

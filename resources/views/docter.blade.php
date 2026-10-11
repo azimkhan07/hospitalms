@@ -1,16 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.page-hero', [
+    'title' => $site['doctors_heading'] ?: 'Our Doctors',
+    'subtitle' => $site['doctors_subtitle'],
+    'crumb' => 'Doctors',
+])
 <div id="doctors" class="parallax section db" data-stellar-background-ratio="0.4" style="background:#fff;" data-scroll-id="doctors" tabindex="-1">
     <div class="container">
-
-        <div class="heading">
-            <span class="icon-logo"><img src="{{ $site['icon'] ? storage_url($site['icon']) : asset('images/icon-logo.png') }}" alt="#"></span>
-            <h2>{{ $site['doctors_heading'] }}</h2>
-            @if ($site['doctors_subtitle'])
-                <p class="lead">{{ $site['doctors_subtitle'] }}</p>
-            @endif
-        </div>
 
         <div class="row dev-list text-center">
             @forelse ($doctors as $doctor)

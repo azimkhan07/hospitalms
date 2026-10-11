@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.page-hero', [
+    'title' => $site['about_title'] ?: ('About ' . $site['name']),
+    'subtitle' => $site['tagline'],
+    'crumb' => 'About Us',
+])
 <div id="about" class="section  wow fadeIn">
     <div class="container">
-      <div class="heading">
-         <span class="icon-logo"><img src="{{ $site['icon'] ? storage_url($site['icon']) : asset('images/icon-logo.png') }}" alt="#"></span>
-         <h2>{{ $site['about_title'] }}</h2>
-      </div>
-      <!-- end title -->
       <div class="row">
          <div class="col-md-6">
             <div class="message-box">

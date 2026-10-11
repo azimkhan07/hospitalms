@@ -1218,6 +1218,27 @@ out the whole backlog.
   overflow, 0 broken imgs) + audit **34/34, 0 console errors**; full suite
   **270 tests / 1100 assertions green**.
 
+## 18w. Inner-page heroes + services booking layout — done 2026-10-11
+
+- **Hero on every navbar page**: new `resources/views/partials/page-hero.blade.php`
+  (background = `hero_image` with the same dark→primary overlay as the landing)
+  rendered on `/services`, `/about`, `/docters` and `/contact`. It cancels
+  `main#main`'s 105px padding (`margin-top:-105px; padding:150px 0 46px`) so the
+  banner sits flush under the fixed header, with a white page title + breadcrumb
+  ("Home / …"). Each page now has exactly one `<h1>`.
+- Titles are dynamic: `services_page_heading`, `about_title`, `doctors_heading`,
+  `contact_heading` (+ tagline/subtitle), so admins edit them from Settings.
+- Removed the now-duplicate top `.heading` blocks on services/about/doctors and
+  the contact form heading (`contactus`), plus `.hms-page-hero + .section {
+  padding-top:34px }` so content hugs the banner.
+- **Services "Book Appointment" fixed**: the livewire form's root is already a
+  `col-lg-4`, but the page wrapped it in a second column → nested grid. Removed
+  the extra wrapper so the form sits as a sibling of the `col-lg-8` tile grid
+  (verified 360px in a 390px column, aligned with the tiles).
+- `docs/Skills_Interview_Reference.pdf` regenerated earlier this session.
+- Verified: probe (hero h=304 top=0 on all four pages, book form column 390,
+  0 overflow) + audit **34/34, 0 console errors**; full suite **270/1100 green**.
+
 ---
 
 _Backlog is empty. Next phase: public website finishing touches (the user's
