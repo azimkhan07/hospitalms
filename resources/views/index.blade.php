@@ -33,7 +33,7 @@
                             <span class="hms-fact-icon"><i class="fa fa-clock-o"></i></span>
                             <div>
                                 <h4>{{ $site['fact_working_title'] }}</h4>
-                                <p>{{ $site['working_hours'] }}</p>
+                                <p>{{ hms_hours_summary() }}</p>
                             </div>
                         </div>
                     </div>
@@ -212,7 +212,7 @@
                     </div>
                     <div class="hms-contact-card">
                         <h4><i class="fa fa-clock-o"></i>{{ $site['contact_card3_title'] }}</h4>
-                        <p>{{ $site['working_hours'] }}</p>
+                        @include('partials.opening-hours')
                     </div>
                 </div>
             </div>

@@ -69,8 +69,7 @@
                         </div>
                         <div class="info-inner">
                             <span class="icontop"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
-                            <span class="iconcont"><a data-scroll href="#">Daily:
-                                    {{ $site['working_hours'] }}</a></span>
+                            <span class="iconcont"><a data-scroll href="#">{{ hms_hours_summary() }}</a></span>
                         </div>
                     </div>
                 </div>

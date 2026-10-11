@@ -92,6 +92,31 @@
                         </div>
                     </div>
 
+                    <h5 class="text-info border-bottom pb-1 mb-2 mt-2">Working Hours (weekly)</h5>
+                    <div class="row">
+                        @foreach (['hours_mon', 'hours_tue', 'hours_wed', 'hours_thu', 'hours_fri', 'hours_sat', 'hours_sun'] as $key)
+                            @if (array_key_exists($key, $settings))
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group mb-2">
+                                        <label class="mb-1" style="font-size:11px">{{ ['hours_mon' => 'Monday', 'hours_tue' => 'Tuesday', 'hours_wed' => 'Wednesday', 'hours_thu' => 'Thursday', 'hours_fri' => 'Friday', 'hours_sat' => 'Saturday', 'hours_sun' => 'Sunday'][$key] }}</label>
+                                        <input type="text" wire:model="settings.{{ $key }}" class="form-control form-control-sm" placeholder="8:00 AM - 8:00 PM or Closed">
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                        @if (array_key_exists('hours_note', $settings))
+                            <div class="col-lg-4 col-md-6">
+                                <div class="form-group mb-2">
+                                    <label class="mb-1" style="font-size:11px">Note</label>
+                                    <input type="text" wire:model="settings.hours_note" class="form-control form-control-sm" placeholder="Emergency open 24x7">
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <p class="text-muted" style="font-size:10.5px">
+                        Leave a day blank or type "Closed" to mark it shut — the public site then shows "Closed today" plus the next open day's timing.
+                    </p>
+
                     <h5 class="text-info border-bottom pb-1 mb-2 mt-2">Section Headings &amp; Labels</h5>
                     <div class="row">
                         @foreach (['fact_working_title', 'fact_departments_title', 'services_heading', 'services_page_heading', 'doctors_heading', 'testimonials_heading', 'contact_heading', 'contact_card1_title', 'contact_card2_title', 'contact_card3_title', 'about_heading', 'about_sub_heading', 'about_intro', 'hero_btn1', 'hero_btn2', 'about_btn', 'footer_contact_title', 'copyright_text'] as $key)

@@ -311,6 +311,146 @@ if (! function_exists('hms_role_has_app')) {
     }
 }
 
+if (! function_exists('hms_weekly_hours')) {
+    /**
+     * The public clinic/hospital opening hours, one entry per day.
+     *
+     * Values come from the `hours_mon` … `hours_sun` settings written in
+     * Admin → Settings. A blank value (or the word "Closed") marks that day
+     * shut. If no per-day value is configured at all, every day falls back to
+     * the single free-text `working_hours`, so an unmigrated site still shows
+     * something sensible.
+     *
+     * @return array<int, array{key:string,day:string,short:string,label:string,value:string,closed:bool}>
+     */
+    function hms_weekly_hours(?array $raw = null): array
+    {
+        if ($raw === null) {
+            try {
+                $raw = \App\Models\SiteContent::get()['weekly_hours'] ?? [];
+            } catch (\Throwable $e) {
+                $raw = [];
+            }
+        }
+
+        $days = [
+            'mon' => ['Monday', 'Mon'],
+            'tue' => ['Tuesday', 'Tue'],
+            'wed' => ['Wednesday', 'Wed'],
+            'thu' => ['Thursday', 'Thu'],
+            'fri' => ['Friday', 'Fri'],
+            'sat' => ['Saturday', 'Sat'],
+            'sun' => ['Sunday', 'Sun'],
+        ];
+
+        $configured = false;
+        foreach (array_keys($days) as $k) {
+            if (! empty($raw[$k])) {
+                $configured = true;
+                break;
+            }
+        }
+
+        $out = [];
+
+        if (! $configured) {
+            $fallback = trim((string) (\App\Models\SiteContent::get()['working_hours'] ?? '')) ?: 'Open';
+
+            foreach ($days as $k => [$label, $short]) {
+                $out[] = ['key' => $k, 'day' => ucfirst($k), 'short' => $short, 'label' => $label, 'value' => $fallback, 'closed' => false];
+            }
+
+            return $out;
+        }
+
+        foreach ($days as $k => [$label, $short]) {
+            $value = trim((string) ($raw[$k] ?? ''));
+            $closed = $value === '' || stripos($value, 'closed') !== false;
+
+            $out[] = [
+                'key' => $k,
+                'day' => ucfirst($k),
+                'short' => $short,
+                'label' => $label,
+                'value' => $closed ? 'Closed' : $value,
+                'closed' => $closed,
+            ];
+        }
+
+        return $out;
+    }
+}
+
+if (! function_exists('hms_today_hours')) {
+    /**
+     * Today's opening status plus the next day the facility is actually open.
+     *
+     * Feeds the public header and the homepage/contact "Working Hours" cards so
+     * a closed day shows "Closed today" and, beside it, the next open day's
+     * timing (or nothing when every day is shut).
+     *
+     * @return array{key:string,day:string,short:string,label:string,value:string,closed:bool,next_label:?string,next_short:?string,next_value:?string}
+     */
+    function hms_today_hours(?array $raw = null): array
+    {
+        $hours = hms_weekly_hours($raw);
+
+        $todayKey = strtolower(now()->format('D'));
+        $byKey = [];
+        foreach ($hours as $h) {
+            $byKey[$h['key']] = $h;
+        }
+
+        $today = $byKey[$todayKey] ?? $hours[0];
+        $order = array_column($hours, 'key');
+        $idx = array_search($todayKey, $order, true);
+        $idx = $idx === false ? 0 : $idx;
+
+        $next = null;
+        for ($i = 1; $i <= 7; $i++) {
+            $candidate = $byKey[$order[($idx + $i) % 7]] ?? null;
+
+            if ($candidate && ! $candidate['closed']) {
+                $next = $candidate;
+                break;
+            }
+        }
+
+        return [
+            'key' => $today['key'],
+            'day' => $today['day'],
+            'short' => $today['short'],
+            'label' => $today['label'],
+            'value' => $today['value'],
+            'closed' => (bool) $today['closed'],
+            'next_label' => $next['label'] ?? null,
+            'next_short' => $next['short'] ?? null,
+            'next_value' => $next['value'] ?? null,
+        ];
+    }
+}
+
+if (! function_exists('hms_hours_summary')) {
+    /**
+     * One short sentence for the header top bar: today's status, and when shut,
+     * the next open day's timing beside it. Kept short so the bar never wraps.
+     */
+    function hms_hours_summary(?array $raw = null): string
+    {
+        $t = hms_today_hours($raw);
+
+        if (! $t['closed']) {
+            return 'Open today: '.$t['value'];
+        }
+
+        if ($t['next_short']) {
+            return 'Closed today · '.$t['next_short'].' '.$t['next_value'];
+        }
+
+        return 'Closed today';
+    }
+}
+
 if (! function_exists('hms_tenant_required_roles')) {
     /**
      * Role slugs the active tenant was configured with.

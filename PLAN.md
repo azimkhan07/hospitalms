@@ -1239,8 +1239,33 @@ out the whole backlog.
 - Verified: probe (hero h=304 top=0 on all four pages, book form column 390,
   0 overflow) + audit **34/34, 0 console errors**; full suite **270/1100 green**.
 
+## 18x. Day-aware public working hours (closed days) — done 2026-10-11
+
+- **Weekly schedule**: admins now set `hours_mon` … `hours_sun` (plus an optional
+  `hours_note`) in Admin → Settings → "Working Hours (weekly)". A day left blank
+  or set to "Closed" is treated as shut; defaults are Mon–Sat `8:00 AM - 8:00 PM`
+  (Sat `8:00 AM - 2:00 PM`) and Sunday `Closed`.
+- **Helpers** (`app/helpers.php`): `hms_weekly_hours()` returns the ordered
+  7-day list (key/day/short/label/value/closed), falling back to the single
+  free-text `working_hours` when no per-day value exists yet; `hms_today_hours()`
+  returns today's status plus the next open day across the week;
+  `hms_hours_summary()` gives one short sentence for the header top bar.
+- **Data**: `SiteContent::get()` exposes `weekly_hours` (+ `hours_note`) so the
+  raw schedule is cached with the rest of the content while "today" stays
+  computed at render time.
+- **Public display**: `partials/opening-hours.blade.php` renders a status pill
+  ("Open today …" / "Closed today · Next: Monday …") + a 7-row weekly list with
+  the closed days marked red and today highlighted. Used on the homepage contact
+  card and on the `/contact` page; the header top bar and homepage facts card use
+  the short summary. So a closed day still shows the full schedule and the next
+  open timing beside "Closed".
+- Verified: `WeeklyHoursTest` (6) + full suite **276/1120 green**; audit **34/34,
+  0 console errors**; fixed a float-clear overflow on `/contact` (`.hms-inner`
+  now `clear: both`).
+
 ---
 
 _Backlog is empty. Next phase: public website finishing touches (the user's
 announced polish pass)._
+
 
