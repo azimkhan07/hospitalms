@@ -757,7 +757,7 @@ body.clinic_version .footer .widget-title h3 {
     float: left;
     width: 100%;
     min-height: 450px;
-    background: yellow;
+    background: linear-gradient(135deg, #0b3c66 0%, #0f7fd4 100%);
 }
 .contact-section {
     position: relative;
@@ -780,6 +780,7 @@ body.clinic_version .footer .widget-title h3 {
     font-size: 15px;
     font-weight: 300;
     margin-bottom: 15px;
+    color: #fff;
 }
 .form-contant input:focus,
 .form-contant textarea:focus {
@@ -2119,4 +2120,89 @@ main#main {
 }
 .hms-landing #testimonials .testimonial .testi-meta {
     margin-top: 10px;
+}
+
+/* ==== HMS compact inner pages (services / about / doctors via navbar) ==== */
+.hms-inner {
+    --hms-primary: #0f7fd4;
+    --hms-dark: #0b3c66;
+    --hms-muted: #61748a;
+    --hms-line: #e3ebf3;
+    display: flow-root;
+    padding: 38px 0;
+}
+.hms-inner.hms-services {
+    background: #f8fbfe;
+}
+.hms-inner .heading {
+    float: none;
+    width: 100%;
+    margin: 0 0 22px;
+}
+.hms-inner .heading h2 {
+    float: none;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin: 6px 0 0;
+    padding-bottom: 10px;
+}
+.hms-inner .hms-service-tiles {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+.hms-inner .hms-serv {
+    text-align: left;
+    height: 100%;
+}
+.hms-inner .hms-serv h4,
+.hms-inner .hms-serv p,
+.hms-inner .hms-serv .icon-service {
+    float: none;
+    width: auto;
+}
+.hms-inner .hms-serv h4 {
+    margin: 6px 0 4px;
+}
+.hms-inner .hms-serv p {
+    line-height: 1.5;
+}
+.hms-inner .hms-serv .icon-service {
+    display: inline-block;
+    text-align: left;
+    margin: 0;
+}
+.hms-inner .hms-dept-row {
+    margin-top: 22px;
+}
+.hms-inner .hms-dept-row .post-media img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+}
+.hms-inner .hms-dept-row .service-widget h3 {
+    font-size: 14px;
+}
+/* about / doctors / contact inner pages share the compact heading */
+#about .heading,
+#doctors .heading,
+#getintouch .heading {
+    float: none;
+    width: 100%;
+    margin: 0 0 22px;
+}
+#about .heading h2,
+#doctors .heading h2,
+#getintouch .heading h2 {
+    float: none;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin: 6px 0 0;
+    padding-bottom: 10px;
+}
+.contact-section .form-contant input::placeholder,
+.contact-section .form-contant textarea::placeholder {
+    color: rgba(255, 255, 255, 0.65);
 }

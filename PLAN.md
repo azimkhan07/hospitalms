@@ -1192,6 +1192,32 @@ out the whole backlog.
   clinic all-roles, login 422/200 gates, `/auth/me` flag. Full suite **270 tests
   / 1100 assertions green**.
 
+## 18v. Public inner-page polish + interview skills PDF — done 2026-10-11
+
+- **Services page (`/services`)** rebuilt on the compact `.hms-inner` shell:
+  `.heading` block (icon + `services_page_heading`) instead of the old centred
+  `<h1>+<hr>`, white `.hms-serv` feature cards (was white text on the broken
+  `.services` background image), and the appointment form + department tiles
+  kept. Old `#service .services` gradient/image rules no longer apply.
+- **Contact (`/contact`) colour bug** fixed: `.contact-section` was `background:
+  yellow` → theme gradient `linear-gradient(135deg,#0b3c66,#0f7fd4)`; the 5
+  inline `style="color: cyan"` inputs removed; `.form-contant input/textarea`
+  now `color:#fff` with light placeholders (readable over the dark overlay).
+- **Consistent inner headings** — `#about`, `#doctors`, `#getintouch` and
+  `.hms-inner` section headings normalised to 22px / weight 700 / 22px gap,
+  same green underline as the landing. Content is admin-editable via Settings →
+  "Section Headings & Labels" (`about_title`, `about_heading`, `about_sub_heading`,
+  `doctors_heading`, `doctors_subtitle`, `services_page_heading`,
+  `contact_heading`), so the navbar inner pages are fully dynamic.
+- **`docs/Skills_Interview_Reference.pdf`** — one card per skill (Livewire 3,
+  Alpine, REST API, Sanctum, RBAC, multi-tenancy, Bootstrap/AdminLTE, jQuery,
+  Mix, Dompdf, Intervention Image, Jitsi, Queues/Notifications, PHPUnit, Git,
+  GitHub Actions, responsive) with a 2-line easy-English definition + where/how
+  it is used in HMS, for recruiter interview prep.
+- Verified: browser probe (6 feature tiles, white inputs, gradient bg, 0
+  overflow, 0 broken imgs) + audit **34/34, 0 console errors**; full suite
+  **270 tests / 1100 assertions green**.
+
 ---
 
 _Backlog is empty. Next phase: public website finishing touches (the user's

@@ -12,31 +12,31 @@
                     <div class="col-md-6">
                         <div class="form-group in_name">
                             <input type="text" class="form-control" placeholder="Name" wire:model.lazy="name"
-                                required="required" style="color: cyan">
+                                required="required">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group in_email">
                             <input type="email" class="form-control" wire:model.lazy="email" placeholder="E-mail"
-                                required="required " style="color: cyan">
+                                required="required">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group in_email">
                             <input type="tel" class="form-control" id="phone" wire:model.lazy="phone"
-                                placeholder="Phone" required="required" style="color: cyan">
+                                placeholder="Phone" required="required">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group in_email">
                             <input type="text" class="form-control" id="subject" wire:model.lazy="subject"
-                                placeholder="Subject" required="required" style="color: cyan">
+                                placeholder="Subject" required="required">
                         </div>
                     </div>
                     <div class="col-md-12">
                         <div class="form-group in_message">
                             <textarea class="form-control" id="message"  rows="5" placeholder="Message"
-                                wire:model.lazy="message" required="required" style="color: cyan"></textarea>
+                                wire:model.lazy="message" required="required"></textarea>
                         </div>
                         <div class="actions">
                             <input type="submit" value="Send Message"  name="submit" id="submitButton" class="btn small"
