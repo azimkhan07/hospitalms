@@ -33,6 +33,18 @@ class AuthController extends Controller
             ]);
         }
 
+        // Only app-enabled roles may log in to the mobile/tablet app. In clinic
+        // mode every role is enabled; in hospital mode the desk-bound roles
+        // (receptionist, pharmacist, accountant, ...) use the responsive web
+        // panel on a PC instead (see config('hms.app_roles')).
+        if (! $user->isPlatformAdmin() && ! hms_role_has_app($user->roleSlug())) {
+            throw ValidationException::withMessages([
+                'email' => [
+                    'Your role ('.hms_role_label_for_slug($user->roleSlug()).') uses the desktop panel only and cannot log in to the mobile app.',
+                ],
+            ]);
+        }
+
         $token = $user->createToken($data['device_name'] ?? 'api')->plainTextToken;
 
         $user->forceFill(['last_login_at' => now()])->save();
@@ -82,6 +94,7 @@ class AuthController extends Controller
             'department' => $user->department,
             'is_active' => (bool) $user->is_active,
             'role' => $user->roleSlug(),
+            'app_enabled' => $user->isPlatformAdmin() || hms_role_has_app($user->roleSlug()),
             'is_super_admin' => $user->isPlatformAdmin(),
             'tenant' => $user->tenant ? [
                 'id' => $user->tenant->id,

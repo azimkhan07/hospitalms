@@ -50,6 +50,16 @@ if (! function_exists('hms_institution_mode')) {
             if ($valid($tenantMode)) {
                 return $tenantMode;
             }
+
+            // No user yet (e.g. the API login): the request still resolves to a
+            // facility host, so Tenant::current() knows the mode in play.
+            $hostTenant = method_exists(\App\Models\Tenant::class, 'current')
+                ? \App\Models\Tenant::current()
+                : null;
+
+            if ($hostTenant && $valid($hostTenant->mode)) {
+                return $hostTenant->mode;
+            }
         } catch (\Throwable $e) {
             // fall through to the settings row
         }
@@ -248,6 +258,56 @@ if (! function_exists('hms_role_enabled')) {
         }
 
         return hms_tenant_requires_role($slug, $user);
+    }
+}
+
+if (! function_exists('hms_app_roles')) {
+    /**
+     * Role slugs allowed on the mobile/tablet app for the current mode.
+     *
+     * Hospital: only the moving roles get the app — doctor on rounds, nurse on
+     * the ward, Dean (= moderator) and the top Admin. Clinic: every role is
+     * app-enabled. Super admins (platform) are exempt regardless.
+     *
+     * @return array<int, string>
+     */
+    function hms_app_roles(): array
+    {
+        return (array) config('hms.app_roles.'.hms_institution_mode(), []);
+    }
+}
+
+if (! function_exists('hms_role_has_app')) {
+    /**
+     * May a role log in to the mobile app in the current institution mode?
+     *
+     * Pass a slug directly, or omit it to resolve the signed-in user's role.
+     * The API login calls this so that only app-enabled roles ever obtain an
+     * app token — desktop-only roles see "Your role uses the desktop panel".
+     */
+    function hms_role_has_app(?string $slug = null, ?object $user = null): bool
+    {
+        if ($slug === null) {
+            $user ??= Auth::user();
+
+            if (! $user) {
+                return false;
+            }
+
+            if (method_exists($user, 'isPlatformAdmin') && $user->isPlatformAdmin()) {
+                return true;
+            }
+
+            $slug = $user->roleSlug();
+        }
+
+        if (! $slug) {
+            return false;
+        }
+
+        $roles = hms_app_roles();
+
+        return in_array('*', $roles, true) || in_array($slug, $roles, true);
     }
 }
 

@@ -1164,6 +1164,34 @@ out the whole backlog.
   1070 assertions green**; audit 34/34; mobile hOver 0 on all public + new
   admin pages; `SiteContentSeeder` is idempotent.
 
+## 18u. API inventory Excel + mobile app role access — done 2026-10-11
+
+- **`docs/API_Inventory.xlsx`** (openpyxl script
+  `C:\Users\azimk\AppData\Local\Temp\opencode\pp\build_api_xlsx.py`) lists every
+  published endpoint grouped **per role**: role heading → header row
+  (Endpoint | Description | Screen) → endpoint rows, so the app developer knows
+  exactly which screen consumes which call. Sheet 1 "API Inventory"
+  (auth / public site / appointment / staff core / clinical & ward / nursing &
+  pharmacy / billing / mobile r+holiday features / superadmin platform ops),
+  sheet 2 "App Access Rules" documents the clinic-vs-hospital app matrix.
+- Mobile app login is now role- and mode-aware (`config('hms.app_roles')`):
+  - **Clinic mode** → every role gets the app.
+  - **Hospital mode** → only the moving roles: `doctor` (rounds), `nurse`
+    (ward), `moderator` (Dean), `admin`. Desk-bound roles (receptionist,
+    pharmacist, accountant, laboratorist, storekeeper, hr) are desktop-only
+    until their PC arrives; the responsive web panel already works on mobile.
+- Enforced at `POST /api/v1/auth/login`: after the `is_active` check, a
+  desktop-only role gets **422 ValidationException** — "Your role (…) uses the
+  desktop panel only and cannot log in to the mobile app." Platform super admins
+  are exempt. New helpers `hms_app_roles()` + `hms_role_has_app()`; mode is
+  resolved from the signed-in user's tenant, or `Tenant::current()` (host) when
+  no user exists yet — so the login gate is correct on facility hosts.
+- `GET /api/v1/auth/me` now includes `app_enabled` (bool) so the app can show
+  the right home screen / gate menus per role.
+- Tests: `tests/Feature/AppAccessTest.php` (6) — hospital moving vs desk roles,
+  clinic all-roles, login 422/200 gates, `/auth/me` flag. Full suite **270 tests
+  / 1100 assertions green**.
+
 ---
 
 _Backlog is empty. Next phase: public website finishing touches (the user's

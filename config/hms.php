@@ -61,12 +61,29 @@ return [
                 'vitals', 'ward', 'ward.discharge', 'lab',
             ],
         ],
-        'hospital' => [
+'hospital' => [
             'label' => 'Multi-Speciality Hospital',
             'description' => 'Full hospital: every role and every module.',
             'roles' => null,
             'modules' => null,
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mobile app roles (per institution mode)
+    |--------------------------------------------------------------------------
+    | Only roles whose work actually moves around the building get the mobile
+    | app: doctors on rounds, nurses on the ward, plus the Dean (moderator) and
+    | the top Admin. Desk-bound roles (receptionist, pharmacist, accountant,
+    | laboratorist, storekeeper, hr) stay on the PC in hospital mode but are
+    | all app-enabled in a small clinic. Who is app-enabled decides who may log
+    | in to the mobile app: the API login checks hms_role_has_app() and rejects
+    | desktop-only roles.
+    */
+    'app_roles' => [
+        'clinic' => ['admin', 'moderator', 'doctor', 'nurse', 'receptionist', 'pharmacist', 'laboratorist', 'accountant', 'storekeeper', 'hr'],
+        'hospital' => ['admin', 'moderator', 'doctor', 'nurse'],
     ],
 
     /*
