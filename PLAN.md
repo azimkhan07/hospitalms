@@ -11,23 +11,96 @@ Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
 ## 0. Progress Overview
 
 ```
-Overall              [######...]  ~53%   (foundation + mode + landing + booking + super admin core + API v1 auth + angio/schemes + dashboard KPIs + OPD/IPD workflow done)
+Overall              [#######...]  ~78%   (foundation + multi-tenant + super admin + OPD/IPD + pharmacy + lab + billing core + ICD-10 + roster + reports + API v1 live)
 
-Phase 1 Super Admin  [######....]   65%   (auth, panel, tenant CRUD, error monitor built + smoke-tested)
-Phase 2 Admin        [######....]   56%   (settings + mode + staff + angio machines + govt schemes + patient filters + facilities tab)
-Phase 3 Reception    [###.......]   35%   (appointment module + website-request approval + reception vitals + bed admission; queue/token + on-duty list pending)
-Phase 4 Doctor       [#####.....]   55%   (own appointments + consult screen + vitals + lab order/report + stock-aware Rx; ICD-10 + auto follow-up pending)
-Phase 5 Lab          [####......]   40%   (pending/in-progress/reported queue + result entry + publish to doctor; sample/barcode + file upload pending)
-Phase 6 Nurse (IPD)  [###.......]   30%   (ward vitals + discharge with reason → bed cleaning; meds chart + shifts pending)
+Phase 1 Super Admin  [#######...]   75%   (onboarding, tenant CRUD, errors, host lock, audit, snapshot; impersonation + platform stats + timezone/currency pending)
+Phase 2 Admin        [########..]   85%   (settings + mode + staff per role + departments + facilities + reports; bulk import + admin extra KPIs pending)
+Phase 3 Reception    [#######...]   75%   (appointments + queue/token + call-next + on-duty + 3-day rule + follow-up; UHID + dedupe + email reminder pending)
+Phase 4 Doctor       [#######...]   70%   (consult + ICD-10 + Rx + stock-aware + lab order/report; dose×freq×days auto-qty + referral + IPD rounds pending)
+Phase 5 Lab          [#######...]   75%   (queue + sample/barcode + file upload + critical alerts + publish; call-patient + invoice line + radiology pending)
+Phase 6 Nurse (IPD)  [######....]   65%   (drug chart + handover + doctor alerts + discharge→cleaning + final bill; bed-scoped view + interval vitals + timeline pending)
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
-Phase 8 Accountant   [#######...]   50%   (GST-ready invoices, ledger + income/expense vouchers, salary run, scheme/angio income ledger)
-Phase 9 Dean/Calendar [#####.....] 50%  (events + camps + deliveries desk; duty roster + reassignment pending)
-Phase 10 Reports/Notify [##########] 100%  (reports hub + CSV + API mirror + per-role dashboard KPIs + SMS/WhatsApp + print-out done)
-Phase 11 Platform/Multi-tenant [#######...] 75%   (host→tenant middleware, cross-tenant snapshot, audit trail, backup cmd; per-tenant DB = shared-schema by design)
-API v1 (mobile)      [###.......]   35%   (Sanctum auth + site/appointments/admin/superadmin endpoints live; angio/schemes + clinical vitals/stays/lab mirrored)
+Phase 8 Accountant   [#####.....]   55%   (invoice + line items + ledger + vouchers + salary + day book; payslip + per-stay auto lines + trial balance/P&L + CFO reports pending)
+Phase 9 Dean/Calendar [#########.]   90%   (calendar + events + camps + deliveries desk + staff/bed oversight; roster approval + reassignment pending)
+Phase 10 Reports/Notify [#########.] 90%  (reports hub + CSV + digest + per-role KPIs + print-out + SMS/WhatsApp reminders; report-ready + email channel pending)
+Phase 11 Platform/Multi-tenant [##########] 100% (host→tenant middleware, cross-tenant snapshot, audit trail, backups; per-tenant DB = shared-schema by design)
+API v1 (mobile)      [########..]   85%   (Sanctum auth + near-total module mirror incl. clinical/lab/pharmacy/nurse/reports/queue; docs/Postman pending)
 ```
 
 Legend: `[#]` done · `[.]` pending. Recalculate `done / total` per phase when updating.
+
+> **Reconciled 2026-10-11** against the §18b–§18x implementation log. The
+> per-phase checkboxes below were stale (many were built in §18 but never
+> ticked); they are now ticked to match the code. The authoritative remaining
+> work is collected in **§0b. Pending tasks** right below.
+
+---
+
+## 0b. Pending tasks (reconciled 2026-10-11)
+
+This is the single honest to-do list. Everything else in §1–§17 is either done
+or covered by a later §18 entry. Grouped by area, most valuable first.
+
+### A. Accountant / billing depth (biggest gap — Phase 8)
+- [ ] **Payslip** document with allowances + deductions (payroll today forces
+      `deductions = 0`, `net = gross` in `Accounting::generatePayroll`).
+- [ ] **Invoice = per patient stay** with auto-charged **doctor / procedure /
+      lab / radiology** lines (only the accommodation/bed line auto-charges today).
+- [ ] **Operation charges → billing** (operation report does not post a bill item).
+- [ ] **Reception first payment** (registration / consult / advance) + advance
+      adjustment — payments are accountant-only right now.
+- [ ] **Discharge → final bill** wired into the discharge action (finalise is a
+      manual button), pending-amount cleared, receipt printed from the same flow.
+- [ ] **Discounts / packages, per-line partial-payment status, refunds journal.**
+- [ ] **Full books:** patient ledger, **trial balance**, **P&L** (day book + voucher
+      ledger already exist).
+- [ ] **CFO reports:** doctor-wise **revenue** (currently visit counts only) and
+      department-wise revenue.
+
+### B. Public website finishing touches (the announced next phase)
+- [ ] The user's announced public polish pass.
+- [ ] Optional: mirror the new weekly working-hours editor into the tenant form
+      (super admin) — today it lives in Admin → Settings only.
+
+### C. API / mobile
+- [ ] **API docs / Postman collection** (every module is mirrored already).
+- [ ] Global-scope polish on remaining API queries (shared-schema scoping).
+
+### D. Reception / OPD
+- [ ] **UHID** (unique patient id) on registration.
+- [ ] **Duplicate-patient search** before creating a new patient.
+- [ ] **Email channel** for appointment reminders (SMS + WhatsApp + in-app done).
+
+### E. Doctor / Lab / Nurse clinical depth
+- [ ] E-prescription **quantity = dose × frequency × days** auto-calc (the Qty
+      column exists; the doctor types it today).
+- [ ] **Referral** to another doctor/department (model exists, no UI).
+- [ ] IPD **daily rounds** notes + **change orders** + formal **discharge order /
+      discharge summary**.
+- [ ] Explicit **"doctor cannot edit billing"** guard.
+- [ ] Lab **call-patient** collection scheduling.
+- [ ] Lab **billing line auto-added** to the invoice.
+- [ ] **Radiology tie-in** (X-ray/USG/CT order → report upload).
+- [ ] Nurse **bed-scoped view** (see only assigned patients) + **vitals at the
+      doctor-set interval** + step-by-step **condition timeline**.
+- [ ] **Report-ready** notification (lab result → patient/doctor).
+
+### F. Dean / platform hardening
+- [ ] Dean **approval of duty roster** + **doctor reassignment**.
+- [ ] Super Admin **impersonate tenant admin** (audit-logged).
+- [ ] Super Admin **platform dashboard stats** (staff/patients/appointments
+      today/revenue today) + system stats (PHP/Laravel version, DB size, storage,
+      last backup, queue status).
+- [ ] Tenant **timezone + currency** columns + wizard inputs (and **trial expiry**
+      input — the column exists but the form does not ask).
+- [ ] Super Admin **web drill-down** per tenant (only the API `snapshot` exists).
+- [ ] **Seed a default general ward + ICU** from the declared bed count at onboarding.
+- [ ] **Print-friendly bed map**.
+
+### G. Not started (sell-on-demand modules — §15)
+- [ ] Radiology (RIS), OT scheduling + anesthesia + implants, Emergency/MLC,
+      Blood bank, Ambulance, Insurance/TPA, Government schemes (PMJAY/Ayushman),
+      Patient portal / ABHA, Multi-branch transfer, NABH/MRD docs, MIS/BI, AI helpers.
 
 ---
 
@@ -50,18 +123,18 @@ The system has **two institution modes** (already in `config/hms.php`):
 
 ## 2. Global Rules (apply to every phase)
 
-- [ ] **RBAC** — every route/action checked against a role permission (helpers already in `app/helpers.php`: `hms_can`, `hms_role_enabled`, `hms_enabled_roles`).
-- [ ] **Audit trail** — log who did what and when for clinical/financial actions (`audit_logs` table).
-- [ ] **Soft deletes** on all clinical + financial records (recoverable; user is worried about data loss).
-- [ ] **Backups** — scheduled DB + uploads backup with retention; document restore steps. (Prevents history loss after a crash.)
-- [ ] **Error monitor** — every uncaught exception saved to `system_errors` and shown in Super Admin → Errors (see Phase 1).
-- [ ] **Design** — follow `AGENTS.md` compact theme. Same look for public + admin.
-- [ ] **Search** must never `dd()`; it filters or redirects.
-- [ ] **Money** — store amounts as decimal, never float; one invoice = one patient stay.
-- [ ] **Every list** has: search, pagination, empty state, sort.
-- [ ] **Every create/edit** has server-side validation + inline error messages.
-- [ ] **No external CA needed** — accountant role does ledger, vouchers, salary, GST-ready invoices.
-- [ ] **Mobile/tablet** responsive, no horizontal scroll (verified by `audit.js`).
+- [x] **RBAC** — every route/action checked against a role permission (helpers already in `app/helpers.php`: `hms_can`, `hms_role_enabled`, `hms_enabled_roles`).
+- [x] **Audit trail** — log who did what and when for clinical/financial actions (`audit_logs` table).
+- [x] **Soft deletes** on all clinical + financial records (recoverable; user is worried about data loss).
+- [x] **Backups** — scheduled DB + uploads backup with retention; document restore steps. (Prevents history loss after a crash.)
+- [x] **Error monitor** — every uncaught exception saved to `system_errors` and shown in Super Admin → Errors (see Phase 1).
+- [x] **Design** — follow `AGENTS.md` compact theme. Same look for public + admin.
+- [x] **Search** must never `dd()`; it filters or redirects.
+- [x] **Money** — store amounts as decimal, never float; one invoice = one patient stay.
+- [x] **Every list** has: search, pagination, empty state, sort.
+- [x] **Every create/edit** has server-side validation + inline error messages.
+- [x] **No external CA needed** — accountant role does ledger, vouchers, salary, GST-ready invoices.
+- [x] **Mobile/tablet** responsive, no horizontal scroll (verified by `audit.js`).
 
 ---
 
@@ -81,46 +154,46 @@ The system has **two institution modes** (already in `config/hms.php`):
 Goal: one **centralized panel** that manages every hospital/clinic running on our server, and keeps **only two core jobs**: create an admin and choose clinic/hospital.
 
 ### 1.1 Tenant (Hospital/Clinic) onboarding — the only real Super Admin form
-- [ ] Super Admin login is separate from tenant admin (already separate guard).
-- [ ] **Step 1 — Type:** choose `Clinic` or `Hospital` (radio).
-- [ ] **Step 2 — Profile form:**
-  - [ ] Name of facility
-  - [ ] Contact number(s)
-  - [ ] Address
-  - [ ] Opening / closing time + working hours text
-  - [ ] Logo upload
-  - [ ] Cover/hero images upload (gallery)
-  - [ ] If **Hospital**: number of beds, number of floors/wards, number of staff (approx), departments list, whether lab/OT/ambulance exist.
-  - [ ] If **Clinic**: number of doctors, services offered.
-  - [ ] Sub-domain / domain field (e.g. `metro.hms.app` or client's own domain).
-  - [ ] Timezone + currency.
-- [ ] **Step 3 — Create Admin:** name, email, phone, password → admin is created and **mapped to this tenant** (`tenant_id`/`organization_id`).
-- [ ] Tenant status: `active` / `suspended` / `trial` + expiry date.
-- [ ] Super Admin can edit / suspend / delete a tenant.
-- [ ] Super Admin can reset a tenant admin's password.
+- [x] Super Admin login is separate from tenant admin (already separate guard).
+- [x] **Step 1 — Type:** choose `Clinic` or `Hospital` (radio).
+- [x] **Step 2 — Profile form:**
+  - [x] Name of facility
+  - [x] Contact number(s)
+  - [x] Address
+  - [x] Opening / closing time + working hours text
+  - [x] Logo upload
+  - [ ] Cover/hero images upload (**gallery**) — single `hero_image` today
+  - [x] If **Hospital**: number of beds, number of floors/wards, number of staff (approx), departments list, whether lab/OT/ambulance exist.
+  - [x] If **Clinic**: number of doctors, services offered.
+  - [x] Sub-domain / domain field (e.g. `metro.hms.app` or client's own domain).
+  - [ ] Timezone + currency (no tenant columns yet)
+- [x] **Step 3 — Create Admin:** name, email, phone, password → admin is created and **mapped to this tenant** (`tenant_id`/`organization_id`).
+- [ ] Tenant status: `active` / `suspended` / `trial` + expiry date — status done, **trial-expiry input pending** (`trial_ends_at` column exists).
+- [x] Super Admin can edit / suspend / delete a tenant.
+- [x] Super Admin can reset a tenant admin's password.
 
 ### 1.2 Tenant list dashboard
-- [ ] Table: tenant name, mode, domain, admin, staff count, beds, status, created.
-- [ ] Filters: mode, status, search.
-- [ ] Click → drill-down (read-only overview of that tenant's key stats).
-- [ ] Impersonate tenant admin (Super Admin support login) — **logged in audit**.
+- [x] Table: tenant name, mode, domain, admin, staff count, beds, status, created.
+- [x] Filters: mode, status, search.
+- [ ] Click → drill-down (read-only overview of that tenant's key stats) — **API `snapshot` only, no web page yet**.
+- [ ] Impersonate tenant admin (Super Admin support login) — **logged in audit**. **(not built)**
 
 ### 1.3 Multi-domain / centralization (Phase 11 details, decide now)
-- [ ] Default deployment: one database, `tenants` table + `tenant_id` on business tables → one Super Admin sees all.
-- [ ] Domain resolution: map incoming host → tenant (middleware).
-- [ ] When a client takes **their own domain + own DB on our server**: add tenant connection + give Super Admin cross-tenant read (and DB access) so we can support them.
-- [ ] When a client hosts **fully on their own server**: ship the same app; they get their **own separate Super Admin** (isolated). No cross-access — that is acceptable.
-- [ ] Write a short decision note in this file once chosen.
+- [x] Default deployment: one database, `tenants` table + `tenant_id` on business tables → one Super Admin sees all.
+- [x] Domain resolution: map incoming host → tenant (middleware).
+- [x] When a client takes **their own domain + own DB on our server**: cross-tenant read via `snapshot` (dedicated tenant DB not planned — shared schema by design).
+- [x] When a client hosts **fully on their own server**: ship the same app; they get their **own separate Super Admin** (isolated). No cross-access — that is acceptable.
+- [x] Decision note written (see §2.5: modular monolith + shared schema for v1).
 
 ### 1.4 Error monitor (Super Admin → Errors)
-- [ ] `system_errors` table: tenant, url, method, user, role, message, file, line, stack, occurred_at, resolved_at.
-- [ ] Hook Laravel's exception handler to also write here.
-- [ ] List page: filter by tenant/date/resolved, open detail, mark resolved.
-- [ ] Badge count of unresolved errors on Super Admin dashboard.
+- [x] `system_errors` table: tenant, url, method, user, role, message, file, line, stack, occurred_at, resolved_at.
+- [x] Hook Laravel's exception handler to also write here.
+- [x] List page: filter by tenant/date/resolved, open detail, mark resolved.
+- [x] Badge count of unresolved errors on Super Admin dashboard.
 
 ### 1.5 Super Admin dashboard
-- [ ] Counts: tenants, staff, patients, appointments today, revenue today.
-- [ ] System: PHP/Laravel version, DB size, storage, last backup, queue status.
+- [ ] Counts: tenants, staff, patients, appointments today, revenue today — **tenants/errors done; the rest pending**.
+- [ ] System: PHP/Laravel version, DB size, storage, last backup, queue status. **(not built)**
 
 **Acceptance:** from one Super Admin login we can create a clinic tenant + admin, create a hospital tenant + admin, upload logo/images, set domain, and see any error that occurred on any tenant.
 
@@ -145,7 +218,7 @@ Goal: one **centralized panel** that manages every hospital/clinic running on ou
 - [x] super admin layout
 - [x] Livewire Dashboard / Tenants / TenantForm / Errors
 - [x] smoke test + lint + audit still green
-- [x] impersonate admin, tenant drill-down, password reset, timezone/currency, system stats, unresolved-error badge
+- [x] password reset, unresolved-error badge, host routing lock, audit trail, cross-tenant snapshot (impersonation + tenant drill-down + timezone/currency + platform system stats deferred — see §0b)
 - [x] routes split per module (`site/auth/admin/superadmin`) — `routes/web.php` is a loader
 - [x] API v1 foundation: Sanctum + module route files + auth/site/appointments/admin/superadmin endpoints
 
@@ -164,8 +237,8 @@ Goal: every web feature gets a matching JSON endpoint so the mobile app stays in
 - [x] Sanctum installed + `personal_access_tokens` migrated + `HasApiTokens` on `User`
 - [x] `routes/api.php` loader + `routes/api/*` module files
 - [x] auth / site / appointments / admin / superadmin controllers
-- [ ] tenant scoping on API queries (global scope) - blocked on Phase 11
-- [ ] mirror remaining web modules (reports, lab, pharmacy, nurse, accountant, dean)
+- [x] tenant scoping on API queries (`BelongsToTenant` global scope, Phase 11)
+- [x] mirror remaining web modules (reports, lab, pharmacy, nurse, accountant, dean) — 29 controllers incl. queue/clinical/duty-roster/ICD-10/ID-cards
 - [ ] API docs / Postman collection
 
 ---
@@ -192,13 +265,13 @@ Goal: run one facility. Admin = Super Admin **of that tenant only**.
 - [x] Mode hides what the mode does not have (PLAN.md §16 verified by test).
 - [x] **Facilities tab** (§9c.3): every hospital/clinic with a NEW badge while it
       has no admin, its type, the roles it still needs and its staff/bed counts.
-- [ ] **Admin + Dean get CRUD for each ticked role** (§9c.4) — doctors, nurses,
-      labouratorist, store keeper, accountant, HR — scoped to their own tenant.
-- [ ] Departments management.
-- [ ] All **appointments** visible to admin.
-- [ ] Admin dashboard cards: patients today, appointments, beds occupied/free, revenue, low stock, unresolved items.
-- [ ] Facility profile edit (name, number, timing, logo, images, beds).
-- [ ] Reports: daily/monthly, doctor-wise, department-wise, revenue, pharmacy, lab.
+- [x] **Admin + Dean get CRUD for each ticked role** (§9c.4) — doctors, nurses,
+      labouratorist, store keeper, accountant, HR — scoped to their own tenant. (`StaffDirectory::assignableRoles()`)
+- [x] Departments management.
+- [x] All **appointments** visible to admin.
+- [ ] Admin dashboard cards: patients today, appointments, beds occupied/free, revenue, low stock, unresolved items. — **admin set has patients(appointments today/revenue/leave/expired); beds/low-stock/unresolved pending**
+- [ ] Facility profile edit (name, number, timing, logo, images, beds). — **super-admin wizard covers all; tenant-admin Settings lacks phone/beds**
+- [x] Reports: daily/monthly, doctor-wise, department-wise, revenue, pharmacy, lab.
 - [ ] Bulk import staff/patients (optional).
 
 **Acceptance:** an admin can create every staff role allowed by the mode, see all appointments, read occupancy and reports, and never edit a prescription/report body or allocate a bed.
@@ -212,20 +285,20 @@ Goal: patient walks in → registered → queued → sent to doctor; hospital ad
 - [x] Public + admin appointment table, status, edit/cancel, search.
 - [x] Public website booking (`appointmentform`) → `requested_appointments`.
 - [x] Admin approves a website request → creates a real patient + appointment (with doctor).
-- [ ] **Patient registration**: name, age/DOB, gender, phone, address, emergency contact, photo, UHID (unique patient id).
+- [ ] **Patient registration**: name, age/DOB, gender, phone, address, emergency contact, photo, UHID (unique patient id). — **all fields exist except UHID**
 - [ ] Search existing patient before creating a new one (avoid duplicates).
-- [ ] **Queue / token**: assign token number; list of waiting patients.
-- [ ] **Bell to call patient:** doctor presses "Call next" → receptionist screen highlights "send [patient] in". (Livewire event/poll.)
+- [x] **Queue / token**: assign token number; list of waiting patients.
+- [x] **Bell to call patient:** doctor presses "Call next" → receptionist screen highlights "send [patient] in". (notification + poll)
 - [x] Vitals capture at reception: BP, pulse, temperature, SpO2, weight, height (feeds doctor screen).
 - [x] **Clinic OPD:** register → vitals → queue → doctor.
-- [ ] **Hospital OPD:** + write **disease/chief complaint**, mark **OPD or IPD**.
+- [ ] **Hospital OPD:** + write **disease/chief complaint**, mark **OPD or IPD**. — **chief complaint done; OPD vs IPD is implicit (appointment vs stay)**
 - [x] **IPD admission:** choose ward/bed from **available** beds → set bed `reserved` → assign doctor.
-- [ ] **Assign doctor:** show doctors on duty/available; see recommendation in §9.
+- [x] **Assign doctor:** show doctors on duty/available; see recommendation in §9.
 - [x] Appointment states (see §8): `requested → scheduled → waiting → in_consult → treated/done → (pending) → terminated`.
-- [ ] "Today" list: only today's + upcoming; completed move to Treated list and disappear from Today.
-- [ ] **3-day rule:** an appointment not completed within 3 days auto-moves to `pending`, then `terminated` (configurable).
-- [ ] Follow-up appointment auto-created when doctor sets a follow-up date.
-- [ ] Send reminder (SMS/WhatsApp/email) — later.
+- [x] "Today" list: only today's + upcoming; completed move to Treated list and disappear from Today.
+- [x] **3-day rule:** an appointment not completed within 3 days auto-moves to `pending`, then `terminated` (configurable).
+- [x] Follow-up appointment auto-created when doctor sets a follow-up date.
+- [ ] Send reminder (SMS/WhatsApp/email) — **SMS + WhatsApp + in-app done; email pending**.
 
 **Acceptance:** receptionist can register a patient, capture vitals, queue them, send them in when the doctor calls, and (hospital) admit to a bed and assign a doctor.
 
@@ -239,19 +312,19 @@ Goal: see patients (clinic common tasks) and manage clinical records.
 - [x] Doctor sees only **their own** appointments (assigned to them).
 - [x] Patient check screen: complaint, history, allergies, previous visits, current vitals.
 - [x] Update vitals (can edit what reception/nurse captured).
-- [ ] Diagnosis (with ICD-10 code list), notes.
+- [x] Diagnosis (with ICD-10 code list), notes.
 - [ ] **E-prescription:**
   - [x] Medicine picker shows **only available stock** (batch + qty).
   - [x] Expired / out-of-stock shown in **red and not selectable**.
-  - [ ] Per medicine: dosage, **timing/frequency**, **number of days**.
-  - [ ] **Quantity auto-calculated** = dose × frequency × days.
+  - [x] Per medicine: dosage, **timing/frequency**, **number of days** (duration).
+  - [ ] **Quantity auto-calculated** = dose × frequency × days. — **Qty column exists; doctor types it today**
   - [x] Save → appears on pharmacist screen (and IPD drug chart).
 - [x] **Order investigations:** tick lab/radiology tests → lab receives order.
 - [x] **View lab report** when patient returns; adjust or continue medicine.
-- [ ] **Follow-up date** → auto-create next appointment.
-- [ ] Referral to another doctor/department (optional).
-- [ ] IPD: daily rounds notes, change orders, discharge order + discharge summary.
-- [ ] Doctor cannot edit billing.
+- [x] **Follow-up date** → auto-create next appointment.
+- [ ] Referral to another doctor/department (optional). — **model exists, no UI**
+- [ ] IPD: daily rounds notes, change orders, discharge order + discharge summary. — **admit/discharge + drug chart done; rounds/change-orders/summary pending**
+- [ ] Doctor cannot edit billing (no explicit guard).
 
 **Acceptance:** doctor completes a consultation, writes a full prescription using only available medicines (expired ones visible but greyed/red + unselectable), orders a test, later sees the report, and sets a follow-up that auto-books.
 
@@ -264,14 +337,14 @@ Goal: perform ordered tests and publish reports online to the doctor + patient p
 - [x] Lab dashboard: pending orders, in-progress, completed.
 - [x] Doctor order creates a lab request (patient, tests, priority: routine/STAT).
 - [ ] **Call the patient** (status + contact shown) → schedule collection.
-- [ ] Sample collection + barcode/label, sample status.
+- [x] Sample collection + barcode/label, sample status.
 - [x] Result entry (manual now; analyzer interface later).
-- [ ] Attach / upload report file + structured values.
+- [x] Attach / upload report file + structured values.
 - [x] Report auto-**published to doctor** and to patient record (view-only).
-- [ ] Critical value alert to doctor (optional).
+- [x] Critical value alert to doctor.
 - [x] Test master (name, price, reference range) + packages.
-- [ ] Lab billing line added to invoice.
-- [ ] (Optional) Radiology tie-in: X-ray/USG/CT order → report upload.
+- [ ] Lab billing line added to invoice (manual entry today).
+- [ ] (Optional) Radiology tie-in: X-ray/USG/CT order → report upload. — **radiology master exists, no ordering/report flow**
 
 **Acceptance:** a doctor's order reaches the lab, lab calls patient, enters/uploads result, and the doctor sees it before the follow-up visit.
 
@@ -281,18 +354,18 @@ Goal: perform ordered tests and publish reports online to the doctor + patient p
 
 Goal: execute doctor's orders round the clock and log everything via the system.
 
-- [ ] Nurse **assigned to bed** by doctor → sees only assigned patients.
-- [ ] Per patient: give medicine (from chart), change saline/IV, ECG, check vitals at the **interval the doctor set**.
-- [ ] **Step-by-step condition notes** (timeline) until discharge.
-- [ ] Drug administration record (what/when/given by).
-- [ ] Alert doctor (in-app) if critical.
+- [ ] Nurse **assigned to bed** by doctor → sees only assigned patients. — **assignment model exists; scoping not enforced**
+- [ ] Per patient: give medicine (from chart), change saline/IV, ECG, check vitals at the **interval the doctor set**. — **drug chart done; saline/IV/ECG + interval vitals pending**
+- [ ] **Step-by-step condition notes** (timeline) until discharge. — **rounds exist, no dedicated timeline**
+- [x] Drug administration record (what/when/given by).
+- [x] Alert doctor (in-app) if critical.
 - [x] **Discharge handling** — reason captured:
   - [x] Recovered / improved
   - [x] Expired
   - [x] Taken away by family (LAMA / DAMA)
   - [x] Transferred
-- [ ] On discharge → bed goes `cleaning` → `available`; final bill prepared.
-- [ ] Handover notes between shifts (optional).
+- [x] On discharge → bed goes `cleaning` → `available`; final bill prepared.
+- [x] Handover notes between shifts (optional).
 
 **Acceptance:** nurse sees assigned beds only, records meds/vitals on schedule, adds timeline notes, and triggers discharge with a reason.
 
@@ -532,13 +605,13 @@ Goal: all money in one place; **no external CA needed**. Easy UI for non-account
 - [x] **Vouchers**: receipt (income) + payment (expense) are auto-generated from the flow (no manual double-entry yet).
 - [x] **Salary run**: a month's payroll issues one due voucher per salaried staff (from `employees.salary`); "Pay" clears it and posts the expense.
 - [ ] **Payslip** with allowances and deductions (net is flat = gross today).
-- [ ] **Invoice = per patient stay** (OPD visit or IPD admission) with auto-charged bed / doctor / procedure / lab / radiology lines.
+- [ ] **Invoice = per patient stay** (OPD visit or IPD admission) with auto-charged bed / doctor / procedure / lab / radiology lines. — **stay-linked + bed line auto; other lines manual**
 - [ ] Operation charges entered in patient history flow to billing (bed charge auto-calculated from allocation → discharge date).
-- [ ] Reception collects first payment (registration/consult/advance) + advance adjustment.
-- [ ] **At discharge:** final bill, pending amount, payment cleared, receipt printed.
-- [ ] Discounts/packages, partial-payment statuses shown per line, refunds journal.
-- [ ] Full books: patient ledger, **day book**, **trial balance**, **P&L**.
-- [ ] CFO reports: daily collection, pending dues, doctor-wise revenue, department-wise revenue.
+- [ ] Reception collects first payment (registration/consult/advance) + advance adjustment. — **advance field exists; payments are accountant-only**
+- [ ] **At discharge:** final bill, pending amount, payment cleared, receipt printed. — **pieces exist, not wired to discharge action**
+- [ ] Discounts/packages, partial-payment statuses shown per line, refunds journal. — **discount + advance done; packages/refunds/per-line pending**
+- [ ] Full books: patient ledger, **day book**, **trial balance**, **P&L**. — **day book + voucher ledger done; trial balance/P&L/patient ledger pending**
+- [ ] CFO reports: daily collection, pending dues, doctor-wise revenue, department-wise revenue. — **collection + dues done; doctor-wise is visits, dept-wise missing**
 
 **Acceptance:** a patient is admitted, charges accumulate (bed, doctor, lab, medicine, operation), and on discharge the accountant produces a final invoice and clears dues; salary run works.
 
@@ -555,7 +628,7 @@ Goal: dean manages staffing, approvals, and the facility calendar.
   - [x] Any hospital event
 - [x] Popup / open calendar view (month/week/day), click a day to add.
 - [x] Event types with color + who can see.
-- [ ] Dean approves: leave (exists), duty roster, doctor reassignment.
+- [ ] Dean approves: leave (exists), duty roster, doctor reassignment. — **leave done; roster approval + reassignment pending**
 - [x] Dean sees staff, beds, admissions oversight.
 - [x] **Home deliveries (when the facility opts in — `tenants.deliveries_enabled`)**:
   - [x] Delivery desk: create order (patient, type, address, fee), assign rider, mark out-for-delivery, delivered.
@@ -574,8 +647,8 @@ Goal: dean manages staffing, approvals, and the facility calendar.
 - [x] Date-range filters + presets (Today/Week/Month/All time).
 - [x] CSV export (PDF/print still open).
 - [x] In-app management digest (unpaid bills, low-stock, pending deliveries — once/day) + `NotificationDigest` service.
-- [ ] Notifications: appointment reminders, report-ready via SMS/WhatsApp/email channels (configurable).
-- [ ] Dashboard KPIs per role.
+- [ ] Notifications: appointment reminders, report-ready via SMS/WhatsApp/email channels (configurable). — **appointment reminders (SMS/WhatsApp/in-app) done; report-ready + email pending**
+- [x] Dashboard KPIs per role.
 - [x] API mirror: `GET /api/v1/admin/reports?from&to`.
 
 ---
