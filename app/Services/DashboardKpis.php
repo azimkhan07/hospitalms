@@ -51,6 +51,8 @@ class DashboardKpis
                 ['label' => 'Collected Today', 'value' => $currency($values['collected_today']), 'icon' => 'fa-money-bill-wave', 'color' => '#149d46'],
                 ['label' => 'Pending Leave', 'value' => $values['pending_leave'], 'icon' => 'fa-plane-departure', 'color' => '#e67e22'],
                 ['label' => 'Expired Medicines', 'value' => $values['expired_medicine'], 'icon' => 'fa-exclamation-triangle', 'color' => '#d43f3a'],
+                ['label' => 'Available Beds', 'value' => $values['available_beds'], 'icon' => 'fa-bed', 'color' => '#1a9d6b'],
+                ['label' => 'Low Stock', 'value' => $values['low_stock'], 'icon' => 'fa-boxes-stacked', 'color' => '#e67e22'],
             ],
             'moderator' => [
                 ['label' => 'Active Staff', 'value' => $values['staff'], 'icon' => 'fa-user-friends', 'color' => '#0f7fd4'],

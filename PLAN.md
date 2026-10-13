@@ -11,20 +11,20 @@ Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
 ## 0. Progress Overview
 
 ```
-Overall              [#######...]  ~78%   (foundation + multi-tenant + super admin + OPD/IPD + pharmacy + lab + billing core + ICD-10 + roster + reports + API v1 live)
+Overall              [########..]  ~80%   (foundation + multi-tenant + super admin + OPD/IPD + pharmacy + lab + billing core + ICD-10 + roster + reports + API v1 live + Postman)
 
 Phase 1 Super Admin  [#######...]   75%   (onboarding, tenant CRUD, errors, host lock, audit, snapshot; impersonation + platform stats + timezone/currency pending)
 Phase 2 Admin        [########..]   85%   (settings + mode + staff per role + departments + facilities + reports; bulk import + admin extra KPIs pending)
 Phase 3 Reception    [#######...]   75%   (appointments + queue/token + call-next + on-duty + 3-day rule + follow-up; UHID + dedupe + email reminder pending)
-Phase 4 Doctor       [#######...]   70%   (consult + ICD-10 + Rx + stock-aware + lab order/report; dose×freq×days auto-qty + referral + IPD rounds pending)
-Phase 5 Lab          [#######...]   75%   (queue + sample/barcode + file upload + critical alerts + publish; call-patient + invoice line + radiology pending)
+Phase 4 Doctor       [#######...]   75%   (consult + ICD-10 + Rx + stock-aware + dose×freq×days auto-qty + lab order/report; referral + IPD rounds pending)
+Phase 5 Lab          [#######...]   78%   (queue + sample/barcode + file upload + critical alerts + publish + report-ready notify; call-patient + invoice line + radiology pending)
 Phase 6 Nurse (IPD)  [######....]   65%   (drug chart + handover + doctor alerts + discharge→cleaning + final bill; bed-scoped view + interval vitals + timeline pending)
 Phase 7 Pharmacy/Store [##########] 100%  (dispense counter, FEFO, store ledger, payment-done → bill)
 Phase 8 Accountant   [#####.....]   55%   (invoice + line items + ledger + vouchers + salary + day book; payslip + per-stay auto lines + trial balance/P&L + CFO reports pending)
 Phase 9 Dean/Calendar [#########.]   90%   (calendar + events + camps + deliveries desk + staff/bed oversight; roster approval + reassignment pending)
-Phase 10 Reports/Notify [#########.] 90%  (reports hub + CSV + digest + per-role KPIs + print-out + SMS/WhatsApp reminders; report-ready + email channel pending)
+Phase 10 Reports/Notify [#########.] 92%  (reports hub + CSV + digest + per-role KPIs + print-out + SMS/WhatsApp reminders + in-app report-ready; email channel pending)
 Phase 11 Platform/Multi-tenant [##########] 100% (host→tenant middleware, cross-tenant snapshot, audit trail, backups; per-tenant DB = shared-schema by design)
-API v1 (mobile)      [########..]   85%   (Sanctum auth + near-total module mirror incl. clinical/lab/pharmacy/nurse/reports/queue; docs/Postman pending)
+API v1 (mobile)      [#########.]   88%   (Sanctum auth + near-total module mirror incl. clinical/lab/pharmacy/nurse/reports/queue; Postman collection shipped; global-scope polish pending)
 ```
 
 Legend: `[#]` done · `[.]` pending. Recalculate `done / total` per phase when updating.
@@ -63,7 +63,9 @@ or covered by a later §18 entry. Grouped by area, most valuable first.
       (super admin) — today it lives in Admin → Settings only.
 
 ### C. API / mobile
-- [ ] **API docs / Postman collection** (every module is mirrored already).
+- [x] **API docs / Postman collection** — `docs/HMS_API.postman_collection.json`
+      (74 requests, 7 groups, bearer-auth variable) alongside the existing
+      `docs/API_Inventory.xlsx`.
 - [ ] Global-scope polish on remaining API queries (shared-schema scoping).
 
 ### D. Reception / OPD
@@ -72,18 +74,22 @@ or covered by a later §18 entry. Grouped by area, most valuable first.
 - [ ] **Email channel** for appointment reminders (SMS + WhatsApp + in-app done).
 
 ### E. Doctor / Lab / Nurse clinical depth
-- [ ] E-prescription **quantity = dose × frequency × days** auto-calc (the Qty
-      column exists; the doctor types it today).
+- [x] E-prescription **quantity = dose × frequency × days** auto-calc — the Qty
+      column now auto-fills from clinical shorthand (`hms_rx_quantity()`); a
+      typed number is never overwritten. `tests/Feature/ClinicalQuickWinsTest.php`.
 - [ ] **Referral** to another doctor/department (model exists, no UI).
 - [ ] IPD **daily rounds** notes + **change orders** + formal **discharge order /
       discharge summary**.
-- [ ] Explicit **"doctor cannot edit billing"** guard.
+- [x] Explicit **"doctor cannot edit billing"** guard — enforced by module gating
+      (`doctor` has no `bills`/`accounting`); regression test added.
 - [ ] Lab **call-patient** collection scheduling.
 - [ ] Lab **billing line auto-added** to the invoice.
 - [ ] **Radiology tie-in** (X-ray/USG/CT order → report upload).
 - [ ] Nurse **bed-scoped view** (see only assigned patients) + **vitals at the
       doctor-set interval** + step-by-step **condition timeline**.
-- [ ] **Report-ready** notification (lab result → patient/doctor).
+- [x] **Report-ready** notification — `LabReportReady` pings the ordering doctor
+      (falls back to all active doctors) on every reported result; critical
+      values still raise the red `DoctorAlert` too.
 
 ### F. Dean / platform hardening
 - [ ] Dean **approval of duty roster** + **doctor reassignment**.
@@ -239,7 +245,7 @@ Goal: every web feature gets a matching JSON endpoint so the mobile app stays in
 - [x] auth / site / appointments / admin / superadmin controllers
 - [x] tenant scoping on API queries (`BelongsToTenant` global scope, Phase 11)
 - [x] mirror remaining web modules (reports, lab, pharmacy, nurse, accountant, dean) — 29 controllers incl. queue/clinical/duty-roster/ICD-10/ID-cards
-- [ ] API docs / Postman collection
+- [x] API docs / Postman collection (`docs/HMS_API.postman_collection.json`)
 
 ---
 
@@ -269,7 +275,7 @@ Goal: run one facility. Admin = Super Admin **of that tenant only**.
       labouratorist, store keeper, accountant, HR — scoped to their own tenant. (`StaffDirectory::assignableRoles()`)
 - [x] Departments management.
 - [x] All **appointments** visible to admin.
-- [ ] Admin dashboard cards: patients today, appointments, beds occupied/free, revenue, low stock, unresolved items. — **admin set has patients(appointments today/revenue/leave/expired); beds/low-stock/unresolved pending**
+- [x] Admin dashboard cards: patients today, appointments, beds occupied/free, revenue, low stock. — **admin set now adds Available Beds + Low Stock; "unresolved items" card still optional**
 - [ ] Facility profile edit (name, number, timing, logo, images, beds). — **super-admin wizard covers all; tenant-admin Settings lacks phone/beds**
 - [x] Reports: daily/monthly, doctor-wise, department-wise, revenue, pharmacy, lab.
 - [ ] Bulk import staff/patients (optional).
@@ -317,14 +323,14 @@ Goal: see patients (clinic common tasks) and manage clinical records.
   - [x] Medicine picker shows **only available stock** (batch + qty).
   - [x] Expired / out-of-stock shown in **red and not selectable**.
   - [x] Per medicine: dosage, **timing/frequency**, **number of days** (duration).
-  - [ ] **Quantity auto-calculated** = dose × frequency × days. — **Qty column exists; doctor types it today**
+  - [x] **Quantity auto-calculated** = dose × frequency × days. — `hms_rx_quantity()` auto-fills Qty (typed value wins)
   - [x] Save → appears on pharmacist screen (and IPD drug chart).
 - [x] **Order investigations:** tick lab/radiology tests → lab receives order.
 - [x] **View lab report** when patient returns; adjust or continue medicine.
 - [x] **Follow-up date** → auto-create next appointment.
 - [ ] Referral to another doctor/department (optional). — **model exists, no UI**
 - [ ] IPD: daily rounds notes, change orders, discharge order + discharge summary. — **admit/discharge + drug chart done; rounds/change-orders/summary pending**
-- [ ] Doctor cannot edit billing (no explicit guard).
+- [x] Doctor cannot edit billing — enforced by module gating (no `bills`/`accounting` for `doctor`) + regression test.
 
 **Acceptance:** doctor completes a consultation, writes a full prescription using only available medicines (expired ones visible but greyed/red + unselectable), orders a test, later sees the report, and sets a follow-up that auto-books.
 
@@ -647,7 +653,7 @@ Goal: dean manages staffing, approvals, and the facility calendar.
 - [x] Date-range filters + presets (Today/Week/Month/All time).
 - [x] CSV export (PDF/print still open).
 - [x] In-app management digest (unpaid bills, low-stock, pending deliveries — once/day) + `NotificationDigest` service.
-- [ ] Notifications: appointment reminders, report-ready via SMS/WhatsApp/email channels (configurable). — **appointment reminders (SMS/WhatsApp/in-app) done; report-ready + email pending**
+- [ ] Notifications: appointment reminders, report-ready via SMS/WhatsApp/email channels (configurable). — **appointment reminders (SMS/WhatsApp/in-app) done; in-app report-ready done; email + SMS/WhatsApp report-ready pending**
 - [x] Dashboard KPIs per role.
 - [x] API mirror: `GET /api/v1/admin/reports?from&to`.
 
@@ -1335,6 +1341,25 @@ out the whole backlog.
 - Verified: `WeeklyHoursTest` (6) + full suite **276/1120 green**; audit **34/34,
   0 console errors**; fixed a float-clear overflow on `/contact` (`.hms-inner`
   now `clear: both`).
+
+---
+
+## 18y. Clinical quick wins + Postman collection — done 2026-10-13
+
+- **E-prescription quantity auto-calc**: `hms_rx_quantity()` reads clinical
+  shorthand (dosage × frequency × days, e.g. `1 tab` + `BD` + `5 days` = 10) and
+  fills the Qty cell live; a number the doctor typed is never overwritten and
+  ambiguous input (strengths, "as needed") is left blank.
+- **Report-ready notification**: new `LabReportReady` (database channel) pings the
+  ordering doctor when a lab result is saved, falling back to every active doctor;
+  critical values still raise the red `DoctorAlert` as before.
+- **Doctor-billing guard verified**: the `doctor` role carries no `bills` /
+  `accounting` module, so the ledger is unreachable; covered by a regression test.
+- **Admin dashboard**: added **Available Beds** and **Low Stock** cards.
+- **API docs**: generated `docs/HMS_API.postman_collection.json` (74 requests in
+  7 groups, bearer-auth + `base_url`/`token` variables) from `route:list`.
+- Verified: `ClinicalQuickWinsTest` (5) + full suite **281/1136 green**; targeted
+  browser audit of dashboard/lab/prescriptions **4/4, 0 console errors**.
 
 ---
 

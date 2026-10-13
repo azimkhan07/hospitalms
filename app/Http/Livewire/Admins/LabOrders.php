@@ -4,7 +4,10 @@ namespace App\Http\Livewire\Admins;
 
 use App\Models\DoctorAlert;
 use App\Models\InvestigationReport;
+use App\Models\User;
+use App\Notifications\LabReportReady;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -193,8 +196,41 @@ class LabOrders extends Component
             $alert->notifyDoctors();
         }
 
+        $this->notifyDoctorsOfReport($report);
+
         $this->reset(['reportId', 'reportFindings', 'reportResult', 'resultFile', 'isCritical', 'criticalNote']);
         session()->flash('message', ($report->test?->name ?: 'Test').' reported.');
+    }
+
+    /**
+     * Tell the doctor who ordered the test that the result is ready (PLAN.md
+     * 9d). Falls back to every active doctor when the order carries no
+     * ordering doctor, and never pings the person who entered the result.
+     */
+    private function notifyDoctorsOfReport(InvestigationReport $report): void
+    {
+        $recipients = collect();
+
+        if ($report->ordered_by) {
+            $orderedBy = User::find($report->ordered_by);
+
+            if ($orderedBy) {
+                $recipients->push($orderedBy);
+            }
+        }
+
+        if ($recipients->isEmpty()) {
+            $recipients = User::where('tenant_id', $report->tenant_id)
+                ->where('is_active', true)
+                ->whereHas('role', fn ($r) => $r->where('slug', 'doctor'))
+                ->get();
+        }
+
+        $recipients = $recipients->reject(fn ($u) => (int) $u->id === (int) auth()->id());
+
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, new LabReportReady($report));
+        }
     }
 
     public function cancel(int $id): void

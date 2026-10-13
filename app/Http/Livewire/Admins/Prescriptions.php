@@ -104,6 +104,32 @@ class Prescriptions extends Component
         $this->items[] = $this->blankItem();
     }
 
+    /**
+     * When the doctor finishes a dosage / frequency / duration cell, try to
+     * fill the quantity from the clinical shorthand — but never overwrite a
+     * number the doctor typed themselves.
+     */
+    public function updated(string $name, mixed $value): void
+    {
+        if (preg_match('/^items\.(\d+)\.(dosage|frequency|duration)$/', $name, $m)) {
+            $this->autoFillQuantity((int) $m[1]);
+        }
+    }
+
+    private function autoFillQuantity(int $index): void
+    {
+        if (! isset($this->items[$index]) || filled($this->items[$index]['quantity'] ?? null)) {
+            return;
+        }
+
+        $row = $this->items[$index];
+        $qty = hms_rx_quantity($row['dosage'] ?? null, $row['frequency'] ?? null, $row['duration'] ?? null);
+
+        if ($qty !== null) {
+            $this->items[$index]['quantity'] = (string) $qty;
+        }
+    }
+
     public function removeRow(int $index): void
     {
         unset($this->items[$index]);
@@ -162,8 +188,12 @@ class Prescriptions extends Component
                     'dosage' => $item['dosage'] ?: null,
                     'frequency' => $item['frequency'] ?: null,
                     'duration' => $item['duration'] ?: null,
-                    // Blank means one course, the hand-over default.
-                    'quantity' => $item['quantity'] ?: null,
+                    // Blank means one course, the hand-over default. If the
+                    // doctor gave dosage + frequency + duration, work out the
+                    // course count so the pharmacy picks the right quantity.
+                    'quantity' => filled($item['quantity'] ?? null)
+                        ? $item['quantity']
+                        : hms_rx_quantity($item['dosage'] ?? null, $item['frequency'] ?? null, $item['duration'] ?? null),
                     'note' => $item['note'] ?: null,
                 ]);
             }

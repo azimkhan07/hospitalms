@@ -451,6 +451,68 @@ if (! function_exists('hms_hours_summary')) {
     }
 }
 
+if (! function_exists('hms_rx_quantity')) {
+    /**
+     * Work out how many units a prescription line should dispense from the
+     * free-text dosage / frequency / duration the doctor typed.
+     *
+     * qty = units-per-dose × doses-per-day × days. Only clear clinical
+     * shorthand is trusted; anything ambiguous returns null so the field stays
+     * blank for the doctor to fill in by hand. Real strengths ("500 mg") are
+     * ignored on purpose — that is a dose, not a unit count.
+     */
+    function hms_rx_quantity(?string $dosage, ?string $frequency, ?string $duration): ?int
+    {
+        $perDose = null;
+        if (preg_match('/\d+(\.\d+)?/', (string) $dosage, $m)) {
+            $n = (float) $m[0];
+            // 1–6 count forms ("1 tab", "2 capsules"); larger numbers are
+            // strengths and must not be multiplied.
+            if ($n >= 1 && $n <= 6 && floor($n) === $n) {
+                $perDose = (int) $n;
+            }
+        }
+
+        $perDay = null;
+        $freq = strtolower(trim((string) $frequency));
+        if ($freq !== '') {
+            // Highest frequency first, token-boundary matched so "od" never
+            // fires inside "daily" and "twice daily" is not read as once.
+            $map = [
+                12 => ['q2h'],
+                8 => ['q3h'],
+                6 => ['q4h'],
+                4 => ['qid', 'qds', 'q6h', 'four times', '4 times', 'four'],
+                3 => ['tds', 'tid', 'q8h', 'thrice', 'three times', '3 times', 'three'],
+                2 => ['bd', 'bid', 'bds', 'q12h', 'twice', 'two times', '2 times'],
+                1 => ['od', 'once', 'daily', 'q24h', 'hs', 'nocte', 'at bedtime', 'morning', 'night', 'noon'],
+            ];
+
+            foreach ($map as $times => $needles) {
+                foreach ($needles as $needle) {
+                    if (preg_match('/(?<![a-z])'.preg_quote($needle, '/').'(?![a-z])/', $freq)) {
+                        $perDay = $times;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        $days = null;
+        if (preg_match('/\d+/', (string) $duration, $m)) {
+            $days = (int) $m[0];
+        }
+
+        if ($perDose === null || $perDay === null || $days === null || $days < 1) {
+            return null;
+        }
+
+        $qty = $perDose * $perDay * $days;
+
+        return $qty > 0 ? min($qty, 9999) : null;
+    }
+}
+
 if (! function_exists('hms_tenant_required_roles')) {
     /**
      * Role slugs the active tenant was configured with.

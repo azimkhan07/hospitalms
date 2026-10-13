@@ -107,7 +107,8 @@
                                         <td>
                                             <input type="number" min="1" max="9999"
                                                 class="form-control form-control-sm text-center"
-                                                placeholder="1" wire:model="items.{{ $i }}.quantity">
+                                                placeholder="auto" title="Auto-filled from dosage × frequency × duration; type to override"
+                                                wire:model="items.{{ $i }}.quantity">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm"
