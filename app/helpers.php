@@ -513,6 +513,27 @@ if (! function_exists('hms_rx_quantity')) {
     }
 }
 
+if (! function_exists('hms_bytes')) {
+    /** Human-readable byte size (e.g. 3.4 MB); null passes through as "—". */
+    function hms_bytes(?int $bytes): string
+    {
+        if ($bytes === null) {
+            return '—';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = 0;
+        $value = (float) $bytes;
+
+        while ($value >= 1024 && $i < count($units) - 1) {
+            $value /= 1024;
+            $i++;
+        }
+
+        return round($value, $i === 0 ? 0 : 1).' '.$units[$i];
+    }
+}
+
 if (! function_exists('hms_tenant_required_roles')) {
     /**
      * Role slugs the active tenant was configured with.

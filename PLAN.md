@@ -13,7 +13,7 @@ Repo: `D:\Amtech\hospitalms` · Dev URL: `http://127.0.0.1:8100`
 ```
 Overall              [########..]  ~80%   (foundation + multi-tenant + super admin + OPD/IPD + pharmacy + lab + billing core + ICD-10 + roster + reports + API v1 live + Postman)
 
-Phase 1 Super Admin  [#######...]   75%   (onboarding, tenant CRUD, errors, host lock, audit, snapshot; impersonation + platform stats + timezone/currency pending)
+Phase 1 Super Admin  [########..]   82%   (onboarding, tenant CRUD, errors, host lock, audit, snapshot, platform + system stats; impersonation + timezone/currency pending)
 Phase 2 Admin        [########..]   85%   (settings + mode + staff per role + departments + facilities + reports; bulk import + admin extra KPIs pending)
 Phase 3 Reception    [#######...]   75%   (appointments + queue/token + call-next + on-duty + 3-day rule + follow-up; UHID + dedupe + email reminder pending)
 Phase 4 Doctor       [#######...]   75%   (consult + ICD-10 + Rx + stock-aware + dose×freq×days auto-qty + lab order/report; referral + IPD rounds pending)
@@ -94,9 +94,10 @@ or covered by a later §18 entry. Grouped by area, most valuable first.
 ### F. Dean / platform hardening
 - [ ] Dean **approval of duty roster** + **doctor reassignment**.
 - [ ] Super Admin **impersonate tenant admin** (audit-logged).
-- [ ] Super Admin **platform dashboard stats** (staff/patients/appointments
-      today/revenue today) + system stats (PHP/Laravel version, DB size, storage,
-      last backup, queue status).
+- [x] Super Admin **platform dashboard stats** (patients / appointments today /
+      revenue today / active staff across every tenant) + **system health** card
+      (PHP + Laravel version, queue driver, timezone, DB size, storage used, last
+      `hms:backup` snapshot). `SuperAdminDashboardTest`.
 - [ ] Tenant **timezone + currency** columns + wizard inputs (and **trial expiry**
       input — the column exists but the form does not ask).
 - [ ] Super Admin **web drill-down** per tenant (only the API `snapshot` exists).
@@ -1360,6 +1361,20 @@ out the whole backlog.
   7 groups, bearer-auth + `base_url`/`token` variables) from `route:list`.
 - Verified: `ClinicalQuickWinsTest` (5) + full suite **281/1136 green**; targeted
   browser audit of dashboard/lab/prescriptions **4/4, 0 console errors**.
+
+---
+
+## 18z. Super Admin platform + system health — done 2026-10-13
+
+- **Platform roll-up** on `/superadmin/dashboard`: patients, appointments today,
+  revenue today and active staff summed across every tenant via
+  `acrossTenants()` (the tenant global scope is off in the platform panel).
+- **System health** card (read-only): PHP + Laravel version, queue driver,
+  app timezone, DB size (`information_schema`), storage used (`storage/app`
+  footprint) and the newest `hms:backup` snapshot with age. Byte sizes format
+  through the new `hms_bytes()` helper.
+- Verified: `SuperAdminDashboardTest` (2) + full suite **283/1145 green**;
+  targeted browser audit incl. super-admin dashboard **5/5, 0 console errors**.
 
 ---
 
