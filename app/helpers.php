@@ -65,7 +65,7 @@ if (! function_exists('hms_institution_mode')) {
         }
 
         try {
-            $stored = \App\Models\Settings::where('key', 'institution_mode')->value('value');
+            $stored = \App\Models\Settings::whereNull('tenant_id')->where('key', 'institution_mode')->value('value');
         } catch (\Throwable $e) {
             $stored = null;
         }

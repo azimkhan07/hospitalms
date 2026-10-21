@@ -16,8 +16,13 @@ class SiteContentSeeder extends Seeder
 {
     public function run(): void
     {
+        // Settings stay platform defaults (tenant_id NULL). Demo features and
+        // testimonials belong to the first facility so the original single-site
+        // install keeps its content; each new facility starts with its own.
+        $tenantId = \App\Models\Tenant::query()->orderBy('id')->value('id');
+
         foreach ((new Settings)->defaults as $key => $value) {
-            \App\Models\Settings::firstOrCreate(['key' => $key], ['value' => $value]);
+            \App\Models\Settings::firstOrCreate(['tenant_id' => null, 'key' => $key], ['value' => $value]);
         }
 
         $features = [
@@ -30,7 +35,10 @@ class SiteContentSeeder extends Seeder
         ];
 
         foreach ($features as $attrs) {
-            feature::updateOrCreate(['title' => $attrs['title']], $attrs + ['icon' => null, 'active' => true]);
+            feature::updateOrCreate(
+                ['tenant_id' => $tenantId, 'title' => $attrs['title']],
+                $attrs + ['icon' => null, 'active' => true]
+            );
         }
 
         $testimonials = [
@@ -49,7 +57,10 @@ class SiteContentSeeder extends Seeder
         ];
 
         foreach ($testimonials as $attrs) {
-            testimonial::updateOrCreate(['name' => $attrs['name']], $attrs + ['photo' => null, 'active' => true]);
+            testimonial::updateOrCreate(
+                ['tenant_id' => $tenantId, 'name' => $attrs['name']],
+                $attrs + ['photo' => null, 'active' => true]
+            );
         }
 
         \App\Models\SiteContent::flush();

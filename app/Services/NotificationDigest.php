@@ -32,7 +32,7 @@ class NotificationDigest
         $tenantId = (int) $user->tenant_id;
         $key = 'reports_digest_last:'.$tenantId;
 
-        $last = (string) Settings::where('key', $key)->value('value');
+        $last = (string) Settings::whereNull('tenant_id')->where('key', $key)->value('value');
 
         if ($last === Carbon::today()->toDateString()) {
             return;
@@ -70,7 +70,7 @@ class NotificationDigest
             $recipient->notify(new DigestReady($message));
         }
 
-        Settings::updateOrCreate(['key' => $key], ['value' => Carbon::today()->toDateString()]);
+        Settings::updateOrCreate(['tenant_id' => null, 'key' => $key], ['value' => Carbon::today()->toDateString()]);
     }
 
     private static function managementRoleSlugs(int $tenantId): array

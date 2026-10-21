@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Role;
+use App\Models\SiteContent;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,7 @@ class TenantService
      */
     public function create(array $data, ?array $admin = null): Tenant
     {
-        return DB::transaction(function () use ($data, $admin) {
+        $tenant = DB::transaction(function () use ($data, $admin) {
             $data = $this->prepare($data);
             $data['created_by'] = $data['created_by'] ?? auth()->id();
 
@@ -31,6 +32,12 @@ class TenantService
 
             return $tenant;
         });
+
+        // The public site caches branding per facility; drop it so the new or
+        // renamed facility is served immediately.
+        SiteContent::flush();
+
+        return $tenant;
     }
 
     /**
@@ -39,8 +46,11 @@ class TenantService
     public function update(Tenant $tenant, array $data): Tenant
     {
         $tenant->update($this->prepare($data, $tenant));
+        $tenant->refresh();
 
-        return $tenant->refresh();
+        SiteContent::flush();
+
+        return $tenant;
     }
 
     /**

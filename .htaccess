@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never rewrite anything already inside /public (prevents loops)
+    RewriteRule ^public(/|$) - [L]
+
+    # Drop the trailing slash from non-directory URLs (keeps Location clean)
+    RewriteCond %{THE_REQUEST} \s(.+?)/+[?\s]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+?)/+$ %1 [L,R=301]
+
+    # Forward everything else into the public directory
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

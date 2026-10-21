@@ -44,19 +44,25 @@ trait BelongsToTenant
 
     public static function currentTenantId(): ?int
     {
-        // Console work with nobody signed in (seeders, migrations, most queued
-        // jobs) has no facility to scope to, so the scope stays off.
-        //
-        // The signed-in check matters: without it the scope would quietly switch
-        // itself off whenever runningInConsole() is true -- including under the
-        // test suite -- and tenant isolation would pass for the wrong reason.
-        if (app()->runningInConsole() && ! Auth::check()) {
-            return null;
-        }
-
+        // A signed-in staff member is always locked to their own facility --
+        // even on a request whose host resolves to another facility (or to the
+        // platform panel, where no facility resolves at all).
         $user = Auth::user();
 
-        return $user?->tenant_id ? (int) $user->tenant_id : null;
+        if ($user) {
+            return $user->tenant_id ? (int) $user->tenant_id : null;
+        }
+
+        // A public visitor has nobody signed in, but ResolveTenant has already
+        // worked out which facility the host belongs to. Without this fallback
+        // every guest page listed all facilities' departments, doctors and
+        // website content together. The console check below keeps seeders and
+        // queued jobs unscoped (they run with no request, so no host resolves).
+        if ($tenantId = Tenant::currentId()) {
+            return $tenantId;
+        }
+
+        return null;
     }
 
     /**

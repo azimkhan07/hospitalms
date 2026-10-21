@@ -54,7 +54,7 @@ class AdminSeeder extends Seeder
         ];
 
         foreach ($settings as $key => $value) {
-            Settings::updateOrCreate(['key' => $key], ['value' => $value]);
+            Settings::updateOrCreate(['tenant_id' => null, 'key' => $key], ['value' => $value]);
         }
 
         $roles = Role::pluck('id', 'slug');
@@ -63,7 +63,7 @@ class AdminSeeder extends Seeder
             ['slug' => 'metro-hospital'],
             [
                 'name' => 'Metro Multi-Speciality Hospital',
-                'mode' => Settings::where('key', 'institution_mode')->value('value') ?: 'hospital',
+                'mode' => Settings::whereNull('tenant_id')->where('key', 'institution_mode')->value('value') ?: 'hospital',
                 'phone' => $settings['phone'] ?? null,
                 'email' => $settings['email'] ?? null,
                 'address' => $settings['address'] ?? null,

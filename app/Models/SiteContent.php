@@ -2,17 +2,56 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class SiteContent
 {
+    /**
+     * The public website content for the facility this request belongs to.
+     *
+     * Rows saved without a tenant_id are the platform defaults; a facility's
+     * own rows override them (and the facility record itself supplies its name,
+     * logo, contact details and hero image when the admin has not overridden
+     * them under Website Content). The cache key carries the facility id so one
+     * hospital's branding can never be served on another's domain.
+     */
     public static function get(): array
     {
-        return Cache::rememberForever('site_content', function () {
-            $s = [];
+        $tenantId = self::tenantId();
 
-            foreach (Settings::all() as $row) {
-                $s[$row->key] = $row->value;
+        return Cache::rememberForever('site_content:'.($tenantId ?: 'global'), function () use ($tenantId) {
+            $tenant = $tenantId ? Tenant::find($tenantId) : null;
+
+            $s = Settings::query()
+                ->whereNull('tenant_id')
+                ->orderBy('id')
+                ->pluck('value', 'key')
+                ->all();
+
+            $overrides = $tenantId
+                ? Settings::query()->where('tenant_id', $tenantId)->orderBy('id')->pluck('value', 'key')->all()
+                : [];
+
+            $s = array_merge($s, $overrides);
+
+            if ($tenant) {
+                $own = fn (string $key) => array_key_exists($key, $overrides);
+
+                if (! $own('title')) {
+                    $s['title'] = $tenant->name ?: ($s['title'] ?? null);
+                }
+
+                // Contact details and images belong to the facility, never to
+                // whichever facility happened to be seeded first. A blank
+                // facility field stays blank (the views fall back to their own
+                // neutral default) instead of showing another hospital's
+                // address or logo.
+                foreach (['logo', 'hero_image', 'phone', 'email', 'address', 'working_hours'] as $key) {
+                    if (! $own($key)) {
+                        $s[$key] = $tenant->{$key};
+                    }
+                }
             }
 
             return [
@@ -73,9 +112,36 @@ class SiteContent
         });
     }
 
+    /**
+     * The facility whose website is being rendered: the request host wins, so a
+     * visitor (even one who happens to be signed in to another facility's panel)
+     * always sees the site belonging to the domain they opened. On a single-host
+     * install no host resolves, so the signed-in staff member's facility is the
+     * fallback.
+     */
+    public static function tenantId(): ?int
+    {
+        if ($hostTenant = Tenant::currentId()) {
+            return $hostTenant;
+        }
+
+        $userId = Auth::user()?->tenant_id;
+
+        return $userId ? (int) $userId : null;
+    }
+
     public static function flush(): void
     {
         Cache::forget('site_content');
+        Cache::forget('site_content:global');
+
+        try {
+            foreach (Tenant::withTrashed()->pluck('id') as $id) {
+                Cache::forget('site_content:'.$id);
+            }
+        } catch (\Throwable $e) {
+            // The table may not exist yet during install/migration.
+        }
     }
 
     public static function departments()

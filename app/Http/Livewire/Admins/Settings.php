@@ -64,11 +64,42 @@ class Settings extends Component
 
     public function mount(): void
     {
+        // Defaults are the platform-wide fallback (tenant_id = NULL). A
+        // facility that has not customised a key keeps reading them.
         foreach ($this->defaults as $key => $value) {
-            SettingModel::firstOrCreate(['key' => $key], ['value' => $value]);
+            SettingModel::firstOrCreate(['tenant_id' => null, 'key' => $key], ['value' => $value]);
         }
 
-        $this->settings = SettingModel::all()->pluck('value', 'key')->toArray();
+        $tenant = $this->tenant();
+        $overrides = $this->tenantId()
+            ? SettingModel::where('tenant_id', $this->tenantId())->pluck('value', 'key')->all()
+            : [];
+
+        $this->settings = array_merge(
+            SettingModel::whereNull('tenant_id')->pluck('value', 'key')->all(),
+            $overrides
+        );
+
+        // Show the facility's own name and contact details where the admin has
+        // not saved an override, so a new tenant never sees (and accidentally
+        // re-saves) the previous facility's branding.
+        if ($tenant) {
+            if (! array_key_exists('title', $overrides)) {
+                $this->settings['title'] = $tenant->name;
+            }
+
+            foreach (['phone', 'email', 'address', 'working_hours'] as $key) {
+                if (! array_key_exists($key, $overrides) && filled($tenant->{$key})) {
+                    $this->settings[$key] = $tenant->{$key};
+                }
+            }
+
+            foreach ($this->fileKeys as $key) {
+                if (! array_key_exists($key, $overrides) && filled($tenant->{$key})) {
+                    $this->settings[$key] = $tenant->{$key};
+                }
+            }
+        }
 
         // Show the mode the tenant actually has, not a stale settings row.
         $this->settings['institution_mode'] = hms_institution_mode();
@@ -85,6 +116,9 @@ class Settings extends Component
             'about_image' => 'nullable|image|mimes:jpg,png,jpeg,webp|max:4096',
         ]);
 
+        $tenantId = $this->tenantId();
+        $tenant = $this->tenant();
+
         foreach ($this->settings as $key => $value) {
             if (in_array($key, $this->fileKeys, true)) {
                 continue;
@@ -94,19 +128,19 @@ class Settings extends Component
             // during onboarding), so writing it to settings here created a second
             // source of truth that role/module gating never looked at.
             if ($key === 'institution_mode') {
-                auth()->user()?->tenant?->update(['mode' => $value]);
-                SettingModel::updateOrCreate(['key' => $key], ['value' => $value]);
+                $tenant?->update(['mode' => $value]);
+                SettingModel::updateOrCreate(['tenant_id' => $tenantId, 'key' => $key], ['value' => $value]);
 
                 continue;
             }
 
-            SettingModel::updateOrCreate(['key' => $key], ['value' => $value]);
+            SettingModel::updateOrCreate(['tenant_id' => $tenantId, 'key' => $key], ['value' => $value]);
         }
 
         foreach ($this->fileKeys as $key) {
             if ($this->{$key}) {
                 $path = $this->{$key}->store('uploads', 'public');
-                SettingModel::updateOrCreate(['key' => $key], ['value' => $path]);
+                SettingModel::updateOrCreate(['tenant_id' => $tenantId, 'key' => $key], ['value' => $path]);
             }
         }
 
@@ -114,6 +148,26 @@ class Settings extends Component
 
         session()->flash('message', 'Settings updated successfully.');
         return redirect()->route('admin_settings');
+    }
+
+    /**
+     * The facility whose website settings are being edited: the signed-in
+     * staff member's facility, falling back to the request host.
+     */
+    protected function tenant(): ?\App\Models\Tenant
+    {
+        $user = auth()->user();
+
+        if ($user && $user->tenant_id) {
+            return $user->tenant()->first();
+        }
+
+        return hms_tenant();
+    }
+
+    protected function tenantId(): ?int
+    {
+        return $this->tenant()?->id;
     }
 
     public function render()

@@ -55,7 +55,7 @@ class WebsiteContentAdminTest extends TestCase
 
     public function test_features_page_renders_for_admin(): void
     {
-        feature::create(['title' => 'Smart ICU', 'text' => 'Monitored beds.', 'sort_order' => 1, 'active' => true]);
+        feature::create(['tenant_id' => $this->tenant->id, 'title' => 'Smart ICU', 'text' => 'Monitored beds.', 'sort_order' => 1, 'active' => true]);
 
         $this->actingAs($this->admin)
             ->get(route('admin_features'))
@@ -103,6 +103,7 @@ class WebsiteContentAdminTest extends TestCase
     public function test_testimonials_page_renders_and_forbids_doctor(): void
     {
         testimonial::create([
+            'tenant_id' => $this->tenant->id,
             'name' => 'Meena Sharma', 'role' => 'Patient', 'quote' => 'Excellent care.',
             'sort_order' => 1, 'active' => true,
         ]);

@@ -7,11 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Settings extends Model
-{   
-    use HasFactory,SoftDeletes;
-    protected $table='settings';
-    protected $fillable=[
+{
+    use HasFactory, SoftDeletes;
+
+    protected $table = 'settings';
+
+    protected $fillable = [
+        'tenant_id',
         'key',
         'value',
     ];
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
 }
