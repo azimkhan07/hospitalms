@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\SuperAdmin\AuditLogController;
 use App\Http\Controllers\Api\V1\SuperAdmin\ErrorController;
 use App\Http\Controllers\Api\V1\SuperAdmin\SnapshotController;
 use App\Http\Controllers\Api\V1\SuperAdmin\TenantController;
+use App\Http\Controllers\Api\V1\SuperAdmin\ThemeController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('superadmin')
@@ -21,4 +22,9 @@ Route::prefix('superadmin')
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
         Route::get('/snapshot', [SnapshotController::class, 'index'])->name('snapshot.index');
+
+        Route::get('/themes', [ThemeController::class, 'index'])->name('themes.index');
+        Route::get('/theme-payments', [ThemeController::class, 'payments'])->name('theme-payments.index');
+        Route::post('/theme-payments', [ThemeController::class, 'store'])->name('theme-payments.store');
+        Route::delete('/theme-payments/{payment}', [ThemeController::class, 'destroy'])->name('theme-payments.destroy');
     });

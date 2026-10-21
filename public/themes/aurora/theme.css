@@ -1,0 +1,62 @@
+/* ============================================================
+   HMS theme: Aurora Care
+   Teal glass panels, soft gradients, centred hero.
+   ============================================================ */
+
+body[data-theme="aurora"] {
+    --theme-primary: #0f766e;
+    --theme-accent: #f59e0b;
+    --theme-dark: #083344;
+    --theme-deep: #05202b;
+    --theme-heading: #0b4f4a;
+    --theme-ink: #12312f;
+    --theme-muted: #4d6b68;
+    --theme-line: #d5e9e6;
+    --theme-surface: #eefaf8;
+    --theme-card: #ffffff;
+    --theme-page: #ffffff;
+    --theme-radius: 18px;
+    --theme-radius-sm: 12px;
+    --theme-heading-font: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+    --theme-body-font: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(115deg, rgba(5, 32, 43, .90), rgba(15, 118, 110, .62) 70%, rgba(245, 158, 11, .35));
+    --theme-shadow: 0 18px 40px -26px rgba(5, 32, 43, .55);
+}
+
+body[data-theme="aurora"] .hms-hero-inner {
+    background: rgba(255, 255, 255, .10);
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: var(--theme-radius);
+    padding: 34px 32px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+body[data-theme="aurora"] .hms-facts {
+    background: linear-gradient(120deg, var(--theme-surface), #ffffff);
+}
+
+body[data-theme="aurora"] .hms-fact-icon {
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
+    border-radius: 14px;
+}
+
+body[data-theme="aurora"] .hms-serv .icon-service {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: var(--theme-surface);
+}
+
+body[data-theme="aurora"] .heading h2::after {
+    background: linear-gradient(90deg, var(--theme-primary), var(--theme-accent));
+}
+
+@media (max-width: 991px) {
+    body[data-theme="aurora"] .hms-hero-inner {
+        padding: 24px 20px;
+    }
+}

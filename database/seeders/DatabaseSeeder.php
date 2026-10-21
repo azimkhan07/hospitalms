@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             DiagnosticsSeeder::class,
             SiteContentSeeder::class,
+            ThemeSeeder::class,
         ]);
     }
 }

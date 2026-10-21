@@ -1,0 +1,66 @@
+/* ============================================================
+   HMS theme: Coral Bloom
+   Rose + coral tones, oversized rounded cards.
+   ============================================================ */
+
+body[data-theme="coral"] {
+    --theme-primary: #e11d48;
+    --theme-accent: #fb7185;
+    --theme-dark: #4c0519;
+    --theme-deep: #2b020f;
+    --theme-heading: #9f1239;
+    --theme-ink: #3a1424;
+    --theme-muted: #8b5566;
+    --theme-line: #f6d9e0;
+    --theme-surface: #fff1f4;
+    --theme-card: #ffffff;
+    --theme-page: #fff7f9;
+    --theme-radius: 22px;
+    --theme-radius-sm: 16px;
+    --theme-heading-font: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    --theme-body-font: "Segoe UI", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(110deg, rgba(43, 2, 15, .88), rgba(225, 29, 72, .55) 72%, rgba(251, 113, 133, .35));
+    --theme-shadow: 0 20px 42px -28px rgba(159, 18, 57, .55);
+}
+
+body[data-theme="coral"] .hms-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(420px 260px at 85% 20%, rgba(251, 113, 133, .35), transparent 70%);
+}
+
+body[data-theme="coral"] .hms-serv,
+body[data-theme="coral"] .hms-contact .hms-contact-card,
+body[data-theme="coral"] .dev-list .widget {
+    border-radius: var(--theme-radius);
+}
+
+body[data-theme="coral"] .hms-serv .icon-service {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--theme-surface);
+    color: var(--theme-primary);
+}
+
+body[data-theme="coral"] .heading h2 {
+    letter-spacing: -.02em;
+}
+
+body[data-theme="coral"] .hms-btn {
+    border-radius: 999px;
+    padding: 10px 24px;
+}
+
+body[data-theme="coral"] .hms-fact-icon {
+    background: var(--theme-surface);
+    color: var(--theme-primary);
+}
+
+body[data-theme="coral"] .hms-facts {
+    background: var(--theme-surface);
+}

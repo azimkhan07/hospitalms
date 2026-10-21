@@ -1,0 +1,62 @@
+/* ============================================================
+   HMS theme: Sunrise Clinic
+   Warm coral + cream, editorial serif headings.
+   ============================================================ */
+
+body[data-theme="sunrise"] {
+    --theme-primary: #ea580c;
+    --theme-accent: #f59e0b;
+    --theme-dark: #7c2d12;
+    --theme-deep: #431407;
+    --theme-heading: #7c2d12;
+    --theme-ink: #3f2a1d;
+    --theme-muted: #8a6a55;
+    --theme-line: #f0dccb;
+    --theme-surface: #fff7ef;
+    --theme-card: #fffdfb;
+    --theme-page: #fffaf4;
+    --theme-radius: 12px;
+    --theme-radius-sm: 8px;
+    --theme-heading-font: Georgia, "Times New Roman", "Iowan Old Style", serif;
+    --theme-body-font: "Segoe UI", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(105deg, rgba(67, 20, 7, .90), rgba(234, 88, 12, .60) 75%);
+    --theme-shadow: 0 16px 36px -26px rgba(124, 45, 18, .50);
+}
+
+body[data-theme="sunrise"] .hms-hero h1,
+body[data-theme="sunrise"] .heading h2 {
+    font-style: italic;
+    letter-spacing: 0;
+}
+
+body[data-theme="sunrise"] .heading h2::after {
+    background: var(--theme-accent);
+    height: 2px;
+    width: 70px;
+}
+
+body[data-theme="sunrise"] .hms-btn-primary {
+    background: var(--theme-primary);
+}
+
+body[data-theme="sunrise"] .hms-hero-badge {
+    background: rgba(255, 255, 255, .2);
+    font-style: normal;
+}
+
+body[data-theme="sunrise"] .hms-fact {
+    border-left: 3px solid var(--theme-accent);
+    padding-left: 14px;
+}
+
+body[data-theme="sunrise"] .hms-serv {
+    border-top: 3px solid var(--theme-accent);
+}
+
+body[data-theme="sunrise"] .hms-contact .hms-contact-card {
+    background: var(--theme-surface);
+}
+
+body[data-theme="sunrise"] .footer-area {
+    background: var(--theme-dark);
+}

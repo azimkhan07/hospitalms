@@ -1,0 +1,98 @@
+/* ============================================================
+   HMS theme: Luxe Medical
+   Black + champagne gold, serif, concierge practice.
+   ============================================================ */
+
+body[data-theme="luxe"] {
+    --theme-primary: #b45309;
+    --theme-accent: #e7c873;
+    --theme-dark: #0c0a09;
+    --theme-deep: #000000;
+    --theme-heading: #1c1917;
+    --theme-ink: #292524;
+    --theme-muted: #78716c;
+    --theme-line: #e7e0d3;
+    --theme-surface: #faf7f0;
+    --theme-card: #fffdf8;
+    --theme-page: #fdfbf7;
+    --theme-radius: 0px;
+    --theme-radius-sm: 0px;
+    --theme-heading-font: Georgia, "Times New Roman", serif;
+    --theme-body-font: "Segoe UI", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(100deg, rgba(0, 0, 0, .92), rgba(28, 25, 23, .78) 70%, rgba(180, 83, 9, .40));
+    --theme-shadow: 0 18px 40px -30px rgba(28, 25, 23, .70);
+}
+
+body[data-theme="luxe"] .header-bottom {
+    background: var(--theme-dark);
+    background-image: linear-gradient(90deg, #000, #1c1917 70%, #2b2118);
+    border-bottom: 1px solid rgba(231, 200, 115, .35);
+}
+
+body[data-theme="luxe"] .header-bottom nav.main-menu ul.nav.navbar-nav > li a {
+    letter-spacing: .16em;
+    font-size: 12px;
+}
+
+body[data-theme="luxe"] .hms-hero h1,
+body[data-theme="luxe"] .heading h2 {
+    letter-spacing: .04em;
+}
+
+body[data-theme="luxe"] .heading h2 {
+    text-transform: uppercase;
+    font-size: 24px;
+}
+
+body[data-theme="luxe"] .heading h2::after {
+    background: var(--theme-accent);
+    width: 100%;
+    max-width: 90px;
+    height: 1px;
+}
+
+body[data-theme="luxe"] .hms-hero-badge {
+    border-color: rgba(231, 200, 115, .55);
+    color: var(--theme-accent);
+    letter-spacing: .22em;
+}
+
+body[data-theme="luxe"] .hms-serv,
+body[data-theme="luxe"] .hms-contact .hms-contact-card,
+body[data-theme="luxe"] .dev-list .widget,
+body[data-theme="luxe"] .hms-book {
+    border-color: var(--theme-line);
+    box-shadow: none;
+    border-top: 2px solid var(--theme-accent);
+}
+
+body[data-theme="luxe"] .hms-btn-primary {
+    background: var(--theme-dark);
+    color: var(--theme-accent);
+    border: 1px solid var(--theme-accent);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+body[data-theme="luxe"] .hms-btn-primary:hover {
+    background: var(--theme-accent);
+    color: var(--theme-dark);
+    filter: none;
+}
+
+body[data-theme="luxe"] .hms-fact-icon {
+    background: var(--theme-dark);
+    color: var(--theme-accent);
+    border-radius: 0;
+}
+
+body[data-theme="luxe"] .footer-area {
+    background: #000;
+    border-top: 1px solid rgba(231, 200, 115, .3);
+}
+
+body[data-theme="luxe"] .copyright-area {
+    background: #000;
+    color: rgba(255, 255, 255, .45);
+}

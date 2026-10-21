@@ -12,7 +12,7 @@ class Tenant extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'slug', 'mode', 'clinic_type_id', 'domain', 'subdomain', 'status',
+        'name', 'slug', 'mode', 'clinic_type_id', 'theme_key', 'domain', 'subdomain', 'status',
         'phone', 'email', 'address', 'city', 'state', 'country', 'working_hours',
         'logo', 'hero_image', 'facilities', 'trial_ends_at', 'created_by',
         'latitude', 'longitude', 'geo_radius_meters',
@@ -109,6 +109,16 @@ class Tenant extends Model
     public function clinicType()
     {
         return $this->belongsTo(ClinicType::class, 'clinic_type_id');
+    }
+
+    public function theme()
+    {
+        return $this->belongsTo(Theme::class, 'theme_key', 'key');
+    }
+
+    public function activeThemePayments()
+    {
+        return $this->hasMany(ThemePayment::class)->whereNull('revoked_at');
     }
 
     public function typeLabel(): string

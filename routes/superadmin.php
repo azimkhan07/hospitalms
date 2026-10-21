@@ -36,6 +36,8 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['platform.host', '
 
     Route::get('/tenant-admins', [SuperAdminController::class, 'admins'])->name('admins');
 
+    Route::get('/themes', [SuperAdminController::class, 'themes'])->name('themes');
+
     Route::get('/errors', [SuperAdminController::class, 'errors'])->name('errors');
 
     Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('audit-logs');

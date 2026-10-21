@@ -1,0 +1,56 @@
+/* ============================================================
+   HMS theme: Royal Indigo
+   Indigo gradients with gold detailing and premium cards.
+   ============================================================ */
+
+body[data-theme="royal"] {
+    --theme-primary: #6d28d9;
+    --theme-accent: #f59e0b;
+    --theme-dark: #2e1065;
+    --theme-deep: #1a0738;
+    --theme-heading: #3b0f7a;
+    --theme-ink: #241b3d;
+    --theme-muted: #6b5f8a;
+    --theme-line: #e6dcfb;
+    --theme-surface: #f6f2ff;
+    --theme-card: #ffffff;
+    --theme-page: #ffffff;
+    --theme-radius: 16px;
+    --theme-radius-sm: 10px;
+    --theme-heading-font: "Segoe UI", system-ui, sans-serif;
+    --theme-body-font: "Segoe UI", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(115deg, rgba(26, 7, 56, .92), rgba(109, 40, 217, .68) 70%, rgba(245, 158, 11, .28));
+    --theme-shadow: 0 22px 46px -28px rgba(46, 16, 101, .60);
+}
+
+body[data-theme="royal"] .header-bottom {
+    background-image: linear-gradient(90deg, var(--theme-deep), var(--theme-primary) 70%, var(--theme-accent));
+}
+
+body[data-theme="royal"] .hms-hero-inner {
+    border-left: 3px solid var(--theme-accent);
+    padding-left: 26px;
+}
+
+body[data-theme="royal"] .hms-btn-primary {
+    background: linear-gradient(120deg, var(--theme-primary), #8b5cf6);
+}
+
+body[data-theme="royal"] .heading h2::after {
+    background: linear-gradient(90deg, var(--theme-accent), var(--theme-primary));
+    width: 62px;
+    height: 3px;
+}
+
+body[data-theme="royal"] .hms-serv {
+    border-top: 2px solid transparent;
+    border-image: linear-gradient(120deg, var(--theme-primary), var(--theme-accent)) 1;
+}
+
+body[data-theme="royal"] .hms-fact-icon {
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
+}
+
+body[data-theme="royal"] .hms-facts {
+    background: var(--theme-surface);
+}

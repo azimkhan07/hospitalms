@@ -30,6 +30,11 @@ a leave approval workflow, notifications, and clinical modules — all driven by
 - **Multi-tenant facility domains** — each facility is served from its own
   `{slug}.{base_domain}` subdomain or a domain it purchased, while the super-admin
   panel stays on the operator's own host.
+- **Premium website themes (platform side)** — ten original public-site designs live in
+  `public/themes/{key}`. A facility only shows one after the super admin records its
+  payment under **Super Admin → Website Themes** (price, currency, payment mode, reference);
+  revoking that payment puts the site back on the default design. Themed sites also get the
+  scroll-reveal motion (`public/js/hms-reveal.js`).
 - **Leave workflow** — staff submit leave; moderators/HR review and approve or reject with a note.
 - **Notification bell** — live in-app notifications for meeting invites and leave status changes.
 - **Clinical modules** — appointments, prescriptions, patient history, discharge history, expiry

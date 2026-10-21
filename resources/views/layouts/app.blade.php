@@ -1,9 +1,11 @@
 <!doctype html>
 
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @php
     $site = \App\Models\SiteContent::get();
+    $theme = \App\Models\Theme::activeForTenant(\App\Models\Tenant::current());
 @endphp
+
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $theme ? 'hms-anim' : '' }}">
 
 <head>
     <meta charset="utf-8">
@@ -35,13 +37,18 @@
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+    @if ($theme)
+        <!-- Premium website theme -->
+        <link rel="stylesheet" href="{{ asset('themes/base.css') }}">
+        <link rel="stylesheet" href="{{ asset($theme->stylesheet()) }}">
+    @endif
     <!-- Modernizer for Portfolio -->
     <script src="{{ asset('js/modernizer.js') }}"></script>
     <!-- [if lt IE 9] -->
     @livewireStyles
 </head>
 
-<body class="clinic_version">
+<body class="clinic_version{{ $theme ? ' theme-'.$theme->key : '' }}" data-theme="{{ $theme ? $theme->key : '' }}">
 
 
     <!-- LOADER -->
@@ -173,6 +180,10 @@
     <script src="{{ asset('js/all-in-one.js') }}"></script>
     <!-- all plugins -->
     <script src="{{ asset('js/custom.js') }}"></script>
+    @if ($theme)
+        <!-- Theme scroll reveal -->
+        <script src="{{ asset('js/hms-reveal.js') }}"></script>
+    @endif
     <script>
         function check_active(d) {
             document.getElementById(d).classList.add('active');

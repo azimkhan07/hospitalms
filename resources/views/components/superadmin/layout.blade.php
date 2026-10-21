@@ -194,6 +194,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('superadmin.themes') }}"
+                        class="{{ request()->routeIs('superadmin.themes') ? 'active' : '' }}">
+                        <i class="fas fa-palette"></i>
+                        <span>Website Themes</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('superadmin.errors') }}"
                         class="{{ request()->routeIs('superadmin.errors') ? 'active' : '' }}">
                         <i class="fas fa-triangle-exclamation"></i>

@@ -1,0 +1,56 @@
+/* ============================================================
+   HMS theme: Emerald Health
+   Clean emerald palette, airy spacing, pill controls.
+   ============================================================ */
+
+body[data-theme="emerald"] {
+    --theme-primary: #059669;
+    --theme-accent: #0f766e;
+    --theme-dark: #052e16;
+    --theme-deep: #03210f;
+    --theme-heading: #065f46;
+    --theme-ink: #1f2d28;
+    --theme-muted: #5b7169;
+    --theme-line: #d9ece4;
+    --theme-surface: #f2fbf7;
+    --theme-card: #ffffff;
+    --theme-page: #ffffff;
+    --theme-radius: 16px;
+    --theme-radius-sm: 999px;
+    --theme-heading-font: "Segoe UI", system-ui, sans-serif;
+    --theme-body-font: "Segoe UI", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(100deg, rgba(3, 33, 15, .90), rgba(5, 150, 105, .55));
+    --theme-shadow: 0 16px 34px -26px rgba(6, 95, 70, .50);
+}
+
+body[data-theme="emerald"] .hms-btn {
+    border-radius: 999px;
+    padding: 10px 24px;
+}
+
+body[data-theme="emerald"] .hms-btn-ghost {
+    border-radius: 999px;
+}
+
+body[data-theme="emerald"] .hms-fact-icon {
+    background: var(--theme-surface);
+    color: var(--theme-primary);
+    border: 1px solid var(--theme-line);
+    border-radius: 50%;
+}
+
+body[data-theme="emerald"] .hms-fact h4 {
+    letter-spacing: .01em;
+}
+
+body[data-theme="emerald"] .hms-serv {
+    border-top: 3px solid var(--theme-primary);
+}
+
+body[data-theme="emerald"] .hms-landing #doctors {
+    background: var(--theme-surface);
+}
+
+body[data-theme="emerald"] .dev-list .widget {
+    border-radius: var(--theme-radius);
+}

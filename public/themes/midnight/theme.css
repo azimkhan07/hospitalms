@@ -1,0 +1,99 @@
+/* ============================================================
+   HMS theme: Midnight Ward
+   Dark premium interface with sky-blue glow accents.
+   ============================================================ */
+
+body[data-theme="midnight"] {
+    --theme-primary: #38bdf8;
+    --theme-accent: #facc15;
+    --theme-dark: #0b1120;
+    --theme-deep: #050a14;
+    --theme-heading: #e2e8f0;
+    --theme-ink: #d7e2ef;
+    --theme-muted: #93a6bd;
+    --theme-line: #1e2b42;
+    --theme-surface: #101a2c;
+    --theme-card: #0f1a2c;
+    --theme-page: #0b1120;
+    --theme-radius: 14px;
+    --theme-radius-sm: 10px;
+    --theme-heading-font: "Segoe UI", system-ui, sans-serif;
+    --theme-body-font: "Segoe UI", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(115deg, rgba(5, 10, 20, .94), rgba(56, 189, 248, .35) 75%);
+    --theme-shadow: 0 20px 44px -26px rgba(2, 6, 23, .9);
+}
+
+body[data-theme="midnight"] .hms-landing,
+body[data-theme="midnight"] .hms-inner,
+body[data-theme="midnight"] .hms-serv,
+body[data-theme="midnight"] .hms-landing .serv,
+body[data-theme="midnight"] .hms-landing .hms-serv,
+body[data-theme="midnight"] .message-box .lead,
+body[data-theme="midnight"] .hms-serv p,
+body[data-theme="midnight"] .hms-fact p {
+    color: var(--theme-ink);
+}
+
+body[data-theme="midnight"] .header-top {
+    background: var(--theme-page);
+    border-bottom: 1px solid var(--theme-line);
+}
+
+body[data-theme="midnight"] .header-top .iconcont a,
+body[data-theme="midnight"] .hms-crumb,
+body[data-theme="midnight"] .hms-page-hero p {
+    color: var(--theme-muted);
+}
+
+body[data-theme="midnight"] .info-inner span.icontop {
+    background: var(--theme-surface);
+    color: var(--theme-accent);
+}
+
+body[data-theme="midnight"] .hms-facts {
+    background: var(--theme-surface);
+    border-color: var(--theme-line);
+}
+
+body[data-theme="midnight"] .hms-fact-icon {
+    background: linear-gradient(135deg, var(--theme-primary), #0284c7);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, .12);
+}
+
+body[data-theme="midnight"] .hms-serv,
+body[data-theme="midnight"] .hms-contact .hms-contact-card,
+body[data-theme="midnight"] .hms-book,
+body[data-theme="midnight"] .dev-list .widget,
+body[data-theme="midnight"] .testimonial {
+    background: var(--theme-card);
+    border-color: var(--theme-line);
+}
+
+body[data-theme="midnight"] .heading h2 {
+    color: var(--theme-heading);
+}
+
+body[data-theme="midnight"] .heading h2::after {
+    background: var(--theme-accent);
+    box-shadow: 0 0 14px rgba(250, 204, 21, .55);
+}
+
+body[data-theme="midnight"] .hms-landing #doctors,
+body[data-theme="midnight"] .hms-landing #testimonials,
+body[data-theme="midnight"] .hms-inner.hms-services {
+    background: var(--theme-surface);
+}
+
+body[data-theme="midnight"] .footer-area {
+    background: var(--theme-deep);
+    border-top: 1px solid var(--theme-line);
+}
+
+body[data-theme="midnight"] .copyright-area {
+    background: #000;
+}
+
+body[data-theme="midnight"] .hms-btn-primary {
+    background: var(--theme-primary);
+    color: #04222f;
+}

@@ -1,0 +1,58 @@
+/* ============================================================
+   HMS theme: Forest Calm
+   Deep greens on warm parchment, serif headings.
+   ============================================================ */
+
+body[data-theme="forest"] {
+    --theme-primary: #15803d;
+    --theme-accent: #ca8a04;
+    --theme-dark: #14261a;
+    --theme-deep: #0b170f;
+    --theme-heading: #14532d;
+    --theme-ink: #24301f;
+    --theme-muted: #5f6f57;
+    --theme-line: #dfe7d4;
+    --theme-surface: #f7f9f0;
+    --theme-card: #fffdf7;
+    --theme-page: #fbf8f1;
+    --theme-radius: 10px;
+    --theme-radius-sm: 6px;
+    --theme-heading-font: Georgia, "Times New Roman", serif;
+    --theme-body-font: "Segoe UI", system-ui, sans-serif;
+    --theme-hero-overlay: linear-gradient(100deg, rgba(11, 23, 15, .90), rgba(21, 128, 61, .58) 72%, rgba(202, 138, 4, .28));
+    --theme-shadow: 0 16px 34px -26px rgba(20, 83, 45, .55);
+}
+
+body[data-theme="forest"] .hms-landing #about,
+body[data-theme="forest"] .hms-landing .hms-section {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0));
+}
+
+body[data-theme="forest"] .heading h2 {
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+body[data-theme="forest"] .heading h2::after {
+    background: var(--theme-accent);
+    width: 38px;
+    height: 2px;
+}
+
+body[data-theme="forest"] .hms-serv {
+    background: var(--theme-card);
+    border-left: 3px solid var(--theme-primary);
+}
+
+body[data-theme="forest"] .hms-fact-icon {
+    background: var(--theme-primary);
+    border-radius: 10px 10px 10px 2px;
+}
+
+body[data-theme="forest"] .hms-btn-primary {
+    background: var(--theme-primary);
+}
+
+body[data-theme="forest"] .footer-area {
+    background: var(--theme-dark);
+}

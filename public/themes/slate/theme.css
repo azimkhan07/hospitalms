@@ -1,0 +1,71 @@
+/* ============================================================
+   HMS theme: Slate Minimal
+   Graphite + steel, sharp corners, quiet clinical layout.
+   ============================================================ */
+
+body[data-theme="slate"] {
+    --theme-primary: #475569;
+    --theme-accent: #0ea5e9;
+    --theme-dark: #0f172a;
+    --theme-deep: #020617;
+    --theme-heading: #0f172a;
+    --theme-ink: #1e293b;
+    --theme-muted: #64748b;
+    --theme-line: #e2e8f0;
+    --theme-surface: #f8fafc;
+    --theme-card: #ffffff;
+    --theme-page: #ffffff;
+    --theme-radius: 2px;
+    --theme-radius-sm: 2px;
+    --theme-heading-font: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    --theme-body-font: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    --theme-hero-overlay: linear-gradient(90deg, rgba(2, 6, 23, .93), rgba(71, 85, 105, .70));
+    --theme-shadow: 0 12px 28px -24px rgba(15, 23, 42, .55);
+}
+
+body[data-theme="slate"] .heading h2 {
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+body[data-theme="slate"] .heading h2::after {
+    background: var(--theme-accent);
+    width: 32px;
+    height: 2px;
+}
+
+body[data-theme="slate"] .hms-hero h1 {
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 600;
+}
+
+body[data-theme="slate"] .hms-serv,
+body[data-theme="slate"] .hms-contact .hms-contact-card,
+body[data-theme="slate"] .dev-list .widget,
+body[data-theme="slate"] .hms-book {
+    box-shadow: none;
+    border-left: 3px solid var(--theme-accent);
+}
+
+body[data-theme="slate"] .hms-btn {
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: 12px;
+}
+
+body[data-theme="slate"] .hms-fact-icon {
+    background: var(--theme-dark);
+    border-radius: 2px;
+}
+
+body[data-theme="slate"] .header-bottom {
+    background-image: none;
+    background: var(--theme-dark);
+}
+
+body[data-theme="slate"] .hms-hero-badge {
+    border-radius: 2px;
+}

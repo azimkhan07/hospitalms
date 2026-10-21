@@ -74,6 +74,11 @@ class SuperAdminController extends Controller
         return view('superadmin.admins');
     }
 
+    public function themes()
+    {
+        return view('superadmin.themes');
+    }
+
     /**
      * Sales-level export of every facility (PLAN.md section 9c.5): mode, type,
      * who still needs an admin, the unstaffed roles it was built for, and
