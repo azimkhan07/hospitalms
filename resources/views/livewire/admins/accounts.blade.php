@@ -95,21 +95,22 @@
                                                 </td>
                                                 <td class="text-right">
                                                     @if ($receiveBillId === $bill->id)
-                                                        <div class="input-group" style="max-width: 320px; margin-left: auto;">
+                                                        <div class="hms-collect-box">
                                                             <input type="number" step="0.01" min="0.01"
-                                                                class="form-control" placeholder="Amount"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Amount"
                                                                 wire:model.lazy="receiveAmount">
-                                                            <span class="input-group-btn">
-                                                                <select class="form-control" wire:model="receiveMode">
-                                                                    <option value="cash">Cash</option>
-                                                                    <option value="card">Card</option>
-                                                                    <option value="cheque">Cheque</option>
-                                                                    <option value="online">Online</option>
-                                                                </select>
-                                                                <button class="btn btn-success" wire:click="recordPayment">
-                                                                    Save
-                                                                </button>
-                                                            </span>
+                                                            <select class="form-control form-control-sm"
+                                                                wire:model="receiveMode">
+                                                                <option value="cash">Cash</option>
+                                                                <option value="card">Card</option>
+                                                                <option value="cheque">Cheque</option>
+                                                                <option value="online">Online</option>
+                                                            </select>
+                                                            <button class="btn btn-sm btn-success"
+                                                                wire:click="recordPayment">Save</button>
+                                                            <button class="btn btn-sm btn-light"
+                                                                wire:click="cancelReceive">Cancel</button>
                                                         </div>
                                                     @else
                                                         <button class="btn btn-sm btn-outline-info"

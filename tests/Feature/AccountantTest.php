@@ -154,6 +154,32 @@ class AccountantTest extends TestCase
         $this->assertSame(70.0, $bill->fresh()->amountDue());
     }
 
+    public function test_a_discounted_invoice_settles_when_the_net_amount_is_collected(): void
+    {
+        $patient = $this->patient();
+        $bill = $this->make(bill::class, [
+            'patients_id' => $patient->id,
+            'status' => 'unpaid',
+            'amount' => 120.00,
+            'tax' => 0,
+            'discount' => 20.00,
+            'invoice_no' => 'INV-12',
+        ]);
+
+        $this->actingAs($this->staff('accountant'));
+
+        Livewire::test(\App\Http\Livewire\Admins\Accounts::class)
+            ->call('accept', $bill->id)
+            ->set('receiveAmount', 100.00)
+            ->call('recordPayment')
+            ->assertHasNoErrors();
+
+        // The old check compared against the gross amount, so a fully settled
+        // discounted bill stayed "unpaid" and kept showing its Collect button.
+        $this->assertSame('paid', $bill->fresh()->status);
+        $this->assertSame(0.0, $bill->fresh()->amountDue());
+    }
+
     public function test_payroll_generates_a_due_voucher_per_salaried_staff(): void
     {
         $asia = $this->staffWithSalary('Asia Bibi', '80000');

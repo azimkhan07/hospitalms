@@ -40,10 +40,20 @@ class Accounts extends Component
 
     public function accept(string $billId): void
     {
+        $bill = bill::find($billId);
+
         $this->receiveBillId = (int) $billId;
-        $this->receiveAmount = null;
+        // Pre-fill the outstanding amount so a full collection is one click;
+        // the cashier can still overwrite it for a part payment.
+        $this->receiveAmount = $bill ? round($bill->amountDue(), 2) : null;
         $this->receiveMode = 'cash';
         $this->tab = 'overview';
+    }
+
+    public function cancelReceive(): void
+    {
+        $this->receiveBillId = null;
+        $this->receiveAmount = null;
     }
 
     public function recordPayment(): void

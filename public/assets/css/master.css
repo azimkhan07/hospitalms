@@ -1051,3 +1051,59 @@ button.hms-bell-row:hover {
     text-transform: uppercase;
     letter-spacing: .2px;
 }
+
+/* HMS: dynamic row forms + payment controls (mobile safe) */
+.hms-rx-label {
+    display: block;
+    font-size: 10.5px;
+    color: #75879e;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: .2px;
+}
+
+.hms-collect-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .35rem;
+    max-width: 360px;
+    margin-left: auto;
+}
+
+.hms-collect-box > input {
+    flex: 1 1 110px;
+    min-width: 100px;
+}
+
+.hms-collect-box > select {
+    flex: 0 0 96px;
+    width: 96px;
+}
+
+.hms-collect-box > .btn {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 767.98px) {
+    .content .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .content-header .page-title h3,
+    .page-title h3 {
+        font-size: 18px;
+    }
+
+    .hms-collect-box {
+        max-width: none;
+        margin-left: 0;
+        justify-content: flex-start;
+    }
+
+    .hms-collect-box > input {
+        flex: 1 1 100%;
+    }
+}

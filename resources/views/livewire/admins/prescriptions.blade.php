@@ -7,8 +7,8 @@
         <div class="box box-primary">
             <div class="box-header d-flex align-items-center justify-content-between flex-wrap">
                 <h3 class="box-title"><i class="fas fa-file-prescription text-info mr-1"></i> Prescription Register</h3>
-                <div class="d-flex align-items-center">
-                    <input type="search" class="form-control form-control-sm mr-1" style="max-width:200px"
+                <div class="d-flex align-items-center flex-wrap" style="gap:.4rem">
+                    <input type="search" class="form-control form-control-sm" style="max-width:200px"
                         placeholder="Search patient, doctor, medicine..." wire:model.live.debounce.300ms="search">
                     <button type="button" class="btn btn-sm btn-primary" wire:click="$toggle('showForm')">
                         <i class="fas fa-plus"></i> New Prescription
@@ -56,22 +56,12 @@
                             </div>
                         </div>
 
-                        <table class="table table-sm mb-1" style="background:transparent">
-                            <thead>
-                                <tr>
-                                    <th style="width:30%">Medicine</th>
-                                    <th style="width:16%">Dosage</th>
-                                    <th style="width:16%">Frequency</th>
-                                    <th style="width:14%">Duration</th>
-                                    <th style="width:7%">Qty</th>
-                                    <th style="width:15%">Note</th>
-                                    <th style="width:28px"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($items as $i => $item)
-                                    <tr>
-                                        <td>
+                        <div class="hms-rx-rows">
+                            @foreach ($items as $i => $item)
+                                <div class="hms-rx-row border rounded p-2 mb-2" wire:key="rx-row-{{ $i }}">
+                                    <div class="form-row">
+                                        <div class="form-group col-12 col-sm-6 col-lg-3 mb-lg-0">
+                                            <label class="hms-rx-label">Medicine</label>
                                             <select class="form-control form-control-sm"
                                                 wire:model="items.{{ $i }}.medicine">
                                                 <option value="">Choose medicine</option>
@@ -91,45 +81,52 @@
                                                     </optgroup>
                                                 @endif
                                             </select>
-                                        </td>
-                                        <td>
+                                        </div>
+                                        <div class="form-group col-6 col-sm-3 col-lg-2 mb-lg-0">
+                                            <label class="hms-rx-label">Dosage</label>
                                             <input type="text" class="form-control form-control-sm"
                                                 placeholder="1 tab" wire:model="items.{{ $i }}.dosage">
-                                        </td>
-                                        <td>
+                                        </div>
+                                        <div class="form-group col-6 col-sm-3 col-lg-2 mb-lg-0">
+                                            <label class="hms-rx-label">Timing</label>
                                             <input type="text" class="form-control form-control-sm"
                                                 placeholder="After meal" wire:model="items.{{ $i }}.frequency">
-                                        </td>
-                                        <td>
+                                        </div>
+                                        <div class="form-group col-6 col-sm-3 col-lg-2 mb-lg-0">
+                                            <label class="hms-rx-label">Duration</label>
                                             <input type="text" class="form-control form-control-sm"
                                                 placeholder="5 days" wire:model="items.{{ $i }}.duration">
-                                        </td>
-                                        <td>
+                                        </div>
+                                        <div class="form-group col-6 col-sm-3 col-lg-1 mb-lg-0">
+                                            <label class="hms-rx-label">Qty</label>
                                             <input type="number" min="1" max="9999"
                                                 class="form-control form-control-sm text-center"
                                                 placeholder="auto" title="Auto-filled from dosage × frequency × duration; type to override"
                                                 wire:model="items.{{ $i }}.quantity">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control form-control-sm"
-                                                wire:model="items.{{ $i }}.note">
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-xs btn-outline-danger"
-                                                wire:click="removeRow({{ $i }})" title="Remove">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                        </div>
+                                        <div class="form-group col-12 col-lg-2 mb-0">
+                                            <label class="hms-rx-label">Note</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    placeholder="Optional" wire:model="items.{{ $i }}.note">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-outline-danger"
+                                                        wire:click="removeRow({{ $i }})" title="Remove medicine">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
 
-                        <div class="d-flex">
-                            <button type="button" class="btn btn-xs btn-outline-secondary mr-1" wire:click="addRow">
+                        <div class="d-flex flex-wrap align-items-center">
+                            <button type="button" class="btn btn-xs btn-outline-secondary mr-1 mb-1" wire:click="addRow">
                                 <i class="fas fa-plus"></i> Add row
                             </button>
-                            <button type="submit" class="btn btn-sm btn-success ml-auto">
+                            <button type="submit" class="btn btn-sm btn-success ml-auto mb-1">
                                 <i class="fas fa-check"></i> Issue Prescription
                             </button>
                         </div>
@@ -166,28 +163,30 @@
                                 @endif
                             </div>
                         </div>
-                        <table class="table table-sm mb-0 mt-1" style="background:transparent">
-                            <thead>
-                                <tr>
-                                    <th>Medicine</th>
-                                    <th>Dosage</th>
-                                    <th>Frequency</th>
-                                    <th>Duration</th>
-                                    <th>Note</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($rx->items as $item)
+                        <div class="table-responsive mt-1">
+                            <table class="table table-sm mb-0" style="background:transparent">
+                                <thead>
                                     <tr>
-                                        <td>{{ $item->medicine }}</td>
-                                        <td>{{ $item->dosage ?? '-' }}</td>
-                                        <td>{{ $item->frequency ?? '-' }}</td>
-                                        <td>{{ $item->duration ?? '-' }}</td>
-                                        <td>{{ $item->note ?? '-' }}</td>
+                                        <th>Medicine</th>
+                                        <th>Dosage</th>
+                                        <th>Frequency</th>
+                                        <th>Duration</th>
+                                        <th>Note</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($rx->items as $item)
+                                        <tr>
+                                            <td>{{ $item->medicine }}</td>
+                                            <td>{{ $item->dosage ?? '-' }}</td>
+                                            <td>{{ $item->frequency ?? '-' }}</td>
+                                            <td>{{ $item->duration ?? '-' }}</td>
+                                            <td>{{ $item->note ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 @empty
                     <div class="text-center text-muted py-3">

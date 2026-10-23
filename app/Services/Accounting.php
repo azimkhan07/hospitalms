@@ -35,14 +35,14 @@ class Accounting
                 $bill->invoice_no = 'INV-'.$bill->id;
             }
 
-            // A bill is paid only when the payments fully cover it; partial
-            // collections leave the invoice open so the cashier can chase the
-            // rest on the same row.
-            $paid = (float) $bill->payments()->where('status', 'paid')->sum('amount');
-
-            $bill->status = $paid >= (float) $bill->amount ? 'paid' : 'unpaid';
-            $bill->paid_at = $bill->status === 'paid' ? ($bill->paid_at ?? now()) : null;
-            $bill->save();
+            // A bill is paid only when the payments fully cover its net amount
+            // (discount and advance included); partial collections leave the
+            // invoice open so the cashier can chase the rest on the same row.
+            // Using the model's own recalculate() keeps this in step with the
+            // itemised total, tax and advance instead of comparing against the
+            // raw amount column, which used to leave a fully settled row stuck
+            // in the pending list with its Collect button still showing.
+            $bill->recalculate();
         }
 
         return AccountingVoucher::create([
