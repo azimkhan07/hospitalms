@@ -45,6 +45,51 @@ class TenantClinicTypeTest extends TestCase
         ]);
     }
 
+    public function test_a_new_tenant_saves_without_an_admin_account(): void
+    {
+        $this->actingAs($this->platform());
+
+        // The wizard has no admin-name / email / password fields any more:
+        // admins are assigned from the Tenant Admins screen after creation.
+        // Creating must therefore not require them (the old default of true
+        // made every "New tenant" submission fail validation silently).
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->assertSet('create_admin', false)
+            ->set('name', 'Faiz Clinic')
+            ->set('slug', 'faiz-clinic')
+            ->set('mode', 'clinic')
+            ->set('clinic_type_id', ClinicType::where('slug', 'general')->value('id'))
+            ->set('requiredRoles', ['admin', 'doctor'])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $tenant = Tenant::where('slug', 'faiz-clinic')->first();
+
+        $this->assertNotNull($tenant);
+        $this->assertSame('clinic', $tenant->mode);
+        $this->assertDatabaseMissing('users', ['tenant_id' => $tenant->id]);
+    }
+
+    public function test_clinic_and_hospital_open_with_their_own_default_roles(): void
+    {
+        $this->actingAs($this->platform());
+
+        Livewire::test(TenantForm::class)
+            ->call('open')
+            ->assertSet('requiredRoles', [
+                'admin', 'moderator', 'receptionist', 'doctor', 'nurse', 'pharmacist',
+                'laboratorist', 'storekeeper', 'accountant', 'hr',
+            ])
+            ->set('mode', 'clinic')
+            ->assertSet('requiredRoles', ['admin', 'receptionist', 'doctor', 'pharmacist'])
+            ->set('mode', 'hospital')
+            ->assertSet('requiredRoles', [
+                'admin', 'moderator', 'receptionist', 'doctor', 'nurse', 'pharmacist',
+                'laboratorist', 'storekeeper', 'accountant', 'hr',
+            ]);
+    }
+
     public function test_a_clinic_must_be_given_a_type(): void
     {
         $this->actingAs($this->platform());

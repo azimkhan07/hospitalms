@@ -165,6 +165,15 @@ class TenantForm extends Component
     public function updatedMode(): void
     {
         $this->clinic_type_id = '';
+
+        // A brand-new facility follows the mode: clinic gets the small
+        // receptionist/doctor/pharmacist set, hospital gets the full staffing
+        // plan. An existing facility keeps whatever the platform hand-picked
+        // for it; only the explicit "Reset to suggested" button may change it.
+        if ($this->tenantId === null) {
+            $this->rolesPickedManually = false;
+        }
+
         $this->applySuggestedRoles();
     }
 
@@ -249,6 +258,11 @@ class TenantForm extends Component
         }
 
         $this->show = true;
+
+        // The country / state / city pickers are filled by a browser script.
+        // Tell it to run again now that the form (and its selects) are in the
+        // DOM, especially after an edit or a reopened form.
+        $this->dispatch('tenant-form-opened');
     }
 
     public function close(): void
@@ -319,7 +333,12 @@ class TenantForm extends Component
         $this->mode = 'hospital';
         $this->domain_mode = 'auto';
         $this->status = 'active';
-        $this->create_admin = true;
+        // Admin accounts are created from the separate Tenant Admins screen
+        // (the platform assigns them after the facility exists). Keeping this
+        // false is what makes "New tenant" actually save: the old default
+        // demanded admin_name / admin_email / admin_password that this wizard
+        // does not even render, so every create silently failed validation.
+        $this->create_admin = false;
         $this->step = 1;
         $this->geo_radius_meters = 200;
         $this->private_room_enabled = false;
@@ -355,11 +374,13 @@ class TenantForm extends Component
         $this->validate($rules);
 
         $this->step = 2;
+        $this->dispatch('tenant-form-opened');
     }
 
     public function back(): void
     {
         $this->step = 1;
+        $this->dispatch('tenant-form-opened');
     }
 
     protected function rules(): array
@@ -441,6 +462,7 @@ class TenantForm extends Component
             'email' => $this->email ?: null,
             'address' => $this->address ?: null,
             'city' => $this->city ?: null,
+            'state' => $this->state ?: null,
             'country' => $this->country ?: null,
             'working_hours' => $this->working_hours ?: null,
             'domain' => $this->domain_mode === 'custom' ? $this->normalizeDomain($this->custom_domain) : null,
